@@ -1,0 +1,31 @@
+SITE CRISTARIVA RÉPARÉ — VERSION ACTUELLE
+=========================================
+
+Cette archive rétablit le site complet avec le catalogue actuel de 130 cartes :
+- 95 cartes principales ;
+- 20 cartes Relation ;
+- 15 cartes Datation ;
+- tirages à 1, 3 ou 5 cartes ;
+- trois domaines : Relations, Professionnelle / Projet et Général / spirituel ;
+- interprétation tenant compte du domaine et de la position des cartes ;
+- tirages complémentaires Relation et Datation ;
+- catalogue illustré avec définition, nature et force ;
+- profil astral, synthèse finale et interface français/anglais ;
+- installation sur Android.
+
+INSTALLATION SUR GITHUB
+1. Ouvrez le dépôt : https://github.com/chrysthale-ops/Cristariva
+2. Cliquez sur Add file puis Upload files.
+3. Extrayez cette archive sur votre ordinateur.
+4. Ouvrez le dossier extrait et sélectionnez TOUS LES FICHIERS À L'INTÉRIEUR.
+5. Déposez-les directement à la racine du dépôt.
+6. Vérifiez que index.html apparaît directement à la racine.
+7. Cliquez sur Commit changes.
+8. Attendez quelques minutes puis ouvrez :
+   https://chrysthale-ops.github.io/Cristariva/
+9. Sur Windows, appuyez une fois sur Ctrl+F5. Sur Android, fermez puis
+   rouvrez Chrome afin de remplacer l'ancienne version conservée en mémoire.
+
+Toutes les illustrations sont intégrées dans index.html. Aucun dossier images
+n'est nécessaire. Les anciens dossiers du dépôt peuvent rester en place :
+ils n'empêchent pas cette version de fonctionner.
