@@ -1,5 +1,5 @@
-SITE CRISTARIVA RÉPARÉ — VERSION ACTUELLE
-=========================================
+SITE CRISTARIVA — CARTES MODÈLE A, VERSION 2
+============================================
 
 Cette archive rétablit le site complet avec le catalogue actuel de 130 cartes :
 - 95 cartes principales ;
@@ -12,6 +12,15 @@ Cette archive rétablit le site complet avec le catalogue actuel de 130 cartes :
 - catalogue illustré avec définition, nature et force ;
 - profil astral, synthèse finale et interface français/anglais ;
 - installation sur Android.
+
+PRÉSENTATION DES CARTES
+- une seule illustration par carte, sans superposition ;
+- cadre A discret à double liseré doré ;
+- numéro dans un médaillon fin ;
+- titre intégré et entièrement lisible ;
+- crépuscule bleu-rosé clair et naturel ;
+- soleil encore visible ;
+- aucun cartouche prune massif ni cadre baroque envahissant.
 
 INSTALLATION SUR GITHUB
 1. Ouvrez le dépôt : https://github.com/chrysthale-ops/Cristariva
@@ -26,6 +35,7 @@ INSTALLATION SUR GITHUB
 9. Sur Windows, appuyez une fois sur Ctrl+F5. Sur Android, fermez puis
    rouvrez Chrome afin de remplacer l'ancienne version conservée en mémoire.
 
-Toutes les illustrations sont intégrées dans index.html. Aucun dossier images
-n'est nécessaire. Les anciens dossiers du dépôt peuvent rester en place :
-ils n'empêchent pas cette version de fonctionner.
+Le dossier « cards » contient les 130 illustrations. Il doit impérativement
+être déposé à la racine du dépôt, au même niveau que index.html. Les anciens
+dossiers du dépôt peuvent rester en place : ils n'empêchent pas cette version
+de fonctionner.
