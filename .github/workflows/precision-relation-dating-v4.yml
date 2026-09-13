@@ -1,0 +1,432 @@
+name: Precise Relation and Dating cards v4
+
+on:
+  push:
+    paths:
+      - '.github/workflows/precision-relation-dating-v4.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Rewrite Relation and Dating card meanings precisely
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json, re
+
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+          match = re.search(r'const DATA\s*=\s*(\{.*?\});', text, re.S)
+          if not match:
+              raise SystemExit('const DATA not found')
+          data = json.loads(match.group(1))
+
+          cards = {}
+          def walk(obj):
+              if isinstance(obj, dict):
+                  cid = obj.get('id')
+                  if isinstance(cid, int):
+                      cards[cid] = obj
+                  for value in obj.values():
+                      walk(value)
+              elif isinstance(obj, list):
+                  for value in obj:
+                      walk(value)
+          walk(data)
+
+          fr = {
+            96: {
+              'definition': "Une personne déjà connue avec laquelle le lien repose d’abord sur la confiance, la sympathie ou la complicité, sans engagement amoureux nécessaire.",
+              'reading_relationnel': "Ami(e) désigne un lien amical réel : soutien, échanges sincères, présence et proximité, mais pas automatiquement une relation sentimentale. Les cartes voisines diront si cette amitié reste telle quelle ou évolue.",
+              'reading_professionnel': "Ami(e) peut désigner une personne de confiance de votre réseau qui apporte conseil, recommandation ou aide concrète, sans lien hiérarchique direct.",
+              'reading_spirituel': "Ami(e) représente un soutien humain fiable, quelqu’un avec qui partager vos ressentis ou votre cheminement sans devoir transformer le lien en autre chose.",
+              'meaning': "Lien amical, confiance et soutien.",
+              'message': "Identifiez la personne qui vous soutient réellement et distinguez clairement amitié, attirance et engagement."
+            },
+            97: {
+              'definition': "Un parent ou une figure familiale d’autorité intervient directement dans la situation : père, mère, beau-parent ou personne tenant ce rôle.",
+              'reading_relationnel': "Parent indique qu’une dynamique familiale influence le lien : avis, protection, dépendance, loyauté ou pression familiale peuvent peser sur la relation.",
+              'reading_professionnel': "Parent peut signaler l’aide ou l’influence d’un membre de la famille sur un projet, une décision de carrière ou une question matérielle.",
+              'reading_spirituel': "Parent invite à regarder les héritages familiaux, les modèles reçus et ce qui continue d’orienter vos choix aujourd’hui.",
+              'meaning': "Influence familiale ou figure parentale.",
+              'message': "Repérez ce qui appartient vraiment à votre choix et ce qui vient encore de la famille."
+            },
+            98: {
+              'definition': "La personne engagée avec vous dans un lien principal, ou celle qui est en position de devenir un véritable partenaire si le tirage parle d’un lien en construction.",
+              'reading_relationnel': "Partenaire désigne le lien de couple ou la personne avec laquelle une relation engagée est au centre de la question. Il renvoie à la réciprocité, aux décisions à deux et à la place réellement donnée au lien.",
+              'reading_professionnel': "Partenaire peut désigner un associé, binôme ou collaborateur clé avec lequel les décisions et responsabilités doivent être partagées.",
+              'reading_spirituel': "Partenaire montre qu’une évolution importante se joue à travers la relation à l’autre et la capacité à construire sans se perdre soi-même.",
+              'meaning': "Partenaire central, engagement et construction à deux.",
+              'message': "Regardez les actes de réciprocité et la place concrète que chacun donne au lien."
+            },
+            99: {
+              'definition': "Un enfant réel, un jeune ou une personne nettement plus jeune et dépendante est directement concerné par la situation.",
+              'reading_relationnel': "Enfant peut désigner un enfant au cœur de la relation, une question de parentalité ou une responsabilité familiale qui influence le couple ou le rapprochement.",
+              'reading_professionnel': "Enfant peut signaler une contrainte familiale concrète, un emploi du temps lié à un enfant, ou un projet encore très jeune qui demande protection et accompagnement.",
+              'reading_spirituel': "Enfant parle ici d’une personne jeune ou d’un commencement fragile qu’il faut accompagner avec simplicité et protection.",
+              'meaning': "Enfant, jeunesse, parentalité ou dépendance concrète.",
+              'message': "Tenez compte des besoins réels de la personne la plus jeune ou la plus dépendante dans la situation."
+            },
+            100: {
+              'definition': "Une personne entre récemment dans votre champ de vie, ou un lien débute à peine et n’a pas encore révélé sa nature définitive.",
+              'reading_relationnel': "Rencontre annonce ou identifie un contact récent : attirance, curiosité ou échange peuvent apparaître, mais le lien reste à découvrir avant de parler d’engagement.",
+              'reading_professionnel': "Rencontre désigne un nouveau contact utile : entretien, réseau, client, partenaire potentiel ou personne qui ouvre une nouvelle piste.",
+              'reading_spirituel': "Rencontre indique qu’une personne nouvelle peut agir comme révélateur, miroir ou déclencheur dans votre évolution.",
+              'meaning': "Nouvelle personne ou nouveau lien.",
+              'message': "Laissez les faits montrer ce que cette nouvelle rencontre peut réellement devenir."
+            },
+            101: {
+              'definition': "Un frère, une sœur ou une personne occupant une place fraternelle intervient dans la situation, avec une dynamique possible de solidarité, comparaison ou rivalité.",
+              'reading_relationnel': "Frère / Sœur indique qu’un membre de la fratrie influence le lien ou qu’une relation fonctionne sur un registre très fraternel plutôt que sentimental.",
+              'reading_professionnel': "Frère / Sœur peut montrer l’appui d’un proche de même génération ou, au contraire, une comparaison et une compétition qui influencent vos choix.",
+              'reading_spirituel': "Frère / Sœur invite à observer les loyautés, rivalités et solidarités apprises dans la fratrie et encore actives aujourd’hui.",
+              'meaning': "Fratrie, solidarité ou rivalité entre pairs.",
+              'message': "Distinguez la solidarité véritable de la comparaison ou de la rivalité."
+            },
+            102: {
+              'definition': "Une ancienne relation sentimentale ou un ancien partenaire reste directement lié à la question présente, par contact, souvenir, conséquence ou possibilité de retour.",
+              'reading_relationnel': "Ex indique qu’un ancien partenaire est encore significatif. Cela ne promet pas son retour : les cartes voisines doivent montrer s’il s’agit d’un souvenir, d’un contact repris, d’un dossier non clos ou d’une vraie reconstruction.",
+              'reading_professionnel': "Ex peut désigner un ancien associé ou une personne liée à une période passée qui réapparaît dans un contexte concret.",
+              'reading_spirituel': "Ex montre qu’une expérience passée continue d’enseigner quelque chose qui n’a pas encore été totalement intégré.",
+              'meaning': "Ancien partenaire ou relation sentimentale passée.",
+              'message': "Ne confondez pas réapparition du passé et reconstruction réelle : vérifiez les actes présents."
+            },
+            103: {
+              'definition': "Une personne qui travaille avec vous ou dans le même environnement professionnel joue un rôle direct dans la situation.",
+              'reading_relationnel': "Collègue peut indiquer qu’un lien personnel se développe dans le cadre du travail, ou que le contexte professionnel limite la manière dont une relation peut s’exprimer.",
+              'reading_professionnel': "Collègue désigne un pair de travail : coopération, information, soutien ou tension se joue avec quelqu’un situé à un niveau comparable au vôtre.",
+              'reading_spirituel': "Collègue montre qu’un apprentissage relationnel se fait à travers le quotidien, la coopération et les limites dans le travail.",
+              'meaning': "Pair professionnel ou personne du même environnement de travail.",
+              'message': "Observez ce qui se passe concrètement dans la collaboration quotidienne."
+            },
+            104: {
+              'definition': "Une personne ayant autorité, responsabilité ou pouvoir de décision sur la situation intervient directement : supérieur, manager, chef de projet ou décideur.",
+              'reading_relationnel': "Responsable peut indiquer qu’une différence de statut, de pouvoir ou de responsabilité influence une relation et impose de clarifier les limites.",
+              'reading_professionnel': "Responsable désigne la personne qui valide, arbitre ou décide. Son accord, son évaluation ou sa position peut modifier directement l’évolution du projet.",
+              'reading_spirituel': "Responsable renvoie à la question de l’autorité : ce que vous déléguez, ce que vous assumez et la manière dont vous vous positionnez face au pouvoir.",
+              'meaning': "Figure d’autorité ou décideur.",
+              'message': "Identifiez qui détient réellement le pouvoir de décision et ce qui dépend de vous."
+            },
+            105: {
+              'definition': "Une personne que vous connaissez déjà mais avec laquelle le lien reste peu intime ou occasionnel peut devenir pertinente dans la situation.",
+              'reading_relationnel': "Connaissance désigne un lien encore léger : vous vous connaissez, mais la confiance, l’intimité ou l’engagement ne sont pas établis. Une évolution reste possible si d’autres cartes l’appuient.",
+              'reading_professionnel': "Connaissance représente un contact de réseau ou une relation indirecte qui peut transmettre une information, faire une recommandation ou ouvrir une porte.",
+              'reading_spirituel': "Connaissance montre qu’une personne périphérique peut apporter un signe, une idée ou une perspective utile sans devenir centrale.",
+              'meaning': "Lien connu mais encore distant ou peu approfondi.",
+              'message': "N’attribuez pas à ce lien plus de profondeur qu’il n’en a encore dans les faits."
+            },
+            106: {
+              'definition': "La personne concernée n’est pas encore connue, identifiée ou reconnue au moment du tirage.",
+              'reading_relationnel': "Inconnu(e) indique qu’un lien important peut concerner quelqu’un que vous n’avez pas encore rencontré ou dont vous ne voyez pas encore le rôle. Cette carte ne permet pas d’attribuer le tirage à une personne précise déjà connue sans autre confirmation.",
+              'reading_professionnel': "Inconnu(e) peut représenter un futur client, recruteur, partenaire ou interlocuteur qui n’est pas encore entré dans votre réseau.",
+              'reading_spirituel': "Inconnu(e) invite à laisser une place réelle à ce qui n’est pas encore identifié au lieu de tout rattacher à une personne déjà connue.",
+              'meaning': "Personne non identifiée ou pas encore rencontrée.",
+              'message': "Gardez ouverte l’hypothèse d’une personne nouvelle ou encore inconnue."
+            },
+            107: {
+              'definition': "Une personne poursuit un intérêt concurrent, cherche la même place ou crée une comparaison susceptible de générer rivalité, jalousie ou compétition.",
+              'reading_relationnel': "Rival(e) indique une concurrence affective réelle ou ressentie. Il faut distinguer la présence concrète d’un tiers d’une jalousie fondée uniquement sur la peur.",
+              'reading_professionnel': "Rival(e) désigne un concurrent pour un poste, un contrat, une reconnaissance ou une ressource limitée.",
+              'reading_spirituel': "Rival(e) met en lumière la comparaison, le besoin d’être choisi ou reconnu, et ce que la compétition réveille en vous.",
+              'meaning': "Concurrence, rivalité ou tiers en compétition.",
+              'message': "Vérifiez d’abord s’il existe une concurrence réelle avant d’alimenter la comparaison ou la jalousie."
+            },
+            108: {
+              'definition': "Une personne de grande confiance reçoit des informations privées, connaît vos émotions ou celles d’un autre et peut jouer un rôle discret mais important.",
+              'reading_relationnel': "Confident(e) désigne la personne à qui l’on parle de la relation, des doutes ou des sentiments. Elle peut soutenir, conseiller ou influencer les décisions prises dans l’intimité.",
+              'reading_professionnel': "Confident(e) représente un interlocuteur fiable avec lequel une stratégie, une difficulté ou une décision sensible peut être discutée en sécurité.",
+              'reading_spirituel': "Confident(e) rappelle l’importance d’un espace de parole sûr où les ressentis peuvent être déposés sans jugement.",
+              'meaning': "Personne de confiance et dépositaire d’informations privées.",
+              'message': "Choisissez soigneusement à qui vous confiez ce qui peut influencer vos décisions."
+            },
+            109: {
+              'definition': "Une forte attirance ou un intérêt amoureux existe envers une personne, mais le lien n’est pas encore clairement établi comme relation réciproque ou engagée.",
+              'reading_relationnel': "Crush indique une attirance, une fascination ou une envie de rapprochement. Il faut encore vérifier la réciprocité et les actes avant de conclure à une relation construite.",
+              'reading_professionnel': "Crush peut signaler qu’une attirance personnelle colore une relation professionnelle et risque de brouiller les limites si elle n’est pas reconnue.",
+              'reading_spirituel': "Crush montre ce que l’idéalisation et le désir projettent sur une personne avant que la réalité du lien soit pleinement connue.",
+              'meaning': "Attirance forte encore non établie en relation.",
+              'message': "Prenez l’attirance au sérieux sans la confondre avec une réciprocité déjà prouvée."
+            },
+            110: {
+              'definition': "Une personne connue par le travail, le réseau, un client, un fournisseur ou une activité professionnelle peut être déterminante sans être un collègue direct.",
+              'reading_relationnel': "Contact pro indique qu’un lien personnel ou une rencontre peut passer par le réseau professionnel, avec la nécessité de préserver des limites claires.",
+              'reading_professionnel': "Contact pro désigne un interlocuteur extérieur utile : client, prestataire, recruteur, partenaire ou membre du réseau capable d’ouvrir une opportunité concrète.",
+              'reading_spirituel': "Contact pro montre qu’une évolution peut arriver par une relation fonctionnelle ou un réseau plutôt que par le cercle intime.",
+              'meaning': "Relation de réseau ou interlocuteur professionnel extérieur.",
+              'message': "Activez le bon contact et clarifiez ce que chacun peut réellement apporter."
+            },
+            111: {
+              'definition': "La personne est géographiquement éloignée ou le lien se vit surtout par téléphone, messages ou internet, avec peu de présence physique partagée.",
+              'reading_relationnel': "À distance indique qu’un lien existe malgré l’éloignement, mais que la concrétisation dépend de déplacements, de disponibilité et de la capacité à transformer les échanges à distance en présence réelle.",
+              'reading_professionnel': "À distance représente un collaborateur, client ou partenaire situé ailleurs, avec des enjeux d’organisation, de fuseaux horaires ou de communication numérique.",
+              'reading_spirituel': "À distance montre qu’un lien peut rester significatif sans proximité physique, tout en invitant à distinguer connexion réelle et projection à travers l’absence.",
+              'meaning': "Personne éloignée ou relation principalement à distance.",
+              'message': "Mesurez le lien aussi à sa capacité à devenir concret malgré la distance."
+            },
+            112: {
+              'definition': "Une personne ou relation importante du passé revient dans la situation, sans qu’il s’agisse nécessairement d’un ancien partenaire amoureux.",
+              'reading_relationnel': "Ancien lien désigne une relation passée — amicale, familiale, affective ou autre — qui reprend contact ou dont les conséquences redeviennent actives.",
+              'reading_professionnel': "Ancien lien peut être un ex-collègue, ancien client ou contact perdu qui revient avec une information, une proposition ou une opportunité.",
+              'reading_spirituel': "Ancien lien fait revenir une histoire non terminée ou un apprentissage qui demande à être revisité avec le regard d’aujourd’hui.",
+              'meaning': "Relation passée qui redevient pertinente.",
+              'message': "Identifiez ce qui revient réellement du passé et ce qui a changé depuis."
+            },
+            113: {
+              'definition': "Une personne vous apprécie, vous admire ou éprouve une attirance qui peut être discrète, non déclarée ou encore observée à distance.",
+              'reading_relationnel': "Admirateur indique un intérêt positif envers vous, mais il ne garantit ni déclaration ni engagement. Les autres cartes doivent montrer si cette admiration se traduit en initiative concrète.",
+              'reading_professionnel': "Admirateur peut représenter quelqu’un qui reconnaît votre travail, votre talent ou votre valeur et peut soutenir votre visibilité.",
+              'reading_spirituel': "Admirateur montre que votre présence ou votre parcours inspire quelqu’un, tout en invitant à ne pas dépendre du regard extérieur.",
+              'meaning': "Admiration ou attirance positive, parfois discrète.",
+              'message': "Cherchez les signes concrets d’initiative plutôt que de conclure uniquement à partir d’une impression positive."
+            },
+            114: {
+              'definition': "Une personne plus expérimentée transmet un savoir, conseille, structure ou aide à franchir une étape importante.",
+              'reading_relationnel': "Mentor peut désigner une personne dont les conseils influencent votre manière d’aborder une relation ou une décision affective.",
+              'reading_professionnel': "Mentor représente un guide expérimenté capable de vous transmettre une méthode, d’ouvrir son réseau ou de vous aider à progresser plus vite.",
+              'reading_spirituel': "Mentor indique une figure de transmission qui aide à mettre des mots, une méthode ou une discipline sur votre évolution intérieure.",
+              'meaning': "Guide expérimenté, transmission et conseil.",
+              'message': "Recevez le conseil utile sans abandonner votre propre discernement."
+            },
+            115: {
+              'definition': "Une tierce personne sert de relais, transmet un message, provoque une mise en relation ou facilite un échange entre deux personnes qui ne communiquent pas directement.",
+              'reading_relationnel': "Intermédiaire indique qu’un rapprochement, une information ou une reprise de contact peut passer par quelqu’un d’autre. Il faut toutefois éviter les malentendus liés aux messages indirects.",
+              'reading_professionnel': "Intermédiaire représente un apporteur d’affaires, recruteur, agent, collègue ou contact qui met deux parties en relation et facilite une opportunité.",
+              'reading_spirituel': "Intermédiaire montre qu’une réponse peut vous parvenir par le biais d’une personne ou d’un échange indirect plutôt que par la source attendue.",
+              'meaning': "Relais, messager ou personne qui facilite la mise en relation.",
+              'message': "Vérifiez directement l’information dès que possible pour éviter les déformations liées aux intermédiaires."
+            },
+            116: {
+              'definition': "Le mouvement annoncé est déjà engagé ou peut se manifester dans un délai très court, généralement dans les prochaines heures ou les tout prochains jours.",
+              'reading_relationnel': "Immédiat situe l’événement affectif dans le présent proche : contact, réaction, décision ou rencontre peut survenir sans longue attente si les autres cartes confirment l’ouverture.",
+              'reading_professionnel': "Immédiat indique une réponse, action ou évolution qui demande d’être traitée maintenant ou dans les tout prochains jours.",
+              'reading_spirituel': "Immédiat invite à observer les signes et événements déjà actifs plutôt qu’à chercher une échéance lointaine.",
+              'meaning': "Maintenant à quelques jours.",
+              'message': "Le délai est très court : regardez ce qui est déjà en train de se mettre en mouvement."
+            },
+            117: {
+              'definition': "L’événement est situé autour de trois jours, avec une petite marge selon le contexte et la nature de la question.",
+              'reading_relationnel': "3 jours indique un mouvement affectif très proche : message, réponse, rendez-vous ou changement peut se préciser autour de ce délai.",
+              'reading_professionnel': "3 jours situe une réponse, une démarche ou une évolution professionnelle à très court terme.",
+              'reading_spirituel': "3 jours donne un repère bref pour observer ce qui se confirme concrètement.",
+              'meaning': "Environ trois jours.",
+              'message': "Utilisez trois jours comme fenêtre de vérification, pas comme minute exacte."
+            },
+            118: {
+              'definition': "L’événement est attendu autour d’une semaine, soit environ sept jours, avec une légère marge possible.",
+              'reading_relationnel': "1 semaine place l’évolution sentimentale dans un futur proche : une réponse, un contact ou une clarification peut apparaître autour de cette période.",
+              'reading_professionnel': "1 semaine indique qu’une démarche ou une décision devrait se préciser dans les prochains jours plutôt qu’à long terme.",
+              'reading_spirituel': "1 semaine propose une courte période d’observation avant de réévaluer la situation.",
+              'meaning': "Environ une semaine.",
+              'message': "Observez ce qui évolue sur les sept prochains jours avant de tirer une nouvelle conclusion."
+            },
+            119: {
+              'definition': "L’événement se situe autour de quinze jours, soit approximativement deux semaines.",
+              'reading_relationnel': "15 jours indique qu’un rapprochement, une réponse ou une évolution peut se produire dans les deux prochaines semaines si aucun blocage nouveau n’intervient.",
+              'reading_professionnel': "15 jours situe une décision, une réponse ou un avancement dans un horizon d’environ deux semaines.",
+              'reading_spirituel': "15 jours laisse le temps à une dynamique de devenir assez visible pour être évaluée sur des faits.",
+              'meaning': "Environ quinze jours.",
+              'message': "Laissez deux semaines à la situation pour produire des signes observables."
+            },
+            120: {
+              'definition': "L’événement est situé autour de trois semaines, avec une marge de quelques jours selon les circonstances.",
+              'reading_relationnel': "3 semaines indique une évolution relativement proche mais non immédiate : le lien a besoin d’un peu de temps avant qu’une action ou une clarification apparaisse.",
+              'reading_professionnel': "3 semaines situe un résultat ou une étape de projet dans un délai court mais nécessitant encore plusieurs actions intermédiaires.",
+              'reading_spirituel': "3 semaines proposent une période de maturation avant de juger l’évolution.",
+              'meaning': "Environ trois semaines.",
+              'message': "Attendez une évolution progressive sur les trois prochaines semaines plutôt qu’un changement instantané."
+            },
+            121: {
+              'definition': "L’événement se situe autour d’un mois à partir du tirage, avec une marge raisonnable selon le contexte.",
+              'reading_relationnel': "1 mois indique qu’un changement affectif significatif peut demander plusieurs semaines avant de se concrétiser.",
+              'reading_professionnel': "1 mois situe une réponse, une décision ou un jalon dans le prochain cycle mensuel.",
+              'reading_spirituel': "1 mois invite à observer l’évolution sur un cycle complet avant de conclure.",
+              'meaning': "Environ un mois.",
+              'message': "Mesurez la progression sur les quatre prochaines semaines."
+            },
+            122: {
+              'definition': "L’événement est situé autour de six semaines, soit environ un mois et demi.",
+              'reading_relationnel': "6 semaines indique une progression réelle mais lente : le lien a besoin d’environ un mois et demi pour montrer une évolution nette.",
+              'reading_professionnel': "6 semaines situe une étape de projet, une réponse ou une transition après plusieurs semaines de préparation.",
+              'reading_spirituel': "6 semaines marquent une maturation intermédiaire : assez longue pour observer un changement de fond, sans parler encore de long terme.",
+              'meaning': "Environ six semaines.",
+              'message': "Regardez l’évolution à l’échelle d’un mois et demi, pas de quelques jours."
+            },
+            123: {
+              'definition': "L’événement est situé autour de deux mois à partir du tirage.",
+              'reading_relationnel': "2 mois indique que la situation affective demande du temps pour se réorganiser avant qu’un résultat clair apparaisse.",
+              'reading_professionnel': "2 mois situe une décision, un changement ou une étape structurante dans un horizon bimestriel.",
+              'reading_spirituel': "2 mois invitent à laisser le processus évoluer suffisamment longtemps pour distinguer tendance durable et réaction passagère.",
+              'meaning': "Environ deux mois.",
+              'message': "Évaluez la situation sur les deux prochains mois plutôt qu’à très court terme."
+            },
+            124: {
+              'definition': "L’événement est situé autour de trois mois, soit approximativement un trimestre.",
+              'reading_relationnel': "3 mois indique qu’un changement relationnel important se joue sur plusieurs étapes et ne doit pas être attendu immédiatement.",
+              'reading_professionnel': "3 mois situe un résultat, un jalon ou une transition dans l’horizon d’un trimestre.",
+              'reading_spirituel': "3 mois donnent le temps à une nouvelle orientation de s’installer de manière observable.",
+              'meaning': "Environ trois mois.",
+              'message': "Considérez un horizon trimestriel pour mesurer la concrétisation."
+            },
+            125: {
+              'definition': "L’événement est situé autour de six mois, ce qui indique une évolution de moyen terme nécessitant plusieurs étapes avant concrétisation.",
+              'reading_relationnel': "6 mois montre que la relation ou la situation affective ne se transforme pas rapidement : plusieurs décisions ou changements devront intervenir avant le résultat attendu.",
+              'reading_professionnel': "6 mois situe une évolution de carrière, de projet ou de situation matérielle à moyen terme.",
+              'reading_spirituel': "6 mois indiquent un cycle de transformation suffisamment long pour demander constance et réévaluation progressive.",
+              'meaning': "Environ six mois.",
+              'message': "Pensez en étapes successives sur un semestre plutôt qu’en événement immédiat."
+            },
+            126: {
+              'definition': "L’événement est situé autour de neuf mois, avec un temps de maturation long avant qu’un résultat puisse apparaître.",
+              'reading_relationnel': "9 mois indique qu’une évolution affective dépend d’un long processus et ne doit pas être attendue comme imminente.",
+              'reading_professionnel': "9 mois situe un changement majeur après une période longue de préparation, de formation ou de développement.",
+              'reading_spirituel': "9 mois symbolisent un cycle complet de gestation : quelque chose se construit lentement avant de devenir visible.",
+              'meaning': "Environ neuf mois.",
+              'message': "Le tirage parle d’un horizon long : vérifiez les étapes intermédiaires plutôt que d’attendre passivement."
+            },
+            127: {
+              'definition': "L’événement est situé autour d’un an, ce qui place la perspective dans le long terme et suppose que de nombreux paramètres puissent encore évoluer.",
+              'reading_relationnel': "1 an indique qu’une éventuelle évolution sentimentale appartient au long terme. Il serait imprudent de suspendre vos décisions présentes à cette seule échéance.",
+              'reading_professionnel': "1 an situe une transformation, un objectif ou un résultat à l’échelle annuelle, avec plusieurs jalons nécessaires avant l’aboutissement.",
+              'reading_spirituel': "1 an invite à voir le processus comme un cycle complet d’évolution et non comme une attente figée.",
+              'meaning': "Environ un an.",
+              'message': "Gardez l’échéance comme horizon lointain et continuez à décider à partir des faits présents."
+            },
+            128: {
+              'definition': "L’événement est rattaché à la saison qui suit celle du tirage plutôt qu’à une date fixe : printemps, été, automne ou hiver suivant.",
+              'reading_relationnel': "Saison prochaine indique que le lien peut changer lors du prochain basculement saisonnier, souvent après un changement de rythme, de disponibilité ou de contexte.",
+              'reading_professionnel': "Saison prochaine situe un projet ou une décision dans la prochaine période saisonnière, avec un repère plus large qu’un nombre précis de jours.",
+              'reading_spirituel': "Saison prochaine invite à suivre un cycle naturel de transition plutôt qu’à fixer une date artificiellement précise.",
+              'meaning': "Au cours de la saison suivante.",
+              'message': "Repérez la prochaine transition saisonnière comme fenêtre, pas comme jour exact."
+            },
+            129: {
+              'definition': "Aucune date fixe n’est donnée : le délai commence réellement lorsqu’un événement déclencheur se produit, par exemple une décision, un message, un déplacement ou une rupture de situation.",
+              'reading_relationnel': "Déclencheur signifie que l’évolution affective dépend d’abord d’une action concrète : reprise de contact, rencontre, choix clair, disponibilité nouvelle ou fin d’un blocage.",
+              'reading_professionnel': "Déclencheur indique que le calendrier dépend d’une validation, d’un financement, d’une signature, d’un recrutement ou d’une décision préalable.",
+              'reading_spirituel': "Déclencheur montre que le moment juste n’est pas purement chronologique : un changement intérieur ou extérieur doit d’abord ouvrir la voie.",
+              'meaning': "Le délai démarre après une condition ou un événement précis.",
+              'message': "Cherchez ce qui doit arriver d’abord : c’est cet événement, plus que la date, qui commande le calendrier."
+            },
+            130: {
+              'definition': "Le tirage ne permet pas de fixer une échéance fiable : trop de variables restent ouvertes, la situation peut changer ou la temporalité dépend encore de décisions non prises.",
+              'reading_relationnel': "Indéfini signifie qu’aucun délai sentimental sérieux ne peut être annoncé maintenant. Il faut d’abord que la dynamique du lien se clarifie avant de dater une évolution.",
+              'reading_professionnel': "Indéfini indique qu’un calendrier professionnel reste impossible à stabiliser tant que certaines décisions, ressources ou conditions ne sont pas fixées.",
+              'reading_spirituel': "Indéfini invite à renoncer à forcer une date quand le processus n’a pas encore acquis une direction stable.",
+              'meaning': "Pas de date fiable à ce stade.",
+              'message': "Ne transformez pas l’incertitude en fausse précision : attendez qu’une condition nouvelle rende le calendrier lisible."
+            }
+          }
+
+          en = {
+            96: ('Friend', 'A person you already know whose bond with you is primarily based on trust, sympathy or companionship, without requiring romantic commitment.', 'Friendship, trust and support.'),
+            97: ('Parent', 'A parent or parental authority figure directly influences the situation through support, expectations, loyalty or family pressure.', 'Family influence or parental figure.'),
+            98: ('Partner', 'The person sharing a primary committed bond with you, or someone in a position to become a genuine partner if the relationship is still forming.', 'Primary partner, commitment and mutual construction.'),
+            99: ('Child', 'A real child, younger person or dependent person is directly involved in the situation.', 'Child, youth, parenthood or concrete dependency.'),
+            100: ('Meeting', 'A person has recently entered your life, or a connection is only beginning and has not yet revealed its final nature.', 'New person or emerging connection.'),
+            101: ('Sibling', 'A brother, sister or sibling-like person is involved, with possible themes of solidarity, comparison or rivalry.', 'Sibling bond, peer solidarity or rivalry.'),
+            102: ('Ex', 'A former romantic partner or past relationship remains relevant through contact, memory, consequences or a possible return.', 'Former romantic partner or past relationship.'),
+            103: ('Colleague', 'Someone who works with you or shares your professional environment plays a direct role in the situation.', 'Professional peer or workplace person.'),
+            104: ('Manager', 'A person with authority, responsibility or decision-making power directly influences the situation.', 'Authority figure or decision-maker.'),
+            105: ('Acquaintance', 'Someone you already know, but with whom the bond remains occasional or not yet intimate, becomes relevant.', 'Known but still distant or lightly developed bond.'),
+            106: ('Unknown person', 'The relevant person is not yet known, identified or recognized at the time of the reading.', 'Person not yet identified or met.'),
+            107: ('Rival', 'Someone is pursuing a competing interest, the same position or the same person, creating rivalry, jealousy or competition.', 'Competition, rivalry or competing third party.'),
+            108: ('Confidant', 'A highly trusted person knows private information, emotions or concerns and may influence decisions discreetly.', 'Trusted keeper of private information.'),
+            109: ('Crush', 'Strong attraction or romantic interest exists, but the bond is not yet established as reciprocal or committed.', 'Strong attraction not yet established as a relationship.'),
+            110: ('Professional contact', 'A person from work, networking, a client, supplier or professional activity becomes important without being a direct colleague.', 'External professional contact or network connection.'),
+            111: ('Long-distance', 'The person is geographically distant or the bond is maintained mainly through phone, messages or online contact.', 'Distant person or mainly long-distance connection.'),
+            112: ('Old connection', 'A meaningful person or bond from the past becomes relevant again without necessarily being a former romantic partner.', 'Past relationship becoming relevant again.'),
+            113: ('Admirer', 'Someone appreciates, admires or feels attracted to you, perhaps discreetly or without having declared it.', 'Admiration or positive attraction, sometimes discreet.'),
+            114: ('Mentor', 'A more experienced person teaches, advises, structures or helps you move through an important stage.', 'Experienced guide, advice and transmission.'),
+            115: ('Intermediary', 'A third person relays information, introduces people or facilitates contact between people who are not communicating directly.', 'Messenger, connector or facilitator.'),
+            116: ('Immediate', 'The announced movement is already underway or can occur within hours or the next few days.', 'Now to a few days.'),
+            117: ('3 days', 'The event is placed around three days, with a small margin depending on context.', 'Around three days.'),
+            118: ('1 week', 'The event is expected around one week, roughly seven days, with a small margin.', 'Around one week.'),
+            119: ('15 days', 'The event is placed around fifteen days, approximately two weeks.', 'Around fifteen days.'),
+            120: ('3 weeks', 'The event is placed around three weeks, with a margin of a few days.', 'Around three weeks.'),
+            121: ('1 month', 'The event is placed around one month from the reading.', 'Around one month.'),
+            122: ('6 weeks', 'The event is placed around six weeks, approximately a month and a half.', 'Around six weeks.'),
+            123: ('2 months', 'The event is placed around two months from the reading.', 'Around two months.'),
+            124: ('3 months', 'The event is placed around three months, approximately one quarter.', 'Around three months.'),
+            125: ('6 months', 'The event is placed around six months, pointing to a medium-term development requiring several stages.', 'Around six months.'),
+            126: ('9 months', 'The event is placed around nine months, implying a long maturation before a result appears.', 'Around nine months.'),
+            127: ('1 year', 'The event is placed around one year, clearly in the long term with many variables still able to change.', 'Around one year.'),
+            128: ('Next season', 'The event is linked to the season following the reading rather than to a fixed date.', 'During the next season.'),
+            129: ('Trigger', 'No fixed date is given: timing begins once a specific triggering event, decision, message or change occurs.', 'Timing starts after a specific condition or event.'),
+            130: ('Undefined', 'No reliable date can be set yet because too many variables remain open or undecided.', 'No reliable date at this stage.')
+          }
+
+          expected = set(range(96, 131))
+          missing = expected - set(cards)
+          if missing:
+              raise SystemExit(f'Missing card ids: {sorted(missing)}')
+
+          for cid, fields in fr.items():
+              card = cards[cid]
+              card.update(fields)
+              if isinstance(card.get('en'), dict) and cid in en:
+                  name, definition, meaning = en[cid]
+                  card['en']['name'] = name
+                  card['en']['definition'] = definition
+                  card['en']['meaning'] = meaning
+                  card['en']['message'] = meaning
+                  card['en']['reading_relationnel'] = definition
+                  card['en']['reading_professionnel'] = definition
+                  card['en']['reading_spirituel'] = definition
+
+          new_json = json.dumps(data, ensure_ascii=False, separators=(',', ':'))
+          text = text[:match.start(1)] + new_json + text[match.end(1):]
+          path.write_text(text, encoding='utf-8')
+
+          sw = Path('service-worker.js')
+          if sw.exists():
+              sw_text = sw.read_text(encoding='utf-8')
+              sw_text = re.sub(r"const CACHE_NAME='[^']+';", "const CACHE_NAME='cristariva-modele-a-v13-20260913-precis-relations-datation';", sw_text, count=1)
+              sw.write_text(sw_text, encoding='utf-8')
+
+          print(f'Updated {len(fr)} supplemental cards precisely.')
+          PY
+
+      - name: Validate updated data
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json, re
+          text = Path('index.html').read_text(encoding='utf-8')
+          m = re.search(r'const DATA\s*=\s*(\{.*?\});', text, re.S)
+          assert m, 'DATA missing after update'
+          data = json.loads(m.group(1))
+          cards = {}
+          def walk(obj):
+              if isinstance(obj, dict):
+                  if isinstance(obj.get('id'), int): cards[obj['id']] = obj
+                  for value in obj.values(): walk(value)
+              elif isinstance(obj, list):
+                  for value in obj: walk(value)
+          walk(data)
+          for cid in range(96, 131):
+              assert cid in cards, f'card {cid} missing'
+              for key in ('definition','meaning','message'):
+                  assert len(str(cards[cid].get(key,''))) > 15, f'{cid} {key} too short'
+          assert 'Cette carte identifie le rôle' not in ''.join(str(cards[i].get('definition','')) for i in range(96,116))
+          print('Validation OK: 20 Relation + 15 Dating cards are precise.')
+          PY
+
+      - name: Commit precise supplemental cards
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html service-worker.js
+          if git diff --cached --quiet; then
+            echo 'No changes to commit.'
+          else
+            git commit -m 'Make Relation and Dating card interpretations precise'
+            git push
+          fi
