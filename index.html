@@ -741,7 +741,6 @@ $('#astroBtn').addEventListener('click',async()=>{
   const asc=clock?zodiac(ascendant(birth,g.latitude,g.longitude)):null;
   state.astro={birthplace:placeLabel(g),birthUTC:birth.toISOString(),birthTimezone:g.timezone,birthTimeKnown:!!clock,planets,sun,moon,asc,dominant:astroThemes(planets),now:planetLongitudes(new Date())};
   box.innerHTML=formatAstroResult();if(!$('#synthesis').classList.contains('hidden'))renderSynthesis();
-  if(!$('#synthesis').classList.contains('hidden'))renderSynthesis();
  }catch(e){renderAstroError(e.message==='birth-time-ambiguous'?'L’heure saisie est ambiguë lors d’un changement d’heure. Vérifiez le décalage UTC sur votre acte de naissance.':e.message==='birth-time-gap'?'Cette heure locale n’a pas existé lors du changement d’heure. Vérifiez votre heure de naissance.':e.message==='birth-timezone'?'Le fuseau horaire historique du lieu est indisponible. Choisissez une ville dans les suggestions.':'Le lieu n’a pas pu être identifié. Essayez par exemple « Strasbourg, France » ou vérifiez votre connexion internet.');}
 });
 $('#synthesisBtn').addEventListener('click',()=>{
