@@ -94,7 +94,7 @@ function formatAstroResult(){
 
 function birthInstant'''
 
-s2, n = re.subn(r'function formatAstroResult\(\)\{.*?\n\}\n\nfunction birthInstant', astro_block, s, flags=re.S)
+s2, n = re.subn(r'function formatAstroResult\(\)\{.*?\n\}\n\nfunction birthInstant', lambda m: astro_block, s, flags=re.S)
 if n != 1:
     raise SystemExit(f'formatAstroResult block replacements: {n}')
 s = s2
@@ -105,7 +105,7 @@ new_render = r'''function renderSynthesis(){
  $('#synthesis').innerHTML=`<h3>${t('Synthèse finale')}</h3>${storyInterpretation(state.draw)}${supplementalSynthesis()}${astro}<p><b>${state.lang==='en'?'Question':'Question'}:</b> ${readingEscape(state.question||t('Question ouverte'))} · <b>${t('Domaine')}:</b> ${t(state.domain)}</p>`;
 }
 let catalogSelected=null;'''
-s2, n = re.subn(r'function renderSynthesis\(\)\{.*?\n\}\nlet catalogSelected=null;', new_render, s, flags=re.S)
+s2, n = re.subn(r'function renderSynthesis\(\)\{.*?\n\}\nlet catalogSelected=null;', lambda m: new_render, s, flags=re.S)
 if n != 1:
     raise SystemExit(f'renderSynthesis replacements: {n}')
 s = s2
