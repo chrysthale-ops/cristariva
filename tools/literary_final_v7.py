@@ -7,13 +7,14 @@ s=p.read_text(encoding='utf-8')
 block=r'''/* CRISTARIVA — synthèse finale littéraire v7 */
 function finalCleanText(text,c){
  let x=String(text||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+ x=x.replace(/^(Dans une relation|Dans le cadre relationnel|Sur le plan relationnel|Dans le travail|Dans le cadre professionnel(?: ou d’un projet)?|Sur le plan professionnel|Sur le plan général|Sur le plan intérieur|Dans le cadre spirituel ou général|Pour votre question)[, ]+/i,'');
  const name=(c&&c.name)?c.name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'):'';
  if(name){
   x=x.replace(new RegExp('^'+name+'\\s+(?:indique|montre|signifie|parle de|invite à|confronte à|favorise|annonce|rappelle|ouvre|décrit)\\s*','i'),'');
   x=x.replace(new RegExp('^'+name+'\\s*[:—-]\\s*','i'),'');
  }
- x=x.replace(/^(Dans une relation|Dans le cadre relationnel|Sur le plan relationnel|Dans le travail|Dans le cadre professionnel(?: ou d’un projet)?|Sur le plan professionnel|Sur le plan général|Sur le plan intérieur|Dans le cadre spirituel ou général|Pour votre question)[, ]+/i,'');
  x=x.replace(/^(Cette carte|Elle)\s+(?:indique|montre|signifie|parle de|invite à|rappelle|favorise|annonce|décrit)\s+/i,'');
+ if(name)x=x.replace(new RegExp('^'+name+'\\s+(?:indique|montre|signifie|parle de|invite à|confronte à|favorise|annonce|rappelle|ouvre|décrit)\\s*','i'),'');
  x=x.replace(/^En clair\s*:\s*/i,'');
  return x.trim();
 }
@@ -87,7 +88,10 @@ function literaryFinalSynthesis(){
 marker='function renderSynthesis(){'
 idx=s.find(marker)
 if idx<0: raise SystemExit('renderSynthesis not found')
-if 'synthèse finale littéraire v7' not in s:
+if 'synthèse finale littéraire v7' in s:
+    s,n=re.subn(r'/\* CRISTARIVA — synthèse finale littéraire v7 \*/.*?(?=function renderSynthesis\(\))',lambda m:block+'\n',s,count=1,flags=re.S)
+    if n!=1: raise SystemExit(f'literary block replacements: {n}')
+else:
     s=s[:idx]+block+s[idx:]
 
 new_render=r'''function renderSynthesis(){
@@ -101,5 +105,5 @@ p.write_text(s,encoding='utf-8')
 
 sw=Path('service-worker.js')
 w=sw.read_text(encoding='utf-8')
-w=re.sub(r"const CACHE_NAME='[^']+';","const CACHE_NAME='cristariva-modele-a-v16-20260913-synthese-litteraire';",w,count=1)
+w=re.sub(r"const CACHE_NAME='[^']+';","const CACHE_NAME='cristariva-modele-a-v17-20260913-synthese-litteraire-fluide';",w,count=1)
 sw.write_text(w,encoding='utf-8')
