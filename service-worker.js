@@ -1,4 +1,4 @@
-const CACHE_NAME='cristariva-modele-a-v12-20260913-noms-courts-textes';
+const CACHE_NAME='cristariva-modele-a-v13-20260913-precis-relations-datation';
 const SHELL=['./','./index.html','./manifest.webmanifest','./manifest-en.webmanifest','./icon-192.png','./icon-512.png','./cards/024.webp','./cards/109.webp'];
 
 self.addEventListener('install',event=>{
