@@ -407,10 +407,12 @@ $('#drawBtn').addEventListener('click',()=>{
 $('#relationBtn').addEventListener('click',()=>{
   state.relation=rand(DATA.relation,1)[0];
   $('#relationResult').innerHTML=cardHTML(state.relation,t("Relation"));
+  if(!$('#synthesis').classList.contains('hidden'))renderSynthesis();
 });
 $('#dateBtn').addEventListener('click',()=>{
   state.date=rand(DATA.dating,1)[0];
   $('#dateResult').innerHTML=cardHTML(state.date,t("Datation"));
+  if(!$('#synthesis').classList.contains('hidden'))renderSynthesis();
 });
 function norm(x){x%=360;return x<0?x+360:x}
 function rad(x){return x*Math.PI/180} function deg(x){return x*180/Math.PI}
@@ -660,6 +662,7 @@ $('#astroBtn').addEventListener('click',async()=>{
   const asc=clock?zodiac(ascendant(birth,g.latitude,g.longitude)):null;
   state.astro={birthplace:placeLabel(g),birthUTC:birth.toISOString(),birthTimezone:g.timezone,birthTimeKnown:!!clock,planets,sun,moon,asc,dominant:astroThemes(planets),now:planetLongitudes(new Date())};
   box.innerHTML=formatAstroResult();
+  if(!$('#synthesis').classList.contains('hidden'))renderSynthesis();
  }catch(e){renderAstroError(e.message==='birth-time-ambiguous'?'L’heure saisie est ambiguë lors d’un changement d’heure. Vérifiez le décalage UTC sur votre acte de naissance.':e.message==='birth-time-gap'?'Cette heure locale n’a pas existé lors du changement d’heure. Vérifiez votre heure de naissance.':e.message==='birth-timezone'?'Le fuseau horaire historique du lieu est indisponible. Choisissez une ville dans les suggestions.':'Le lieu n’a pas pu être identifié. Essayez par exemple « Strasbourg, France » ou vérifiez votre connexion internet.');}
 });
 $('#synthesisBtn').addEventListener('click',()=>{
@@ -708,13 +711,81 @@ function renderComplementary(){
  $('#relationResult').innerHTML=state.relation?cardHTML(state.relation,t('Relation')):'';
  $('#dateResult').innerHTML=state.date?cardHTML(state.date,t('Datation')):'';
 }
+const RELATION_SYNTHESIS_FR={
+96:"un lien d’abord amical : la proximité peut être réelle, mais elle se construit sur la confiance, la complicité et la place donnée à l’amitié",
+97:"un parent ou une dynamique familiale : la situation se joue dans le cadre de la famille, de l’autorité parentale ou d’un héritage relationnel familial",
+98:"un partenaire déjà identifié ou une personne appelée à tenir une place de partenaire : la question concerne directement la construction, la stabilité ou l’évolution d’un couple ou d’un binôme engagé",
+99:"un enfant, une personne plus jeune ou une responsabilité liée à un enfant : cet élément devient central dans la manière dont la situation peut évoluer",
+100:"une rencontre : la dynamique se rattache à une personne qui entre récemment dans l’histoire ou à un lien qui commence réellement à se former",
+101:"un frère ou une sœur, ou un lien de type fraternel : solidarité, comparaison, proximité familiale ou tension entre pairs peut devenir le point concret de la question",
+102:"un ex ou un ancien partenaire : le tirage renvoie au passé relationnel déjà vécu ; cela désigne la personne ou le lien concerné sans garantir à lui seul une reprise",
+103:"un collègue : la relation se développe dans un cadre de travail, de collaboration quotidienne ou de proximité professionnelle",
+104:"un responsable, supérieur ou personne en position de décision : son autorité, son accord ou son initiative pèse directement sur la suite",
+105:"une connaissance : le lien existe déjà mais reste encore périphérique, peu intime ou insuffisamment développé pour être considéré comme proche",
+106:"une personne encore inconnue : le tirage ne renvoie pas nécessairement à quelqu’un déjà identifié dans votre entourage ; un nouveau protagoniste peut entrer dans l’histoire",
+107:"un rival ou une rivale : comparaison, concurrence, jalousie ou intérêts opposés influencent concrètement la situation",
+108:"un confident ou une confidente : une personne avec laquelle la parole, la confiance et les confidences jouent un rôle déterminant",
+109:"un crush, c’est-à-dire une personne qui suscite déjà une attirance ou un intérêt marqué sans que la relation soit encore clairement installée",
+110:"un contact professionnel : la personne concernée est reliée au travail, à un projet, à un réseau ou à une opportunité professionnelle plutôt qu’à la sphère intime au départ",
+111:"une personne à distance : l’éloignement géographique ou la communication à distance fait partie intégrante du lien et conditionne son évolution",
+112:"un ancien lien : une personne connue auparavant, pas forcément un ex amoureux, revient dans le champ de la question ou reste encore active dans son histoire",
+113:"un admirateur ou une admiratrice : une personne porte de l’intérêt, de l’estime ou de l’attirance, même si cet intérêt n’est pas encore ouvertement déclaré",
+114:"un mentor ou une personne de référence : son expérience, ses conseils ou son influence peuvent orienter la décision et la progression",
+115:"un intermédiaire : la situation passe par une tierce personne, un messager, une mise en relation ou quelqu’un qui facilite — ou filtre — le contact"
+};
+const DATING_SYNTHESIS_FR={
+116:"dans un délai très proche : les premiers signes utiles sont à chercher maintenant ou dans les tout prochains jours",
+117:"dans les trois jours qui suivent le tirage, comme fenêtre courte où un premier signe, contact ou mouvement peut apparaître",
+118:"sur environ une semaine : la situation peut donner un indice concret rapidement, sans demander un long cycle d’attente",
+119:"autour de quinze jours : la dynamique demande un peu de maturation avant de devenir clairement observable",
+120:"sur environ trois semaines : le mouvement est relativement proche mais passe encore par une étape intermédiaire",
+121:"autour d’un mois : l’évolution se lit à l’échelle de plusieurs semaines plutôt que de quelques jours",
+122:"sur environ six semaines : la situation a besoin d’un temps de construction réel avant de montrer son résultat",
+123:"autour de deux mois : le tirage place l’évolution dans un horizon de moyen terme proche",
+124:"autour de trois mois : plusieurs étapes peuvent encore intervenir avant que la tendance devienne concrète",
+125:"autour de six mois : la situation se construit sur un temps plus long et ne doit pas être lue comme imminente",
+126:"autour de neuf mois : la maturation est longue et suppose que la dynamique reste active dans la durée",
+127:"autour d’un an : le tirage place l’échéance sur un cycle long, avec plusieurs changements possibles avant son aboutissement",
+128:"à la saison suivante : le changement de saison sert de repère symbolique pour observer une nouvelle phase de la situation",
+129:"après un déclencheur précis : la datation ne commence réellement qu’une fois qu’un événement, une décision, un message ou une rencontre a ouvert la séquence",
+130:"sans échéance fiable pour l’instant : la situation n’est pas suffisamment stabilisée pour imposer une date et doit d’abord évoluer avant d’être datée"
+};
+const RELATION_SYNTHESIS_EN={
+96:"a primarily friendly bond",97:"a parent or family dynamic",98:"an identified or potential partner",99:"a child or a responsibility connected with a child",100:"a new encounter",101:"a sibling or sibling-like bond",102:"an ex or former partner",103:"a colleague",104:"a manager or decision-maker",105:"an acquaintance",106:"a person not yet identified",107:"a rival or competing influence",108:"a confidant",109:"a crush or person of marked attraction",110:"a professional contact",111:"a person at a distance",112:"a former connection",113:"an admirer",114:"a mentor or reference figure",115:"an intermediary or go-between"
+};
+const DATING_SYNTHESIS_EN={
+116:"very soon",117:"within about three days",118:"within about one week",119:"within about two weeks",120:"within about three weeks",121:"within about one month",122:"within about six weeks",123:"within about two months",124:"within about three months",125:"within about six months",126:"within about nine months",127:"within about one year",128:"around the next season",129:"only after a triggering event opens the sequence",130:"with no reliable deadline yet"
+};
+function supplementalSynthesis(){
+ const rel=state.relation, date=state.date, en=state.lang==='en';
+ if(!rel&&!date)return `<div class="reading"><h3>${en?'Relationship and timing':'Relation et datation'}</h3><p>${en?'No complementary card has been drawn yet.':'Aucune carte complémentaire n’a été tirée : la synthèse repose donc uniquement sur le tirage principal et, le cas échéant, sur l’astrologie.'}</p></div>`;
+ const last=state.draw[state.draw.length-1];
+ const relText=rel?(en?(RELATION_SYNTHESIS_EN[rel.id]||cardField(rel,'definition')):(RELATION_SYNTHESIS_FR[rel.id]||cardField(rel,'definition'))):'';
+ const dateText=date?(en?(DATING_SYNTHESIS_EN[date.id]||cardField(date,'definition')):(DATING_SYNTHESIS_FR[date.id]||cardField(date,'definition'))):'';
+ let body='';
+ if(en){
+  if(rel)body+=`<p>In direct continuity with <strong>${readingEscape(cardName(last))}</strong>, the Relationship card <strong>${readingEscape(cardName(rel))}</strong> identifies ${readingEscape(relText)}.</p>`;
+  if(date)body+=`<p>The Timing card <strong>${readingEscape(cardName(date))}</strong> places this development ${readingEscape(dateText)}.</p>`;
+  if(rel&&date)body+=`<p class="conclusion"><strong>Combined reading:</strong> the main spread still gives the direction, while <strong>${readingEscape(cardName(rel))}</strong> clarifies who or what kind of bond carries it and <strong>${readingEscape(cardName(date))}</strong> clarifies its rhythm or condition.</p>`;
+ }else{
+  if(rel)body+=`<p>Dans la continuité directe de <strong>${readingEscape(cardName(last))}</strong>, la carte Relation <strong>${readingEscape(cardName(rel))}</strong> précise que l’histoire concerne surtout ${readingEscape(relText)}.</p>`;
+  if(date)body+=`<p>La carte Datation <strong>${readingEscape(cardName(date))}</strong> situe cette évolution ${readingEscape(dateText)}.</p>`;
+  if(rel&&date){
+   const timingLead=date.id===129?'sous une condition précise':date.id===130?'sans date suffisamment fiable à ce stade':'dans le rythme indiqué par la carte';
+   body+=`<p class="conclusion"><strong>Lecture croisée :</strong> <strong>${readingEscape(cardName(last))}</strong> reste la direction centrale du tirage ; <strong>${readingEscape(cardName(rel))}</strong> indique la personne ou le type de lien auquel cette direction s’applique, tandis que <strong>${readingEscape(cardName(date))}</strong> montre qu’elle se déploie ${timingLead}. La synthèse répond ainsi à trois questions en même temps : <em>ce qui évolue, avec qui, et à quel rythme</em>.</p>`;
+  }
+ }
+ return `<div class="reading supplemental-reading"><h3>${en?'Relationship and timing clarification':'Précision Relation + Datation'}</h3>${body}</div>`;
+}
 function renderSynthesis(){
  if(!state.draw.length)return;
- const extras=[];
- if(state.relation)extras.push(`${t('Relation')}: <b>${readingEscape(cardName(state.relation))}</b>`);
- if(state.date)extras.push(`${t('Datation')}: <b>${readingEscape(cardName(state.date))}</b>`);
- const astro=state.astro?literalSynthesis(state.astro):'';
- $('#synthesis').innerHTML=`<h3>${t('Synthèse finale')}</h3>${storyInterpretation(state.draw)}<p>${extras.join(' · ')||t('Aucun approfondissement complémentaire n’a été tiré.')}</p>${astro}<p><b>Question:</b> ${readingEscape(state.question||t('Question ouverte'))} · <b>${t('Domaine')}:</b> ${t(state.domain)}</p>`;
+ let astro='';
+ if(state.astro){
+  const savedRelation=state.relation, savedDate=state.date;
+  state.relation=null; state.date=null;
+  try{astro=literalSynthesis(state.astro);}finally{state.relation=savedRelation;state.date=savedDate;}
+ }
+ $('#synthesis').innerHTML=`<h3>${t('Synthèse finale')}</h3>${storyInterpretation(state.draw)}${supplementalSynthesis()}${astro}<p><b>${state.lang==='en'?'Question':'Question'}:</b> ${readingEscape(state.question||t('Question ouverte'))} · <b>${t('Domaine')}:</b> ${t(state.domain)}</p>`;
 }
 let catalogSelected=null;
 function catalogRecord(c){
