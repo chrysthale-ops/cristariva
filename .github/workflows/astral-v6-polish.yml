@@ -1,0 +1,44 @@
+name: Polish astral narrative v6
+
+on:
+  push:
+    paths:
+      - '.github/workflows/astral-v6-polish.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  polish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove duplicate synthesis refresh
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          duplicate="box.innerHTML=formatAstroResult();if(!$('#synthesis').classList.contains('hidden'))renderSynthesis();\n  if(!$('#synthesis').classList.contains('hidden'))renderSynthesis();"
+          single="box.innerHTML=formatAstroResult();if(!$('#synthesis').classList.contains('hidden'))renderSynthesis();"
+          if duplicate in s:
+              s=s.replace(duplicate,single,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          s=Path('index.html').read_text(encoding='utf-8')
+          assert s.count("box.innerHTML=formatAstroResult();if(!$('#synthesis').classList.contains('hidden'))renderSynthesis();") == 1
+          scripts='\n'.join(re.findall(r'<script[^>]*>(.*?)</script>',s,flags=re.S|re.I))
+          Path('/tmp/check.js').write_text(scripts,encoding='utf-8')
+          PY
+          node --check /tmp/check.js
+      - name: Commit polish
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Polish astral narrative refresh"
+          git push
