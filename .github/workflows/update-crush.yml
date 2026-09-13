@@ -1,0 +1,64 @@
+name: Update Crush card metadata
+
+on:
+  push:
+    paths:
+      - '.github/workflows/update-crush.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Update card 109 to Crush
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json, re
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          m = re.search(r'const DATA =(\{.*?\});\nlet state=', s, re.S)
+          if not m:
+              raise SystemExit('DATA block not found')
+          data = json.loads(m.group(1))
+          card = next(c for c in data['relation'] if c['id'] == 109)
+          card.update({
+              'name': 'Crush',
+              'category': 'À mettre en rapport avec le tirage',
+              'intensity': 'Indicative et variable selon le tirage',
+              'definition': 'Cette carte évoque un coup de cœur, une attirance spontanée ou un intérêt affectif naissant. Le lien peut encore rester discret.',
+              'meaning': 'Dans le cadre spirituel ou général, « Crush » représente l’émergence d’une attirance ou d’un intérêt affectif qui attire fortement l’attention et demande à être replacé dans l’ensemble du tirage.',
+              'message': 'L’attirance ouvre une possibilité : les cartes voisines préciseront sa réciprocité et son évolution.',
+              'reading_relationnel': 'Dans le cadre relationnel, « Crush » signale un coup de cœur, une attirance ou un intérêt affectif naissant. Cette carte ne suffit pas à confirmer une relation : les cartes voisines précisent si l’attirance est réciproque, exprimée et susceptible d’évoluer.',
+              'reading_professionnel': 'Dans le cadre professionnel ou d’un projet, « Crush » peut symboliser un fort engouement initial pour une personne, une idée ou une opportunité. Les cartes voisines indiquent si cet enthousiasme peut devenir concret et durable.',
+              'reading_spirituel': 'Dans le cadre spirituel ou général, « Crush » représente l’émergence d’une attirance ou d’un intérêt affectif qui attire fortement l’attention et demande à être replacé dans l’ensemble du tirage.',
+              'en': {
+                  'name': 'Crush',
+                  'definition': 'This card evokes a spontaneous attraction, a crush, or a budding emotional interest that may still remain discreet.',
+                  'category': 'To be read with the spread',
+                  'intensity': 'Indicative and variable according to the spread',
+                  'keywords': '',
+                  'meaning': 'In a general or spiritual reading, “Crush” represents the emergence of attraction or emotional interest that should be interpreted with the surrounding cards.',
+                  'message': 'Attraction opens a possibility; the surrounding cards clarify reciprocity and how it may develop.'
+              }
+          })
+          new_data = json.dumps(data, ensure_ascii=False, separators=(',', ':'))
+          s = s[:m.start(1)] + new_data + s[m.end(1):]
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit update
+        shell: bash
+        run: |
+          git config user.name 'CRISTARIVA updater'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'Update card 109 metadata to Crush'
+          git push
