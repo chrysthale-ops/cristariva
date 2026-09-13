@@ -1,4 +1,4 @@
-const CACHE_NAME='cristariva-modele-a-v16-20260913-synthese-litteraire';
+const CACHE_NAME='cristariva-modele-a-v17-20260913-synthese-litteraire-fluide';
 const SHELL=['./','./index.html','./manifest.webmanifest','./manifest-en.webmanifest','./icon-192.png','./icon-512.png','./cards/024.webp','./cards/109.webp'];
 
 self.addEventListener('install',event=>{

@@ -858,13 +858,14 @@ function supplementalSynthesis(){
 /* CRISTARIVA — synthèse finale littéraire v7 */
 function finalCleanText(text,c){
  let x=String(text||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+ x=x.replace(/^(Dans une relation|Dans le cadre relationnel|Sur le plan relationnel|Dans le travail|Dans le cadre professionnel(?: ou d’un projet)?|Sur le plan professionnel|Sur le plan général|Sur le plan intérieur|Dans le cadre spirituel ou général|Pour votre question)[, ]+/i,'');
  const name=(c&&c.name)?c.name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'):'';
  if(name){
   x=x.replace(new RegExp('^'+name+'\\s+(?:indique|montre|signifie|parle de|invite à|confronte à|favorise|annonce|rappelle|ouvre|décrit)\\s*','i'),'');
   x=x.replace(new RegExp('^'+name+'\\s*[:—-]\\s*','i'),'');
  }
- x=x.replace(/^(Dans une relation|Dans le cadre relationnel|Sur le plan relationnel|Dans le travail|Dans le cadre professionnel(?: ou d’un projet)?|Sur le plan professionnel|Sur le plan général|Sur le plan intérieur|Dans le cadre spirituel ou général|Pour votre question)[, ]+/i,'');
  x=x.replace(/^(Cette carte|Elle)\s+(?:indique|montre|signifie|parle de|invite à|rappelle|favorise|annonce|décrit)\s+/i,'');
+ if(name)x=x.replace(new RegExp('^'+name+'\\s+(?:indique|montre|signifie|parle de|invite à|confronte à|favorise|annonce|rappelle|ouvre|décrit)\\s*','i'),'');
  x=x.replace(/^En clair\s*:\s*/i,'');
  return x.trim();
 }
@@ -933,6 +934,7 @@ function literaryFinalSynthesis(){
  const question=state.question?`<p class="reading-question">${en?'Question':'Question'} : « ${readingEscape(state.question)} »</p>`:'';
  return `<div class="reading final-literary"><h3>${en?'Final synthesis':'Synthèse finale'}</h3>${question}<p>${story}</p>${p2?`<p>${p2}</p>`:''}<p class="conclusion">${finalEnsureStop(conclusion)}</p></div>`;
 }
+
 function renderSynthesis(){
  if(!state.draw.length)return;
  $('#synthesis').innerHTML=literaryFinalSynthesis();
