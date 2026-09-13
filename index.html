@@ -382,7 +382,7 @@ function storyInterpretation(cards){
    paragraphs.push(`The evolution is shown by <strong>${name(d)}</strong>: ${read(d)}`);
    paragraphs.push(`Finally, <strong>${name(e)}</strong> gives the synthesis: ${read(e)} ${preciseGeneralConclusion(cards,focus,true)}`);
   }else{
-   paragraphs.push(`Au point de départ de ${subject}, <strong>${name(a)}</strong> pose le décor : ${read(a)}`);
+   paragraphs.push(`Concernant ${subject}, le point de départ est <strong>${name(a)}</strong> : ${read(a)}`);
    paragraphs.push(`Le principal obstacle est <strong>${name(b)}</strong> : ${read(b)}${focus==="sex"&&((b.name||"").toLowerCase()==="maîtrise")?" Autrement dit, le frein peut venir moins d’une absence de désir que d’un désir très contenu, contrôlé ou difficile à laisser s’exprimer.":""}`);
    paragraphs.push(`La ressource du tirage est <strong>${name(c)}</strong> : ${read(c)} ${focus==="sex"?preciseSexResourceNote(c):"Placée ici, cette carte montre ce qui peut être mobilisé pour modifier concrètement la situation."}`);
    paragraphs.push(`L’évolution est portée par <strong>${name(d)}</strong> : ${read(d)}${focus==="sex"&&((d.name||"").toLowerCase()==="patience")?" Cela indique une progression possible, mais sans passage à l’acte rapide ni pression sur le calendrier.":""}`);
