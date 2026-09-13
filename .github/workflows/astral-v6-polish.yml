@@ -1,4 +1,4 @@
-name: Narrative synthesis v9 polish
+name: Concise final synthesis v10
 
 on:
   push:
@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Apply narrative synthesis v9
+      - name: Apply concise synthesis v10
         run: python tools/literary_final_v7.py
       - name: Validate
         run: |
@@ -21,13 +21,16 @@ jobs:
           import re
           from pathlib import Path
           s=Path('index.html').read_text(encoding='utf-8')
-          assert 'synthèse finale narrative v9' in s
+          assert 'synthèse concise et fluide v10' in s
           block=re.search(r'function renderSynthesis\(\)\{.*?\n\}',s,re.S).group(0)
           assert 'literaryFinalSynthesis()' in block
           assert 'storyInterpretation(state.draw)' not in block
-          assert 'cristariva-modele-a-v19-20260913-synthese-narrative-fluide' in Path('service-worker.js').read_text(encoding='utf-8')
-          assert 'finalRoleText' in s
-          assert 'il existe un risque d’' in s
+          assert 'function finalContext()' in s
+          assert 'function finalSemanticKey(c)' in s
+          assert 'function finalRoleSentence(c,role,en)' in s
+          assert 'cristariva-modele-a-v20-20260913-synthese-concise' in Path('service-worker.js').read_text(encoding='utf-8')
+          assert 'Dans votre couple' in s
+          assert 'Un élément extérieur encore mal identifié peut intervenir, sans devenir le centre de votre relation.' in s
           scripts='\n'.join(re.findall(r'<script[^>]*>(.*?)</script>',s,flags=re.S|re.I))
           Path('/tmp/check.js').write_text(scripts,encoding='utf-8')
           PY
@@ -38,5 +41,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html service-worker.js
           git diff --cached --quiet && exit 0
-          git commit -m "Polish grammar and narrative flow in final synthesis"
+          git commit -m "Make final synthesis shorter clearer and question-led"
           git push
