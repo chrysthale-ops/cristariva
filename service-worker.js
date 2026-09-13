@@ -1,4 +1,4 @@
-const CACHE_NAME='cristariva-modele-a-v6-20260912-card24-corrigee';
+const CACHE_NAME='cristariva-modele-a-v7-20260913-card24-binary';
 const SHELL=['./','./index.html','./manifest.webmanifest','./manifest-en.webmanifest','./icon-192.png','./icon-512.png','./cards/024.webp'];
 
 self.addEventListener('install',event=>{
