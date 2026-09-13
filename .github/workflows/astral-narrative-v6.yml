@@ -1,0 +1,173 @@
+name: Simplified astral narrative v6
+
+on:
+  push:
+    paths:
+      - '.github/workflows/astral-narrative-v6.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Replace technical astrology with narrative influences
+        shell: python
+        run: |
+          import re
+          from pathlib import Path
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          astro_block = r'''/* CRISTARIVA — éclairage astral narratif v6 */
+function simpleNatalProfile(a){
+ const en=state.lang==='en';
+ const sunTone=(en?(TONE_EN[a.sun.sign]||'distinctive'):(SIGN_TONE[a.sun.sign]||'personnelle')).replace(/^une?\s+/,'');
+ const moonTone=(en?(TONE_EN[a.moon.sign]||'sensitive'):(SIGN_TONE[a.moon.sign]||'sensible')).replace(/^une?\s+/,'');
+ if(en){
+  return `<p>Your birth chart is summarized through three essential reference points: <b>Sun in ${signName(a.sun.sign)}</b>, <b>Moon in ${signName(a.moon.sign)}</b>${a.asc?` and <b>${signName(a.asc.sign)} Ascendant</b>`:''}. This combines a ${sunTone} core with a ${moonTone} emotional style${a.asc?`, expressed outwardly through a ${TONE_EN[a.asc.sign]||'personal'} approach`:''}.</p>`;
+ }
+ return `<p>Votre thème natal est résumé autour de trois repères essentiels : <b>Soleil en ${a.sun.sign}</b>, <b>Lune en ${a.moon.sign}</b>${a.asc?` et <b>Ascendant ${a.asc.sign}</b>`:''}. Cela associe un tempérament de fond ${sunTone} à une sensibilité ${moonTone}${a.asc?`, avec une manière d'aborder les situations plutôt ${SIGN_TONE[a.asc.sign]||'personnelle'}`:''}.</p>`;
+}
+function astroFocusWeights(focus){
+ const common={Soleil:1,Lune:1,Mercure:1,Vénus:1,Mars:1};
+ const map={
+  sex:{Mars:4,Vénus:4,Lune:2,Soleil:1,Mercure:1},
+  love:{Vénus:4,Lune:3,Mars:2,Mercure:2,Soleil:1},
+  return:{Lune:3,Vénus:3,Mercure:3,Mars:2,Soleil:1},
+  contact:{Mercure:5,Lune:2,Vénus:2,Mars:1,Soleil:1},
+  work:{Soleil:3,Mercure:3,Mars:3,Vénus:1,Lune:1},
+  money:{Vénus:3,Soleil:2,Mercure:2,Mars:2,Lune:1},
+  spirit:{Lune:4,Soleil:2,Mercure:1,Vénus:1,Mars:1},
+  life:common
+ };
+ return map[focus]||common;
+}
+function astroSignalForHit(h){
+ const easy=h.name==='trigone'||h.name==='sextile';
+ const tense=h.name==='carré'||h.name==='opposition';
+ const strong=h.name==='conjonction';
+ const type=h.tr;
+ if(type==='Jupiter')return {key:'opening',tone:tense?'mixed':'support',text:tense?'une tendance à voir trop grand ou à accélérer avant que les faits ne suivent':'une ouverture qui favorise confiance, possibilités et élargissement du champ des options'};
+ if(type==='Saturne')return {key:'maturation',tone:easy?'support':'challenge',text:easy?'une capacité à consolider, structurer et rendre la situation plus durable':'un besoin de patience, de limites claires et de maturation avant d’obtenir un résultat solide'};
+ if(type==='Uranus')return {key:'change',tone:tense?'challenge':'mixed',text:tense?'une instabilité qui peut provoquer revirements, impatience ou changements brusques':'une poussée de changement qui aide à sortir d’un ancien schéma et à ouvrir une voie différente'};
+ if(type==='Neptune')return {key:'sensitivity',tone:tense?'challenge':'mixed',text:tense?'une sensibilité accrue qui peut brouiller la lecture des intentions et renforcer projections ou attentes':'une intuition et une réceptivité plus fortes, utiles à condition de les confronter aux faits'};
+ if(type==='Mars')return {key:'action',tone:tense?'challenge':'support',text:tense?'une tension qui pousse à agir vite, à réagir fortement ou à vouloir forcer le rythme':'un regain d’élan, de désir et d’initiative qui facilite le passage à l’action'};
+ if(type==='Vénus')return {key:'bond',tone:tense?'mixed':'support',text:tense?'une remise en question des attentes affectives, de l’attirance ou de la réciprocité':'un climat plus favorable au rapprochement, à l’accord, à l’attirance et à la recherche d’harmonie'};
+ return {key:'insight',tone:strong?'mixed':'support',text:'une période qui rend certains enjeux plus visibles et pousse à ajuster la manière d’y répondre'};
+}
+function relevantAstroSignals(a){
+ const focus=preciseQuestionFocus();
+ const weights=astroFocusWeights(focus);
+ return transitData(a).map(h=>{
+  const sig=astroSignalForHit(h);
+  const closeness=Math.max(0,6-h.orb);
+  return {...sig,hit:h,score:(weights[h.na]||1)*2+closeness};
+ }).sort((x,y)=>y.score-x.score).slice(0,3);
+}
+function cardDirectionTheme(){
+ const cards=state.draw||[];
+ const last=cards[cards.length-1];
+ if(!last)return {key:'insight',label:'une prise de conscience'};
+ const key=readingTheme(last)[1];
+ const labels={separation:'une prise de distance ou une fin de cycle',truth:'un besoin de vérité et de clarification',block:'des freins à résoudre avant d’avancer',bond:'un rapprochement qui demande de la réciprocité',opening:'une ouverture ou une nouvelle possibilité',choice:'une décision à prendre',past:'le poids d’une histoire passée encore active',time:'une évolution lente qui demande maturation',strength:'une stabilisation progressive',feeling:'un enjeu affectif ou émotionnel central',movement:'un changement de direction',insight:'une compréhension nouvelle de la situation'};
+ return {key,label:labels[key]||labels.insight};
+}
+function astroQuestionBridge(focus){
+ const fr={sex:'Pour votre question sur l’intimité et la sexualité',love:'Pour votre question affective',return:'Pour la possibilité d’un retour',contact:'Pour la reprise de contact ou la communication',work:'Pour votre question professionnelle',money:'Pour votre question matérielle',spirit:'Pour votre cheminement intérieur',life:'Pour votre question'};
+ const en={sex:'For your question about intimacy and sexuality',love:'For your emotional question',return:'For a possible return',contact:'For communication or renewed contact',work:'For your professional question',money:'For your material question',spirit:'For your inner path',life:'For your question'};
+ return (state.lang==='en'?en:fr)[focus]||(state.lang==='en'?'For your question':'Pour votre question');
+}
+function astroIntegratedNarrative(a){
+ const en=state.lang==='en', focus=preciseQuestionFocus(), signals=relevantAstroSignals(a), direction=cardDirectionTheme();
+ if(!signals.length){
+  return en?`<div class="reading astro-integrated"><h3>Astral influence within the reading</h3><p>The current astrological climate does not add a strong specific pressure in this simplified model. The cards therefore remain the clearest guide to the direction of the story, with the sky acting more as background than as a trigger.</p></div>`:`<div class="reading astro-integrated"><h3>L’influence astrale dans votre récit</h3><p>Le climat astral du moment n’ajoute pas de pression dominante suffisamment nette dans ce modèle simplifié. Le tirage reste donc le meilleur indicateur de la direction de l’histoire ; le ciel agit davantage comme une ambiance de fond que comme un déclencheur.</p></div>`;
+ }
+ const primary=signals[0], secondary=signals[1];
+ const support=signals.filter(x=>x.tone==='support').length, challenge=signals.filter(x=>x.tone==='challenge').length;
+ const last=state.draw[state.draw.length-1];
+ const lastName=last?readingEscape(cardName(last)):'';
+ const agrees=(['bond','opening','strength','movement'].includes(direction.key)&&support>=challenge)||(['block','separation','time','truth'].includes(direction.key)&&challenge>=support);
+ if(en){
+  let p=`${astroQuestionBridge(focus)}, the strongest current influence translates into ${primary.text}.`;
+  if(secondary)p+=` A second layer adds ${secondary.text}.`;
+  p+=` Applied to the cards, this ${agrees?'reinforces':'qualifies'} the direction shown by <strong>${lastName}</strong>, which points toward ${direction.label}.`;
+  p+=` The useful message is therefore to read the timing and the concrete actions in the same direction as the spread, rather than treating the sky as a separate prediction.`;
+  return `<div class="reading astro-integrated"><h3>How the astral climate changes the reading</h3><p>${p}</p></div>`;
+ }
+ let p=`${astroQuestionBridge(focus)}, l’influence dominante du moment se traduit par ${primary.text}.`;
+ if(secondary)p+=` Une seconde tendance ajoute ${secondary.text}.`;
+ p+=` Replacé dans le tirage, ce climat ${agrees?'renforce':'nuance'} la direction donnée par <strong>${lastName}</strong>, qui parle de ${direction.label}.`;
+ p+=` Autrement dit, l’astrologie n’ajoute pas une prédiction séparée : elle précise <strong>comment et à quel rythme</strong> la dynamique des cartes a le plus de chances de se manifester dans votre vécu.`;
+ return `<div class="reading astro-integrated"><h3>Ce que le climat astral change dans votre histoire</h3><p>${p}</p></div>`;
+}
+function formatAstroResult(){
+ const a=state.astro;if(!a)return '';
+ if(state.lang==='en')return `<h3>Your simplified birth profile</h3>${simpleNatalProfile(a)}<p class="muted">The current sky is intentionally not shown as a list of planetary positions. Its active influences are calculated in the background and integrated directly into your final reading.</p>`;
+ return `<h3>Votre thème natal simplifié</h3>${simpleNatalProfile(a)}<p class="muted">Les positions actuelles ne sont volontairement pas affichées. Leurs influences sont calculées en arrière-plan et intégrées directement au récit final, en fonction de votre question et des cartes tirées.</p>`;
+}
+
+function birthInstant'''
+
+          s2, n = re.subn(r'function formatAstroResult\(\)\{.*?\n\}\n\nfunction birthInstant', astro_block, s, flags=re.S)
+          if n != 1:
+              raise SystemExit(f'formatAstroResult block replacements: {n}')
+          s = s2
+
+          new_render = r'''function renderSynthesis(){
+ if(!state.draw.length)return;
+ const astro=state.astro?astroIntegratedNarrative(state.astro):'';
+ $('#synthesis').innerHTML=`<h3>${t('Synthèse finale')}</h3>${storyInterpretation(state.draw)}${supplementalSynthesis()}${astro}<p><b>${state.lang==='en'?'Question':'Question'}:</b> ${readingEscape(state.question||t('Question ouverte'))} · <b>${t('Domaine')}:</b> ${t(state.domain)}</p>`;
+}
+let catalogSelected=null;'''
+          s2, n = re.subn(r'function renderSynthesis\(\)\{.*?\n\}\nlet catalogSelected=null;', new_render, s, flags=re.S)
+          if n != 1:
+              raise SystemExit(f'renderSynthesis replacements: {n}')
+          s = s2
+
+          old = "box.innerHTML=formatAstroResult();"
+          new = "box.innerHTML=formatAstroResult();if(!$('#synthesis').classList.contains('hidden'))renderSynthesis();"
+          if old in s and new not in s:
+              s = s.replace(old, new, 1)
+
+          s = s.replace('Préparez le profil natal et le lien avec le ciel du moment du tirage.', 'Affichez un thème natal simplifié ; les influences du moment seront intégrées directement dans le récit final.')
+          s = s.replace('Explore your birth chart and its connection with the sky at the time of your reading.', 'View a simplified birth profile; current influences will be woven directly into the final reading.')
+
+          p.write_text(s, encoding='utf-8')
+
+          sw = Path('service-worker.js')
+          w = sw.read_text(encoding='utf-8')
+          w = re.sub(r"const CACHE_NAME='[^']+';", "const CACHE_NAME='cristariva-modele-a-v15-20260913-astral-narratif';", w, count=1)
+          sw.write_text(w, encoding='utf-8')
+
+      - name: Validate simplified astrology
+        shell: bash
+        run: |
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          s=Path('index.html').read_text(encoding='utf-8')
+          assert 'éclairage astral narratif v6' in s
+          assert 'function astroIntegratedNarrative(a)' in s
+          assert 'Votre thème natal simplifié' in s
+          assert 'Leurs influences sont calculées en arrière-plan' in s
+          assert 'state.astro?astroIntegratedNarrative(state.astro)' in s
+          assert 'cristariva-modele-a-v15-20260913-astral-narratif' in Path('service-worker.js').read_text(encoding='utf-8')
+          scripts='\n'.join(re.findall(r'<script[^>]*>(.*?)</script>',s,flags=re.S|re.I))
+          Path('/tmp/cristariva-check.js').write_text(scripts,encoding='utf-8')
+          PY
+          node --check /tmp/cristariva-check.js
+
+      - name: Commit and publish
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html service-worker.js
+          git diff --cached --quiet && exit 0
+          git commit -m "Simplify astral section and integrate influences into story"
+          git push
