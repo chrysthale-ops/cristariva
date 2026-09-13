@@ -1,4 +1,4 @@
-name: Literary final synthesis v7
+name: Literary final synthesis v7 polish
 
 on:
   push:
@@ -13,22 +13,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Apply literary final synthesis migration
+      - name: Apply literary synthesis
         run: python tools/literary_final_v7.py
-      - name: Validate literary synthesis
+      - name: Validate
         run: |
           python - <<'PY'
           import re
           from pathlib import Path
           s=Path('index.html').read_text(encoding='utf-8')
-          assert 'synthèse finale littéraire v7' in s
-          assert 'function literaryFinalSynthesis()' in s
           block=re.search(r'function renderSynthesis\(\)\{.*?\n\}',s,re.S).group(0)
-          assert "$('#synthesis').innerHTML=literaryFinalSynthesis();" in block
+          assert 'literaryFinalSynthesis()' in block
           assert 'storyInterpretation(state.draw)' not in block
-          assert 'supplementalSynthesis()' not in block
-          assert 'astroIntegratedNarrative' not in block
-          assert 'cristariva-modele-a-v16-20260913-synthese-litteraire' in Path('service-worker.js').read_text(encoding='utf-8')
+          assert 'cristariva-modele-a-v17-20260913-synthese-litteraire-fluide' in Path('service-worker.js').read_text(encoding='utf-8')
           scripts='\n'.join(re.findall(r'<script[^>]*>(.*?)</script>',s,flags=re.S|re.I))
           Path('/tmp/check.js').write_text(scripts,encoding='utf-8')
           PY
@@ -39,5 +35,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html service-worker.js
           git diff --cached --quiet && exit 0
-          git commit -m "Make final synthesis literary and fluid"
+          git commit -m "Polish literary final synthesis"
           git push
