@@ -1,4 +1,4 @@
-name: Polish astral narrative v6
+name: Literary final synthesis v7
 
 on:
   push:
@@ -9,36 +9,35 @@ permissions:
   contents: write
 
 jobs:
-  polish:
+  update:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Remove duplicate synthesis refresh
+      - name: Apply literary final synthesis migration
+        run: python tools/literary_final_v7.py
+      - name: Validate literary synthesis
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          p=Path('index.html')
-          s=p.read_text(encoding='utf-8')
-          duplicate="box.innerHTML=formatAstroResult();if(!$('#synthesis').classList.contains('hidden'))renderSynthesis();\n  if(!$('#synthesis').classList.contains('hidden'))renderSynthesis();"
-          single="box.innerHTML=formatAstroResult();if(!$('#synthesis').classList.contains('hidden'))renderSynthesis();"
-          if duplicate in s:
-              s=s.replace(duplicate,single,1)
-          p.write_text(s,encoding='utf-8')
-          PY
           python - <<'PY'
           import re
           from pathlib import Path
           s=Path('index.html').read_text(encoding='utf-8')
-          assert s.count("box.innerHTML=formatAstroResult();if(!$('#synthesis').classList.contains('hidden'))renderSynthesis();") == 1
+          assert 'synthèse finale littéraire v7' in s
+          assert 'function literaryFinalSynthesis()' in s
+          block=re.search(r'function renderSynthesis\(\)\{.*?\n\}',s,re.S).group(0)
+          assert "$('#synthesis').innerHTML=literaryFinalSynthesis();" in block
+          assert 'storyInterpretation(state.draw)' not in block
+          assert 'supplementalSynthesis()' not in block
+          assert 'astroIntegratedNarrative' not in block
+          assert 'cristariva-modele-a-v16-20260913-synthese-litteraire' in Path('service-worker.js').read_text(encoding='utf-8')
           scripts='\n'.join(re.findall(r'<script[^>]*>(.*?)</script>',s,flags=re.S|re.I))
           Path('/tmp/check.js').write_text(scripts,encoding='utf-8')
           PY
           node --check /tmp/check.js
-      - name: Commit polish
+      - name: Commit and publish
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html
+          git add index.html service-worker.js
           git diff --cached --quiet && exit 0
-          git commit -m "Polish astral narrative refresh"
+          git commit -m "Make final synthesis literary and fluid"
           git push
