@@ -1,5 +1,5 @@
-const CACHE_NAME='cristariva-modele-a-v8-20260913-rose-orange';
-const SHELL=['./','./index.html','./manifest.webmanifest','./manifest-en.webmanifest','./icon-192.png','./icon-512.png','./cards/024.webp'];
+const CACHE_NAME='cristariva-modele-a-v9-20260913-crush-final';
+const SHELL=['./','./index.html','./manifest.webmanifest','./manifest-en.webmanifest','./icon-192.png','./icon-512.png','./cards/024.webp','./cards/109.webp'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting()));
