@@ -1,4 +1,4 @@
-const CACHE_NAME='cristariva-modele-a-v7-20260913-card24-binary';
+const CACHE_NAME='cristariva-modele-a-v8-20260913-rose-orange';
 const SHELL=['./','./index.html','./manifest.webmanifest','./manifest-en.webmanifest','./icon-192.png','./icon-512.png','./cards/024.webp'];
 
 self.addEventListener('install',event=>{
@@ -30,9 +30,9 @@ self.addEventListener('fetch',event=>{
     return;
   }
 
-  if(url.pathname.endsWith('/cards/024.webp')){
+  if(/\/cards\/\d{3}\.webp$/.test(url.pathname)){
     event.respondWith(
-      fetch(request,{cache:'no-store'}).then(response=>{
+      fetch(request,{cache:'no-cache'}).then(response=>{
         if(response.ok){const copy=response.clone();caches.open(CACHE_NAME).then(cache=>cache.put(request,copy));}
         return response;
       }).catch(()=>caches.match(request))
