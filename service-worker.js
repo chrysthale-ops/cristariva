@@ -1,4 +1,4 @@
-const CACHE_NAME='cristariva-modele-a-v15-20260913-astral-narratif';
+const CACHE_NAME='cristariva-modele-a-v16-20260913-synthese-litteraire';
 const SHELL=['./','./index.html','./manifest.webmanifest','./manifest-en.webmanifest','./icon-192.png','./icon-512.png','./cards/024.webp','./cards/109.webp'];
 
 self.addEventListener('install',event=>{
