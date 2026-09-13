@@ -1,0 +1,89 @@
+name: Synchroniser les noms courts des cartes
+
+on:
+  push:
+    paths:
+      - '.github/workflows/sync-short-card-names.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Appliquer la nomenclature courte validée
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json, re
+
+          names = {
+            1:'Direction',2:'Trahison',3:'Joie',4:'Éloignement',5:'Émotions',6:'Indice',7:'Tempête',8:'Échos',9:'Équité',10:'Transmission',
+            11:'Incompatibilité',12:'Bonheur',13:'Échec',14:'Lune',15:'Rythme',16:'Stabilité',17:'Dépendance',18:'Guérison',19:'Amour',20:'Échéance',
+            21:'Union',22:'Clarté',23:'Communication',24:'Regrets',25:'Cap',26:'Fin',27:'Paix',28:'Emprise',29:'Succès',30:'Écoute',
+            31:'Peur',32:'Percée',33:'Perte',34:'Intuition',35:'Perspective',36:'Blocage',37:'Cohésion',38:'Soutien',39:'Patience',40:'Transformation',
+            41:'Dissimulation',42:'Maîtrise',43:'Éclosion',44:'Détour',45:'Cycles',46:'Sincérité',47:'Réconciliation',48:'Refus',49:'Libération',50:'Envol',
+            51:'Abandon',52:'Mémoire',53:'Indifférence',54:'Conflit',55:'Transition',56:'Renouveau',57:'Origines',58:'Passion',59:'Choix',60:'Projection',
+            61:'Appartenance',62:'Opposition',63:'Ancrage',64:'Rupture',65:'Mensonge',66:'Repère',67:'Jalousie',68:'Protection',69:'Introspection',70:'Rejet',
+            71:'Désillusion',72:'Complexité',73:'Connexion',74:'Épuisement',75:'Impasse',76:'Naissance',77:'Intégrité',78:'Voie',79:'Fausse promesse',80:'Empreinte',
+            81:'Réciprocité',82:'Signe',83:'Instabilité',84:'Manipulation',85:'Progression',86:'Juste distance',87:'Retard',88:'Vision',89:'Éveil',90:'Retour',
+            91:'Sagesse',92:'Mutation',93:'Potentiel',94:'Providence',95:'Opportunité',96:'Ami(e)',97:'Parent',98:'Partenaire',99:'Enfant',100:'Rencontre',
+            101:'Frère / Sœur',102:'Ex',103:'Collègue',104:'Responsable',105:'Connaissance',106:'Inconnu(e)',107:'Rival(e)',108:'Confident(e)',109:'Crush',110:'Contact pro',
+            111:'À distance',112:'Ancien lien',113:'Admirateur',114:'Mentor',115:'Intermédiaire',116:'Immédiat',117:'3 jours',118:'1 semaine',119:'15 jours',120:'3 semaines',
+            121:'1 mois',122:'6 semaines',123:'2 mois',124:'3 mois',125:'6 mois',126:'9 mois',127:'1 an',128:'Saison prochaine',129:'Déclencheur',130:'Indéfini'
+          }
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          m = re.search(r'const DATA =(\{.*?\});\nlet state=', s, re.S)
+          if not m:
+              raise SystemExit('Bloc DATA introuvable')
+          data = json.loads(m.group(1))
+
+          changed = []
+          def walk(obj):
+              if isinstance(obj, dict):
+                  cid = obj.get('id')
+                  if isinstance(cid, int) and cid in names and 'name' in obj:
+                      old = obj.get('name')
+                      new = names[cid]
+                      if old != new:
+                          obj['name'] = new
+                          changed.append((cid, old, new))
+                  for v in obj.values():
+                      walk(v)
+              elif isinstance(obj, list):
+                  for v in obj:
+                      walk(v)
+          walk(data)
+
+          new_data = json.dumps(data, ensure_ascii=False, separators=(',', ':'))
+          s = s[:m.start(1)] + new_data + s[m.end(1):]
+          p.write_text(s, encoding='utf-8')
+
+          sw = Path('service-worker.js')
+          if sw.exists():
+              t = sw.read_text(encoding='utf-8')
+              t = re.sub(r"const CACHE_NAME='[^']+';", "const CACHE_NAME='cristariva-modele-a-v10-20260913-noms-courts';", t, count=1)
+              sw.write_text(t, encoding='utf-8')
+
+          print(f'{len(changed)} nom(s) modifié(s)')
+          for cid, old, new in changed:
+              print(f'{cid}: {old!r} -> {new!r}')
+          PY
+
+      - name: Valider et publier
+        shell: bash
+        run: |
+          git config user.name 'CRISTARIVA updater'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html service-worker.js
+          git diff --cached --quiet && exit 0
+          git commit -m 'Synchroniser les noms courts validés des 130 cartes'
+          git push
