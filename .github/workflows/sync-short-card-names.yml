@@ -16,7 +16,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Appliquer la nomenclature courte validée
+      - name: Synchroniser noms, définitions et lectures
         shell: bash
         run: |
           python - <<'PY'
@@ -46,36 +46,86 @@ jobs:
               raise SystemExit('Bloc DATA introuvable')
           data = json.loads(m.group(1))
 
-          changed = []
-          def walk(obj):
-              if isinstance(obj, dict):
-                  cid = obj.get('id')
-                  if isinstance(cid, int) and cid in names and 'name' in obj:
-                      old = obj.get('name')
-                      new = names[cid]
-                      if old != new:
-                          obj['name'] = new
-                          changed.append((cid, old, new))
-                  for v in obj.values():
-                      walk(v)
-              elif isinstance(obj, list):
-                  for v in obj:
-                      walk(v)
-          walk(data)
+          text_fields = ('definition','meaning','message','reading_relationnel','reading_professionnel','reading_spirituel')
+          legacy_titles = []
+          changes = []
+
+          for group in ('main','relation','dating'):
+              for card in data[group]:
+                  cid = card.get('id')
+                  if cid not in names:
+                      continue
+                  short = names[cid]
+                  old_root_name = card.get('name') or ''
+                  old_en_name = (card.get('en') or {}).get('name') or ''
+
+                  # Le nom court est l'unique référence officielle.
+                  card['name'] = short
+
+                  candidates = []
+                  for old in (old_root_name, old_en_name):
+                      if old and old != short and old not in candidates:
+                          candidates.append(old)
+                          legacy_titles.append(old)
+
+                  # Remplace les anciens titres dans tous les textes visibles en français.
+                  for field in text_fields:
+                      value = card.get(field)
+                      if not isinstance(value, str):
+                          continue
+                      new_value = value
+                      for old in candidates:
+                          new_value = new_value.replace(old, short)
+                      if new_value != value:
+                          card[field] = new_value
+                          changes.append((cid, field, value, new_value))
+
+                  # Élimine aussi les anciens titres du bloc de langue secondaire.
+                  en = card.get('en')
+                  if isinstance(en, dict):
+                      en['name'] = short
+                      for field in ('definition','meaning','message'):
+                          value = en.get(field)
+                          if not isinstance(value, str):
+                              continue
+                          new_value = value
+                          for old in candidates:
+                              new_value = new_value.replace(old, short)
+                          if new_value != value:
+                              en[field] = new_value
+                              changes.append((cid, 'en.' + field, value, new_value))
 
           new_data = json.dumps(data, ensure_ascii=False, separators=(',', ':'))
+
+          # Vérification : aucun ancien titre recensé ne doit rester dans les données affichées.
+          leftovers = sorted({old for old in legacy_titles if old and old in new_data})
+          if leftovers:
+              raise SystemExit('Anciens titres encore présents : ' + ' | '.join(leftovers[:20]))
+
+          # Contrôles ciblés sur les cas qui posaient problème en ligne.
+          forbidden = [
+              'La lanterne du prochain pas',
+              'Le détail qui ouvre la porte',
+              'La marée des émotions',
+              'Conjoint(e) / Partenaire amoureux',
+              'Ex-partenaire',
+              'Relation professionnelle',
+              'Après un événement déclencheur'
+          ]
+          bad = [x for x in forbidden if x in new_data]
+          if bad:
+              raise SystemExit('Contrôle échoué : ' + ' | '.join(bad))
+
           s = s[:m.start(1)] + new_data + s[m.end(1):]
           p.write_text(s, encoding='utf-8')
 
           sw = Path('service-worker.js')
           if sw.exists():
               t = sw.read_text(encoding='utf-8')
-              t = re.sub(r"const CACHE_NAME='[^']+';", "const CACHE_NAME='cristariva-modele-a-v10-20260913-noms-courts';", t, count=1)
+              t = re.sub(r"const CACHE_NAME='[^']+';", "const CACHE_NAME='cristariva-modele-a-v12-20260913-noms-courts-textes';", t, count=1)
               sw.write_text(t, encoding='utf-8')
 
-          print(f'{len(changed)} nom(s) modifié(s)')
-          for cid, old, new in changed:
-              print(f'{cid}: {old!r} -> {new!r}')
+          print(f'{len(changes)} champ(s) de texte corrigé(s).')
           PY
 
       - name: Valider et publier
@@ -85,5 +135,5 @@ jobs:
           git config user.email 'actions@users.noreply.github.com'
           git add index.html service-worker.js
           git diff --cached --quiet && exit 0
-          git commit -m 'Synchroniser les noms courts validés des 130 cartes'
+          git commit -m 'Synchroniser définitions et interprétations avec les noms courts'
           git push
