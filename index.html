@@ -229,10 +229,12 @@ function domainReading(c){
 }
 function cardHTML(c,pos){
  const name=readingEscape(cardName(c)),label=readingEscape(pos||'');
- const image=readingEscape(cardImage(c)),definition=readingEscape(cardField(c,'definition'));
- const contextual=state.lang==='fr'&&c.group==='main'?readingEscape(domainReading(c)):'';
+ const image=readingEscape(cardImage(c));
+ const domainSpecific=state.lang==='fr'&&c.group==='main';
+ const definition=readingEscape(domainSpecific?domainReading(c):cardField(c,'definition'));
+ const domainLabel=domainSpecific?readingEscape(state.domain):'';
  const full=state.lang==='en'?' full-card-image':'';
- return `<article class="card"><div class="art${full}" data-error="${readingEscape(t('Image indisponible'))}"><img src="${image}" alt="${name}" loading="lazy" onerror="this.closest('.card').classList.add('img-error');this.style.display='none'"></div><div class="body"><div class="num">${label}</div><h3>${name}</h3><p>${definition}</p>${contextual?`<p><b>${readingEscape(state.domain)}</b><br>${contextual}</p>`:''}</div></article>`;
+ return `<article class="card"><div class="art${full}" data-error="${readingEscape(t('Image indisponible'))}"><img src="${image}" alt="${name}" loading="lazy" onerror="this.closest('.card').classList.add('img-error');this.style.display='none'"></div><div class="body"><div class="num">${label}</div><h3>${name}</h3><p>${domainLabel?`<b>${domainLabel}</b><br>`:''}${definition}</p></div></article>`;
 }
 
 const POSITIONS_FR={
@@ -1053,7 +1055,7 @@ try{const saved=new URLSearchParams(location.search).get('lang')||localStorage.g
 applyLanguage();
 </script>
 <script>if('serviceWorker' in navigator){
-const CRISTARIVA_PWA_VERSION='2026.09.14-26';
+const CRISTARIVA_PWA_VERSION='2026.09.14-27';
 let cristarivaReloading=false;
 const cristarivaRefreshOnce=()=>{
  if(cristarivaReloading)return;
@@ -1067,7 +1069,7 @@ navigator.serviceWorker.addEventListener('message',event=>{
  if(event.data&&event.data.type==='CRISTARIVA_UPDATED')cristarivaRefreshOnce();
 });
 const cristarivaCheckUpdate=()=>navigator.serviceWorker.register(
- './service-worker.js?v=20260914-26',
+ './service-worker.js?v=20260914-27',
  {scope:'./',updateViaCache:'none'}
 ).then(reg=>{
  if(reg.waiting)reg.waiting.postMessage('SKIP_WAITING');
