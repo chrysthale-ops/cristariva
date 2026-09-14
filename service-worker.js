@@ -1,6 +1,6 @@
-const CACHE_NAME='cristariva-modele-a-v24-20260914-synthese-autonome';
-const SHELL=['./','./index.html','./manifest.webmanifest','./manifest-en.webmanifest','./icon-192.png','./icon-512.png','./interpretation-engine-v2.js','./natal-influences-v3.1.js','./period-overview-v3.2.js','./integrated-period-reading-v3.3.js','./natal-profile-v3.4.js','./synthesis-cleanup-v3.5.2.js','./story-conclusion-v3.6.js','./cards/024.webp','./cards/109.webp'];
-const ENGINE_TAG='<script src="./interpretation-engine-v2.js?v=3.0"></script><script src="./natal-influences-v3.1.js?v=3.1"></script><script src="./period-overview-v3.2.js?v=3.2"></script><script src="./integrated-period-reading-v3.3.js?v=3.5.1"></script><script src="./natal-profile-v3.4.js?v=3.4"></script><script src="./synthesis-cleanup-v3.5.2.js?v=3.6.2"></script><script src="./story-conclusion-v3.6.js?v=3.6.1"></script>';
+const CACHE_NAME='cristariva-modele-a-v25-20260914-titres-courts-valides';
+const SHELL=['./','./index.html','./manifest.webmanifest','./manifest-en.webmanifest','./icon-192.png','./icon-512.png','./interpretation-engine-v2.js','./natal-influences-v3.1.js','./period-overview-v3.2.js','./integrated-period-reading-v3.3.js','./natal-profile-v3.4.js','./synthesis-cleanup-v3.5.2.js','./story-conclusion-v3.6.js','./validated-card-titles-v3.6.3.js','./cards/024.webp','./cards/109.webp'];
+const ENGINE_TAG='<script src="./interpretation-engine-v2.js?v=3.0"></script><script src="./natal-influences-v3.1.js?v=3.1"></script><script src="./period-overview-v3.2.js?v=3.2"></script><script src="./integrated-period-reading-v3.3.js?v=3.5.1"></script><script src="./natal-profile-v3.4.js?v=3.4"></script><script src="./synthesis-cleanup-v3.5.2.js?v=3.6.2"></script><script src="./story-conclusion-v3.6.js?v=3.6.1"></script><script src="./validated-card-titles-v3.6.3.js?v=3.6.3"></script>';
 
 async function pageWithAstroEngine(response){
   if(!response)return response;
@@ -12,6 +12,7 @@ async function pageWithAstroEngine(response){
   html=html.replace(/<script src="\.\/natal-profile-v3\.4\.js\?v=[^"]+"><\/script>/g,'<script src="./natal-profile-v3.4.js?v=3.4"></script>');
   html=html.replace(/<script src="\.\/synthesis-cleanup-v3\.5\.2\.js\?v=[^"]+"><\/script>/g,'<script src="./synthesis-cleanup-v3.5.2.js?v=3.6.2"></script>');
   html=html.replace(/<script src="\.\/story-conclusion-v3\.6\.js\?v=[^"]+"><\/script>/g,'<script src="./story-conclusion-v3.6.js?v=3.6.1"></script>');
+  html=html.replace(/<script src="\.\/validated-card-titles-v3\.6\.3\.js\?v=[^"]+"><\/script>/g,'<script src="./validated-card-titles-v3.6.3.js?v=3.6.3"></script>');
 
   if(!html.includes('interpretation-engine-v2.js')){
     html=html.replace('</body>',ENGINE_TAG+'</body>');
@@ -22,6 +23,7 @@ async function pageWithAstroEngine(response){
     if(!html.includes('natal-profile-v3.4.js'))html=html.replace('</body>','<script src="./natal-profile-v3.4.js?v=3.4"></script></body>');
     if(!html.includes('synthesis-cleanup-v3.5.2.js?v=3.6.2'))html=html.replace('</body>','<script src="./synthesis-cleanup-v3.5.2.js?v=3.6.2"></script></body>');
     if(!html.includes('story-conclusion-v3.6.js?v=3.6.1'))html=html.replace('</body>','<script src="./story-conclusion-v3.6.js?v=3.6.1"></script></body>');
+    if(!html.includes('validated-card-titles-v3.6.3.js?v=3.6.3'))html=html.replace('</body>','<script src="./validated-card-titles-v3.6.3.js?v=3.6.3"></script></body>');
   }
 
   const headers=new Headers(response.headers);
@@ -64,7 +66,7 @@ self.addEventListener('fetch',event=>{
     return;
   }
 
-  if(/\/(interpretation-engine-v2|natal-influences-v3\.1|period-overview-v3\.2|integrated-period-reading-v3\.3|natal-profile-v3\.4|synthesis-cleanup-v3\.5\.2|story-conclusion-v3\.6)\.js$/.test(url.pathname)){
+  if(/\/(interpretation-engine-v2|natal-influences-v3\.1|period-overview-v3\.2|integrated-period-reading-v3\.3|natal-profile-v3\.4|synthesis-cleanup-v3\.5\.2|story-conclusion-v3\.6|validated-card-titles-v3\.6\.3)\.js$/.test(url.pathname)){
     event.respondWith(
       fetch(request,{cache:'no-cache'}).then(response=>{
         if(response.ok){const copy=response.clone();caches.open(CACHE_NAME).then(cache=>cache.put(request,copy));}
