@@ -1,4 +1,5 @@
-const CACHE_NAME='cristariva-modele-a-v25-20260914-titres-courts-valides';
+const APP_VERSION='2026.09.14-26';
+const CACHE_NAME='cristariva-modele-a-v26-20260914-android-sync';
 const SHELL=['./','./index.html','./manifest.webmanifest','./manifest-en.webmanifest','./icon-192.png','./icon-512.png','./interpretation-engine-v2.js','./natal-influences-v3.1.js','./period-overview-v3.2.js','./integrated-period-reading-v3.3.js','./natal-profile-v3.4.js','./synthesis-cleanup-v3.5.2.js','./story-conclusion-v3.6.js','./validated-card-titles-v3.6.3.js','./cards/024.webp','./cards/109.webp'];
 const ENGINE_TAG='<script src="./interpretation-engine-v2.js?v=3.0"></script><script src="./natal-influences-v3.1.js?v=3.1"></script><script src="./period-overview-v3.2.js?v=3.2"></script><script src="./integrated-period-reading-v3.3.js?v=3.5.1"></script><script src="./natal-profile-v3.4.js?v=3.4"></script><script src="./synthesis-cleanup-v3.5.2.js?v=3.6.2"></script><script src="./story-conclusion-v3.6.js?v=3.6.1"></script><script src="./validated-card-titles-v3.6.3.js?v=3.6.3"></script>';
 
@@ -33,15 +34,21 @@ async function pageWithAstroEngine(response){
 }
 
 self.addEventListener('install',event=>{
-  event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting()));
+  event.waitUntil((async()=>{
+    const cache=await caches.open(CACHE_NAME);
+    await Promise.allSettled(SHELL.map(url=>cache.add(new Request(url,{cache:'reload'}))));
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener('activate',event=>{
-  event.waitUntil(
-    caches.keys()
-      .then(keys=>Promise.all(keys.filter(k=>k.startsWith('cristariva-')&&k!==CACHE_NAME).map(k=>caches.delete(k))))
-      .then(()=>self.clients.claim())
-  );
+  event.waitUntil((async()=>{
+    const keys=await caches.keys();
+    await Promise.all(keys.filter(k=>k.startsWith('cristariva-')&&k!==CACHE_NAME).map(k=>caches.delete(k)));
+    await self.clients.claim();
+    const windows=await self.clients.matchAll({type:'window',includeUncontrolled:true});
+    windows.forEach(client=>client.postMessage({type:'CRISTARIVA_UPDATED',version:APP_VERSION}));
+  })());
 });
 
 self.addEventListener('message',event=>{if(event.data==='SKIP_WAITING')self.skipWaiting();});
@@ -54,7 +61,7 @@ self.addEventListener('fetch',event=>{
   if(request.mode==='navigate'){
     event.respondWith((async()=>{
       try{
-        const network=await fetch(request,{cache:'no-cache'});
+        const network=await fetch(request,{cache:'reload'});
         const transformed=await pageWithAstroEngine(network);
         if(transformed?.ok){const copy=transformed.clone();caches.open(CACHE_NAME).then(cache=>cache.put(request,copy));}
         return transformed;
@@ -68,7 +75,7 @@ self.addEventListener('fetch',event=>{
 
   if(/\/(interpretation-engine-v2|natal-influences-v3\.1|period-overview-v3\.2|integrated-period-reading-v3\.3|natal-profile-v3\.4|synthesis-cleanup-v3\.5\.2|story-conclusion-v3\.6|validated-card-titles-v3\.6\.3)\.js$/.test(url.pathname)){
     event.respondWith(
-      fetch(request,{cache:'no-cache'}).then(response=>{
+      fetch(request,{cache:'reload'}).then(response=>{
         if(response.ok){const copy=response.clone();caches.open(CACHE_NAME).then(cache=>cache.put(request,copy));}
         return response;
       }).catch(()=>caches.match(request))
