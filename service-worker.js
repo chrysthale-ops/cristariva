@@ -1,5 +1,18 @@
-const CACHE_NAME='cristariva-modele-a-v20-20260913-synthese-concise';
-const SHELL=['./','./index.html','./manifest.webmanifest','./manifest-en.webmanifest','./icon-192.png','./icon-512.png','./cards/024.webp','./cards/109.webp'];
+const CACHE_NAME='cristariva-modele-a-v21-20260914-astro-v3';
+const SHELL=['./','./index.html','./manifest.webmanifest','./manifest-en.webmanifest','./icon-192.png','./icon-512.png','./interpretation-engine-v2.js','./cards/024.webp','./cards/109.webp'];
+const ENGINE_TAG='<script src="./interpretation-engine-v2.js?v=3.0"></script>';
+
+async function pageWithAstroEngine(response){
+  if(!response)return response;
+  const type=response.headers.get('content-type')||'';
+  if(!type.includes('text/html'))return response;
+  let html=await response.text();
+  if(!html.includes('interpretation-engine-v2.js'))html=html.replace('</body>',ENGINE_TAG+'</body>');
+  const headers=new Headers(response.headers);
+  headers.delete('content-length');
+  headers.set('content-type','text/html; charset=utf-8');
+  return new Response(html,{status:response.status,statusText:response.statusText,headers});
+}
 
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting()));
@@ -21,12 +34,17 @@ self.addEventListener('fetch',event=>{
   if(request.method!=='GET'||url.origin!==self.location.origin)return;
 
   if(request.mode==='navigate'){
-    event.respondWith(
-      fetch(request).then(response=>{
-        if(response.ok){const copy=response.clone();caches.open(CACHE_NAME).then(cache=>cache.put(request,copy));}
-        return response;
-      }).catch(()=>caches.match(request).then(response=>response||caches.match('./index.html')))
-    );
+    event.respondWith((async()=>{
+      try{
+        const network=await fetch(request,{cache:'no-cache'});
+        const transformed=await pageWithAstroEngine(network);
+        if(transformed?.ok){const copy=transformed.clone();caches.open(CACHE_NAME).then(cache=>cache.put(request,copy));}
+        return transformed;
+      }catch(e){
+        const cached=await caches.match(request)||await caches.match('./index.html');
+        return pageWithAstroEngine(cached);
+      }
+    })());
     return;
   }
 
