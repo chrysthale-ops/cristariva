@@ -1,6 +1,6 @@
-const CACHE_NAME='cristariva-modele-a-v21-20260914-astro-v3-3';
-const SHELL=['./','./index.html','./manifest.webmanifest','./manifest-en.webmanifest','./icon-192.png','./icon-512.png','./interpretation-engine-v2.js','./natal-influences-v3.1.js','./period-overview-v3.2.js','./integrated-period-reading-v3.3.js','./cards/024.webp','./cards/109.webp'];
-const ENGINE_TAG='<script src="./interpretation-engine-v2.js?v=3.0"></script><script src="./natal-influences-v3.1.js?v=3.1"></script><script src="./period-overview-v3.2.js?v=3.2"></script><script src="./integrated-period-reading-v3.3.js?v=3.3"></script>';
+const CACHE_NAME='cristariva-modele-a-v21-20260914-astro-v3-4';
+const SHELL=['./','./index.html','./manifest.webmanifest','./manifest-en.webmanifest','./icon-192.png','./icon-512.png','./interpretation-engine-v2.js','./natal-influences-v3.1.js','./period-overview-v3.2.js','./integrated-period-reading-v3.3.js','./natal-profile-v3.4.js','./cards/024.webp','./cards/109.webp'];
+const ENGINE_TAG='<script src="./interpretation-engine-v2.js?v=3.0"></script><script src="./natal-influences-v3.1.js?v=3.1"></script><script src="./period-overview-v3.2.js?v=3.2"></script><script src="./integrated-period-reading-v3.3.js?v=3.3"></script><script src="./natal-profile-v3.4.js?v=3.4"></script>';
 
 async function pageWithAstroEngine(response){
   if(!response)return response;
@@ -12,6 +12,7 @@ async function pageWithAstroEngine(response){
     if(!html.includes('natal-influences-v3.1.js'))html=html.replace('</body>','<script src="./natal-influences-v3.1.js?v=3.1"></script></body>');
     if(!html.includes('period-overview-v3.2.js'))html=html.replace('</body>','<script src="./period-overview-v3.2.js?v=3.2"></script></body>');
     if(!html.includes('integrated-period-reading-v3.3.js'))html=html.replace('</body>','<script src="./integrated-period-reading-v3.3.js?v=3.3"></script></body>');
+    if(!html.includes('natal-profile-v3.4.js'))html=html.replace('</body>','<script src="./natal-profile-v3.4.js?v=3.4"></script></body>');
   }
   const headers=new Headers(response.headers);
   headers.delete('content-length');
