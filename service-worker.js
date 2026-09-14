@@ -1,4 +1,4 @@
-const CACHE_NAME='cristariva-modele-a-v21-20260914-astro-v3-6';
+const CACHE_NAME='cristariva-modele-a-v22-20260914-cartes-restaurees';
 const SHELL=['./','./index.html','./manifest.webmanifest','./manifest-en.webmanifest','./icon-192.png','./icon-512.png','./interpretation-engine-v2.js','./natal-influences-v3.1.js','./period-overview-v3.2.js','./integrated-period-reading-v3.3.js','./natal-profile-v3.4.js','./synthesis-cleanup-v3.5.2.js','./story-conclusion-v3.6.js','./cards/024.webp','./cards/109.webp'];
 const ENGINE_TAG='<script src="./interpretation-engine-v2.js?v=3.0"></script><script src="./natal-influences-v3.1.js?v=3.1"></script><script src="./period-overview-v3.2.js?v=3.2"></script><script src="./integrated-period-reading-v3.3.js?v=3.5.1"></script><script src="./natal-profile-v3.4.js?v=3.4"></script><script src="./synthesis-cleanup-v3.5.2.js?v=3.5.2"></script><script src="./story-conclusion-v3.6.js?v=3.6"></script>';
 
@@ -76,7 +76,7 @@ self.addEventListener('fetch',event=>{
 
   if(/\/cards\/\d{3}\.webp$/.test(url.pathname)){
     event.respondWith(
-      fetch(request,{cache:'no-cache'}).then(response=>{
+      fetch(request,{cache:'reload'}).then(response=>{
         if(response.ok){const copy=response.clone();caches.open(CACHE_NAME).then(cache=>cache.put(request,copy));}
         return response;
       }).catch(()=>caches.match(request))
