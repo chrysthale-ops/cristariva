@@ -1,19 +1,27 @@
-const CACHE_NAME='cristariva-modele-a-v21-20260914-astro-v3-5';
+const CACHE_NAME='cristariva-modele-a-v21-20260914-astro-v3-5-1';
 const SHELL=['./','./index.html','./manifest.webmanifest','./manifest-en.webmanifest','./icon-192.png','./icon-512.png','./interpretation-engine-v2.js','./natal-influences-v3.1.js','./period-overview-v3.2.js','./integrated-period-reading-v3.3.js','./natal-profile-v3.4.js','./cards/024.webp','./cards/109.webp'];
-const ENGINE_TAG='<script src="./interpretation-engine-v2.js?v=3.0"></script><script src="./natal-influences-v3.1.js?v=3.1"></script><script src="./period-overview-v3.2.js?v=3.2"></script><script src="./integrated-period-reading-v3.3.js?v=3.5"></script><script src="./natal-profile-v3.4.js?v=3.4"></script>';
+const ENGINE_TAG='<script src="./interpretation-engine-v2.js?v=3.0"></script><script src="./natal-influences-v3.1.js?v=3.1"></script><script src="./period-overview-v3.2.js?v=3.2"></script><script src="./integrated-period-reading-v3.3.js?v=3.5.1"></script><script src="./natal-profile-v3.4.js?v=3.4"></script>';
 
 async function pageWithAstroEngine(response){
   if(!response)return response;
   const type=response.headers.get('content-type')||'';
   if(!type.includes('text/html'))return response;
   let html=await response.text();
-  if(!html.includes('interpretation-engine-v2.js'))html=html.replace('</body>',ENGINE_TAG+'</body>');
-  else{
+
+  /* Une PWA Android peut conserver un HTML déjà transformé par un ancien service worker.
+     On normalise donc explicitement les versions des scripts avant toute autre vérification. */
+  html=html.replace(/<script src="\.\/integrated-period-reading-v3\.3\.js\?v=[^"]+"><\/script>/g,'<script src="./integrated-period-reading-v3.3.js?v=3.5.1"></script>');
+  html=html.replace(/<script src="\.\/natal-profile-v3\.4\.js\?v=[^"]+"><\/script>/g,'<script src="./natal-profile-v3.4.js?v=3.4"></script>');
+
+  if(!html.includes('interpretation-engine-v2.js')){
+    html=html.replace('</body>',ENGINE_TAG+'</body>');
+  }else{
     if(!html.includes('natal-influences-v3.1.js'))html=html.replace('</body>','<script src="./natal-influences-v3.1.js?v=3.1"></script></body>');
     if(!html.includes('period-overview-v3.2.js'))html=html.replace('</body>','<script src="./period-overview-v3.2.js?v=3.2"></script></body>');
-    if(!html.includes('integrated-period-reading-v3.3.js'))html=html.replace('</body>','<script src="./integrated-period-reading-v3.3.js?v=3.5"></script></body>');
+    if(!html.includes('integrated-period-reading-v3.3.js?v=3.5.1'))html=html.replace('</body>','<script src="./integrated-period-reading-v3.3.js?v=3.5.1"></script></body>');
     if(!html.includes('natal-profile-v3.4.js'))html=html.replace('</body>','<script src="./natal-profile-v3.4.js?v=3.4"></script></body>');
   }
+
   const headers=new Headers(response.headers);
   headers.delete('content-length');
   headers.set('content-type','text/html; charset=utf-8');
@@ -51,6 +59,16 @@ self.addEventListener('fetch',event=>{
         return pageWithAstroEngine(cached);
       }
     })());
+    return;
+  }
+
+  if(/\/(interpretation-engine-v2|natal-influences-v3\.1|period-overview-v3\.2|integrated-period-reading-v3\.3|natal-profile-v3\.4)\.js$/.test(url.pathname)){
+    event.respondWith(
+      fetch(request,{cache:'no-cache'}).then(response=>{
+        if(response.ok){const copy=response.clone();caches.open(CACHE_NAME).then(cache=>cache.put(request,copy));}
+        return response;
+      }).catch(()=>caches.match(request))
+    );
     return;
   }
 
