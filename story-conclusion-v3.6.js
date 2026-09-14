@@ -1,9 +1,19 @@
-/* CRISTARIVA — conclusion littéraire du tirage v3.6
+/* CRISTARIVA — conclusion littéraire du tirage v3.6.1
    Ajoute à « L’histoire racontée par vos cartes » une conclusion globale
-   sans citer ni répéter le nom des cartes. */
-const CRISTARIVA_STORY_CONCLUSION_VERSION='3.6';
+   sans citer ni répéter le nom des cartes, et verrouille les 3 domaines validés. */
+const CRISTARIVA_STORY_CONCLUSION_VERSION='3.6.1';
 
 function cr36En(){return state?.lang==='en';}
+function cr36NormalizeDomains(){
+  const select=document.getElementById('domain');
+  if(!select)return;
+  const values=['Relations','Professionnelle / Projet','Général / spirituel'];
+  const labels=cr36En()?['Relationships','Professional / Project','General / Spiritual']:values;
+  const current=values.includes(state?.domain)?state.domain:(values.includes(select.value)?select.value:'Relations');
+  select.innerHTML=values.map((value,i)=>`<option value="${value}">${labels[i]}</option>`).join('');
+  select.value=current;
+  if(typeof state==='object'&&state)state.domain=current;
+}
 function cr36Category(card){
   const raw=(card?.category||'').toLowerCase();
   if(raw.includes('positive'))return 1;
@@ -79,18 +89,22 @@ function cr36LiteraryConclusion(cards,en=cr36En()){
   if(!Array.isArray(cards)||!cards.length)return '';
   return `${cr36Arc(cards,en)} ${cr36Outcome(cards,en)}`;
 }
+function cr36AppendSummary(html,cards){
+  if(!html||!Array.isArray(cards)||!cards.length||html.includes('cr36-story-conclusion'))return html;
+  const en=cr36En(),conclusion=cr36LiteraryConclusion(cards,en);
+  if(!conclusion)return html;
+  const text=typeof readingEscape==='function'?readingEscape(conclusion):conclusion;
+  const block=`<div class="conclusion cr36-story-conclusion"><strong>${en?'In summary':'En résumé'}</strong><p>${text}</p></div>`;
+  const i=html.lastIndexOf('</div>');
+  return i>=0?html.slice(0,i)+block+html.slice(i):html+block;
+}
 
 (function(){
+  cr36NormalizeDomains();
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',cr36NormalizeDomains,{once:true});
   if(typeof storyInterpretation!=='function')return;
   const previous=storyInterpretation;
-  storyInterpretation=function(cards){
-    let html=previous(cards);
-    if(!html||!Array.isArray(cards)||!cards.length)return html;
-    const en=cr36En(),conclusion=cr36LiteraryConclusion(cards,en);
-    if(!conclusion)return html;
-    const block=`<div class="conclusion cr36-story-conclusion"><strong>${en?'In summary':'En résumé'}</strong><p>${typeof readingEscape==='function'?readingEscape(conclusion):conclusion}</p></div>`;
-    return html.replace('</div>',`${block}</div>`);
-  };
+  storyInterpretation=function(cards){return cr36AppendSummary(previous(cards),cards);};
   if(typeof interpretation==='function')interpretation=function(cards){return storyInterpretation(cards);};
   if(typeof renderCards==='function'&&state?.draw?.length)renderCards();
 })();
