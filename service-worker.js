@@ -1,6 +1,6 @@
-const CACHE_NAME='cristariva-modele-a-v22-20260914-cartes-restaurees';
+const CACHE_NAME='cristariva-modele-a-v23-20260914-domaines-resume';
 const SHELL=['./','./index.html','./manifest.webmanifest','./manifest-en.webmanifest','./icon-192.png','./icon-512.png','./interpretation-engine-v2.js','./natal-influences-v3.1.js','./period-overview-v3.2.js','./integrated-period-reading-v3.3.js','./natal-profile-v3.4.js','./synthesis-cleanup-v3.5.2.js','./story-conclusion-v3.6.js','./cards/024.webp','./cards/109.webp'];
-const ENGINE_TAG='<script src="./interpretation-engine-v2.js?v=3.0"></script><script src="./natal-influences-v3.1.js?v=3.1"></script><script src="./period-overview-v3.2.js?v=3.2"></script><script src="./integrated-period-reading-v3.3.js?v=3.5.1"></script><script src="./natal-profile-v3.4.js?v=3.4"></script><script src="./synthesis-cleanup-v3.5.2.js?v=3.5.2"></script><script src="./story-conclusion-v3.6.js?v=3.6"></script>';
+const ENGINE_TAG='<script src="./interpretation-engine-v2.js?v=3.0"></script><script src="./natal-influences-v3.1.js?v=3.1"></script><script src="./period-overview-v3.2.js?v=3.2"></script><script src="./integrated-period-reading-v3.3.js?v=3.5.1"></script><script src="./natal-profile-v3.4.js?v=3.4"></script><script src="./synthesis-cleanup-v3.5.2.js?v=3.5.2"></script><script src="./story-conclusion-v3.6.js?v=3.6.1"></script>';
 
 async function pageWithAstroEngine(response){
   if(!response)return response;
@@ -11,7 +11,7 @@ async function pageWithAstroEngine(response){
   html=html.replace(/<script src="\.\/integrated-period-reading-v3\.3\.js\?v=[^"]+"><\/script>/g,'<script src="./integrated-period-reading-v3.3.js?v=3.5.1"></script>');
   html=html.replace(/<script src="\.\/natal-profile-v3\.4\.js\?v=[^"]+"><\/script>/g,'<script src="./natal-profile-v3.4.js?v=3.4"></script>');
   html=html.replace(/<script src="\.\/synthesis-cleanup-v3\.5\.2\.js\?v=[^"]+"><\/script>/g,'<script src="./synthesis-cleanup-v3.5.2.js?v=3.5.2"></script>');
-  html=html.replace(/<script src="\.\/story-conclusion-v3\.6\.js\?v=[^"]+"><\/script>/g,'<script src="./story-conclusion-v3.6.js?v=3.6"></script>');
+  html=html.replace(/<script src="\.\/story-conclusion-v3\.6\.js\?v=[^"]+"><\/script>/g,'<script src="./story-conclusion-v3.6.js?v=3.6.1"></script>');
 
   if(!html.includes('interpretation-engine-v2.js')){
     html=html.replace('</body>',ENGINE_TAG+'</body>');
@@ -21,7 +21,7 @@ async function pageWithAstroEngine(response){
     if(!html.includes('integrated-period-reading-v3.3.js?v=3.5.1'))html=html.replace('</body>','<script src="./integrated-period-reading-v3.3.js?v=3.5.1"></script></body>');
     if(!html.includes('natal-profile-v3.4.js'))html=html.replace('</body>','<script src="./natal-profile-v3.4.js?v=3.4"></script></body>');
     if(!html.includes('synthesis-cleanup-v3.5.2.js?v=3.5.2'))html=html.replace('</body>','<script src="./synthesis-cleanup-v3.5.2.js?v=3.5.2"></script></body>');
-    if(!html.includes('story-conclusion-v3.6.js?v=3.6'))html=html.replace('</body>','<script src="./story-conclusion-v3.6.js?v=3.6"></script></body>');
+    if(!html.includes('story-conclusion-v3.6.js?v=3.6.1'))html=html.replace('</body>','<script src="./story-conclusion-v3.6.js?v=3.6.1"></script></body>');
   }
 
   const headers=new Headers(response.headers);
