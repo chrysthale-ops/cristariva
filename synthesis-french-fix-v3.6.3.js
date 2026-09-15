@@ -1,7 +1,7 @@
-/* CRISTARIVA — correction française de la synthèse générale v3.6.3
-   Évite les accords fragiles construits à partir de listes d'adjectifs
-   et corrige la ponctuation après la question. */
-const CRISTARIVA_SYNTHESIS_FRENCH_FIX_VERSION='3.6.3';
+/* CRISTARIVA — correction française de la synthèse générale v3.6.4
+   Évite les accords fragiles construits à partir de listes d'adjectifs,
+   corrige la ponctuation après la question et supprime la conclusion générique superflue. */
+const CRISTARIVA_SYNTHESIS_FRENCH_FIX_VERSION='3.6.4';
 
 function cr363LowerInitialSentence(text){
   const s=String(text||'').trim();
@@ -30,11 +30,11 @@ if(typeof cr362GlobalSynthesis==='function'){
     const cards=state?.draw||[];
     if(!cards.length)return '';
     const q=(state?.question||'').trim();
-    const answer=cr362RelationAnswer(en),nuance=cr362OutcomeNuance(cards,en),natal=cr363NatalLens(a,en),timing=cr362Timing(a,en),closing=cr362Closing(en);
+    const answer=cr362RelationAnswer(en),nuance=cr362OutcomeNuance(cards,en),natal=cr363NatalLens(a,en),timing=cr362Timing(a,en);
     const lead=en
       ? `${q?`For your question “${cr362Esc(q)}”, `:''}${answer}.`
       : `${q?`À votre question « ${cr362Esc(q)} », `:''}${answer}.`;
-    const text=[lead,nuance,natal,timing,closing].filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
+    const text=[lead,nuance,natal,timing].filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
     return `<div class="story-reading cr3-global cr362-global" data-global-synthesis="${CRISTARIVA_SYNTHESIS_FRENCH_FIX_VERSION}"><h3>${en?'CRISTARIVA — final consultation':'CRISTARIVA — synthèse générale'}</h3><p>${text}</p></div>`;
   };
   if(typeof cr33GlobalSynthesis==='function')cr33GlobalSynthesis=cr362GlobalSynthesis;
