@@ -1,0 +1,73 @@
+name: Reduce single-card display size v46
+
+on:
+  push:
+    paths:
+      - '.github/workflows/single-card-display-v46.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Limit single-card draw width
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          css_marker = '/* CRISTARIVA — taille du tirage à 1 carte v46 */'
+          css = '''\n/* CRISTARIVA — taille du tirage à 1 carte v46 */\n#drawCards.single-card-draw{\n  grid-template-columns:minmax(0,340px);\n  justify-content:center;\n}\n#drawCards.single-card-draw>.card{\n  width:100%;\n  max-width:340px;\n  justify-self:center;\n}\n@media(max-width:800px){\n  #drawCards.single-card-draw{grid-template-columns:minmax(0,min(280px,82vw));}\n  #drawCards.single-card-draw>.card{max-width:min(280px,82vw);}\n}\n'''
+          if css_marker not in s:
+              pos = s.find('</style>')
+              if pos < 0:
+                  raise SystemExit('closing style tag not found')
+              s = s[:pos] + css + s[pos:]
+
+          old = '''function renderCards(){\n if(!state.draw.length)return;\n const positions=(state.lang==='en'?POSITIONS_EN:POSITIONS_FR)[state.draw.length];\n $('#drawCards').innerHTML=state.draw.map((c,i)=>cardHTML(c,positions[i][0])).join('');\n $('#reading').innerHTML=storyInterpretation(state.draw);\n}'''
+          new = '''function renderCards(){\n if(!state.draw.length)return;\n const positions=(state.lang==='en'?POSITIONS_EN:POSITIONS_FR)[state.draw.length];\n const drawCards=$('#drawCards');\n drawCards.classList.toggle('single-card-draw',state.draw.length===1);\n drawCards.innerHTML=state.draw.map((c,i)=>cardHTML(c,positions[i][0])).join('');\n $('#reading').innerHTML=storyInterpretation(state.draw);\n}'''
+          if old in s:
+              s = s.replace(old, new, 1)
+          elif "classList.toggle('single-card-draw'" not in s:
+              raise SystemExit('renderCards block not found')
+
+          s = re.sub(r"const CRISTARIVA_PWA_VERSION='[^']+';", "const CRISTARIVA_PWA_VERSION='2026.09.15-46';", s, count=1)
+          s = re.sub(r"'\./service-worker\.js\?v=[^']+'", "'./service-worker.js?v=20260915-46'", s, count=1)
+          p.write_text(s, encoding='utf-8')
+
+          sw = Path('service-worker.js')
+          w = sw.read_text(encoding='utf-8')
+          w = re.sub(r"const APP_VERSION='[^']+';", "const APP_VERSION='2026.09.15-46';", w, count=1)
+          w = re.sub(r"const CACHE_NAME='[^']+';", "const CACHE_NAME='cristariva-v46-20260915-single-card-size';", w, count=1)
+          sw.write_text(w, encoding='utf-8')
+
+      - name: Validate single-card layout
+        shell: python
+        run: |
+          from pathlib import Path
+          s = Path('index.html').read_text(encoding='utf-8')
+          w = Path('service-worker.js').read_text(encoding='utf-8')
+          assert 'CRISTARIVA — taille du tirage à 1 carte v46' in s
+          assert "classList.toggle('single-card-draw',state.draw.length===1)" in s
+          assert 'grid-template-columns:minmax(0,340px)' in s
+          assert 'max-width:min(280px,82vw)' in s
+          assert "CRISTARIVA_PWA_VERSION='2026.09.15-46'" in s
+          assert "service-worker.js?v=20260915-46" in s
+          assert "APP_VERSION='2026.09.15-46'" in w
+          assert "CACHE_NAME='cristariva-v46-20260915-single-card-size'" in w
+          print('Single-card layout validated')
+
+      - name: Commit and publish
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html service-worker.js
+          git commit -m "Reduce single-card draw display size"
+          git push
