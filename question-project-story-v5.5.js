@@ -1,7 +1,7 @@
-/* CRISTARIVA — récit centré sur les projets v5.5
-   Quand la question porte sur un projet, des projets, des objectifs ou une réalisation,
-   la question prime sur les amorces génériques et sur le vocabulaire brut des cartes. */
-const CRISTARIVA_PROJECT_STORY_VERSION='5.5';
+/* CRISTARIVA — récit centré sur les projets v5.6
+   Le récit répond directement à la question sans commenter le tirage ni parler des cartes.
+   Les formulations décrivent une situation, une transition et une direction concrètes. */
+const CRISTARIVA_PROJECT_STORY_VERSION='5.6';
 
 function cr55Question(){return String(state?.question||'').replace(/\s+/g,' ').trim();}
 function cr55Esc(v){try{return typeof cr53Esc==='function'?cr53Esc(v):typeof cr51Esc==='function'?cr51Esc(v):String(v??'');}catch(e){return String(v??'');}}
@@ -20,6 +20,13 @@ function cr55Hay(card,en=false){
 function cr55ProjectClause(card,role,en=false){
   const hay=cr55Hay(card,en);
   if(en){
+    if(/patience|wait|delay|matur|validation|learning|timing/.test(hay))return role==='origin'
+      ?'your projects have required time to mature, and that slower pace has helped separate what is solid from what was still premature'
+      :'progress now depends more on respecting the right timing than on forcing a result before the conditions are ready';
+    if(/eclos|éclos|emerg|blossom|opportunity|signs? of progress|begin.*produce/.test(hay))return 'something that had been preparing in the background is beginning to take shape, with the first concrete signs that an idea, opportunity or collaboration can really develop';
+    if(/mutation|transform|structur|new role|sector|organisation|model/.test(hay))return role==='outcome'
+      ?'the next phase is not simply an acceleration but a structural change: your projects may evolve through a new role, a different organisation, another field or a revised way of working'
+      :'the situation is entering a deeper reorganisation that changes the way the project itself is structured';
     if(/peace|calm|stabil|clarif|conflict/.test(hay))return role==='origin'
       ?'your projects first need a calmer and more stable base, so priorities can be clarified without forcing the pace'
       :'a calmer framework helps you sort priorities and make more measured decisions';
@@ -27,12 +34,18 @@ function cr55ProjectClause(card,role,en=false){
     if(/passion|motivation|creative|creativity|enthusiasm|engagement/.test(hay))return role==='outcome'
       ?'the next movement restores motivation and creative drive; the project can regain momentum if that energy is channelled into clear priorities and concrete action'
       :'motivation becomes a real resource, provided enthusiasm is organised rather than scattered';
-    if(/success|recognition|progress|opening|opportunity/.test(hay))return 'the project gains room to progress, provided the opening is converted into a concrete next step';
-    if(/delay|wait|stagn/.test(hay))return 'the project is not moving at full speed yet, so timing and preparation matter more than forcing immediate results';
-    if(/choice|decision|direction/.test(hay))return 'a clear decision is needed to define which project deserves priority and which direction should be pursued';
-    return role==='origin'?'the first card shows the conditions from which your projects are currently starting':role==='outcome'?'the final card shows what can give your projects their next concrete impulse':'the middle card shows what currently needs to be adjusted before the projects can move forward more freely';
+    if(/success|recognition|progress|opening|opportunity/.test(hay))return 'a real opening is appearing and can become useful if it is translated into a concrete next step';
+    if(/choice|decision|direction/.test(hay))return 'a clear decision is needed to determine which project deserves priority and which direction should be pursued';
+    return role==='origin'?'your projects are emerging from a phase that has already shaped their current priorities':role==='outcome'?'the next phase calls for a clearer, more concrete direction that can turn intention into real movement':'the situation is changing now, and this transition is redefining the conditions needed for progress';
   }
 
+  if(/patience|attente|délai|delai|matur|validation|apprentissage|timing/.test(hay))return role==='origin'
+    ?'vos projets ont eu besoin de temps pour mûrir ; cette lenteur a permis de distinguer ce qui pouvait réellement tenir de ce qui était encore prématuré'
+    :'la progression dépend maintenant davantage du bon moment et de la maturation des conditions que d’une accélération forcée';
+  if(/éclosion|eclosion|éclos|eclos|émerg|emerg|commence enfin|signes concrets/.test(hay))return 'ce qui se préparait jusque-là en arrière-plan commence à prendre forme : une idée, une opportunité ou une collaboration montre enfin des signes concrets de développement';
+  if(/mutation|transformation structurelle|nouveau rôle|nouveau role|secteur|organisation|modèle|modele/.test(hay))return role==='outcome'
+    ?'la suite ne correspond pas seulement à une accélération, mais à une transformation plus profonde : vos projets peuvent changer de rôle, de cadre, de secteur, d’organisation ou de manière de fonctionner'
+    :'la situation entre dans une réorganisation plus profonde qui modifie la structure même du projet';
   if(/paix|calme|stabil|clarif|conflit/.test(hay))return role==='origin'
     ?'vos projets ont d’abord besoin d’une base plus calme et plus stable afin de clarifier les priorités sans forcer le rythme'
     :'un cadre plus apaisé vous aide à remettre les priorités dans l’ordre et à décider avec davantage de recul';
@@ -40,10 +53,9 @@ function cr55ProjectClause(card,role,en=false){
   if(/passion|motivation|créativ|creativ|enthousias|engagement/.test(hay))return role==='outcome'
     ?'la suite redonne de l’énergie, de la créativité et l’envie de vous investir pleinement ; vos projets peuvent retrouver un véritable élan si cette force est canalisée vers des priorités claires et des actions concrètes'
     :'la motivation devient une ressource importante, à condition d’organiser l’enthousiasme au lieu de le disperser';
-  if(/succès|succes|reconnaissance|progress|ouverture|opportun/.test(hay))return 'une possibilité d’avancée se présente, à condition de la transformer rapidement en étape concrète';
-  if(/retard|attente|stagn/.test(hay))return 'le projet n’est pas encore dans sa phase la plus rapide ; la préparation et le bon timing comptent davantage qu’une accélération forcée';
+  if(/succès|succes|reconnaissance|progress|ouverture|opportun/.test(hay))return 'une ouverture réelle apparaît et peut devenir utile si elle est rapidement traduite en étape concrète';
   if(/choix|décision|decision|direction/.test(hay))return 'un choix clair devient nécessaire pour déterminer quel projet mérite la priorité et quelle direction doit être réellement poursuivie';
-  return role==='origin'?'la première carte décrit les conditions à partir desquelles vos projets se construisent actuellement':role==='outcome'?'la dernière carte montre ce qui peut donner à vos projets leur prochaine impulsion concrète':'la carte centrale montre ce qui doit être ajusté maintenant pour permettre une avancée plus nette';
+  return role==='origin'?'vos projets sortent d’une phase qui a déjà façonné leurs priorités actuelles':role==='outcome'?'la suite demande une orientation plus claire et plus concrète pour transformer l’intention en mouvement réel':'la situation évolue maintenant et redéfinit les conditions nécessaires pour avancer';
 }
 
 function cr55ProjectStory(cards,en=false){
@@ -51,12 +63,12 @@ function cr55ProjectStory(cards,en=false){
   const clauses=cards.slice(0,roles.length).map((c,i)=>cr55ProjectClause(c,roles[i],en));
   if(en){
     if(cards.length===1)return `${clauses[0].charAt(0).toUpperCase()+clauses[0].slice(1)}.`;
-    if(cards.length===3)return `At first, ${clauses[0]}. Right now, ${clauses[1]}. The direction ahead is clearer: ${clauses[2]}.`;
-    return `At first, ${clauses[0]}. The main difficulty is that ${clauses[1]}. Your strongest support is this: ${clauses[2]}. From there, ${clauses[3]}. Finally, ${clauses[4]}.`;
+    if(cards.length===3)return `${clauses[0].charAt(0).toUpperCase()+clauses[0].slice(1)}. Now, ${clauses[1]}. From there, ${clauses[2]}.`;
+    return `${clauses[0].charAt(0).toUpperCase()+clauses[0].slice(1)}. Then, ${clauses[1]}. What helps most is this: ${clauses[2]}. From there, ${clauses[3]}. Finally, ${clauses[4]}.`;
   }
   if(cards.length===1)return `${clauses[0].charAt(0).toUpperCase()+clauses[0].slice(1)}.`;
-  if(cards.length===3)return `Au départ, ${clauses[0]}. Aujourd’hui, ${clauses[1]}. La direction qui se dégage ensuite est plus nette : ${clauses[2]}.`;
-  return `Au départ, ${clauses[0]}. La difficulté principale tient au fait que ${clauses[1]}. Votre meilleur point d’appui est alors le suivant : ${clauses[2]}. À partir de là, ${clauses[3]}. Enfin, ${clauses[4]}.`;
+  if(cards.length===3)return `${clauses[0].charAt(0).toUpperCase()+clauses[0].slice(1)}. Maintenant, ${clauses[1]}. À partir de là, ${clauses[2]}.`;
+  return `${clauses[0].charAt(0).toUpperCase()+clauses[0].slice(1)}. Ensuite, ${clauses[1]}. Ce qui vous aide le plus est ${clauses[2]}. À partir de là, ${clauses[3]}. Enfin, ${clauses[4]}.`;
 }
 
 const cr55BaseStoryInterpretation=typeof storyInterpretation==='function'?storyInterpretation:null;
