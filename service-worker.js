@@ -1,7 +1,7 @@
-const APP_VERSION='2026.09.14-28';
-const CACHE_NAME='cristariva-modele-a-v28-20260914-carte-014-lune';
+const APP_VERSION='2026.09.15-29';
+const CACHE_NAME='cristariva-v29-20260915-caractere-compact';
 const SHELL=['./','./index.html','./manifest.webmanifest','./manifest-en.webmanifest','./icon-192.png','./icon-512.png','./interpretation-engine-v2.js','./natal-influences-v3.1.js','./period-overview-v3.2.js','./integrated-period-reading-v3.3.js','./natal-profile-v3.4.js','./synthesis-cleanup-v3.5.2.js','./story-conclusion-v3.6.js','./validated-card-titles-v3.6.3.js','./cards/014.webp','./cards/024.webp','./cards/109.webp'];
-const ENGINE_TAG='<script src="./interpretation-engine-v2.js?v=3.0"></script><script src="./natal-influences-v3.1.js?v=3.1"></script><script src="./period-overview-v3.2.js?v=3.2"></script><script src="./integrated-period-reading-v3.3.js?v=3.5.1"></script><script src="./natal-profile-v3.4.js?v=3.4"></script><script src="./synthesis-cleanup-v3.5.2.js?v=3.6.2"></script><script src="./story-conclusion-v3.6.js?v=3.6.1"></script><script src="./validated-card-titles-v3.6.3.js?v=3.6.3"></script>';
+const ENGINE_TAG='<script src="./interpretation-engine-v2.js?v=3.0"></script><script src="./natal-influences-v3.1.js?v=3.1"></script><script src="./period-overview-v3.2.js?v=3.2"></script><script src="./integrated-period-reading-v3.3.js?v=3.5.1"></script><script src="./natal-profile-v3.4.js?v=3.4.1"></script><script src="./synthesis-cleanup-v3.5.2.js?v=3.6.2"></script><script src="./story-conclusion-v3.6.js?v=3.6.1"></script><script src="./validated-card-titles-v3.6.3.js?v=3.6.3"></script>';
 
 async function pageWithAstroEngine(response){
   if(!response)return response;
@@ -10,7 +10,7 @@ async function pageWithAstroEngine(response){
   let html=await response.text();
 
   html=html.replace(/<script src="\.\/integrated-period-reading-v3\.3\.js\?v=[^"]+"><\/script>/g,'<script src="./integrated-period-reading-v3.3.js?v=3.5.1"></script>');
-  html=html.replace(/<script src="\.\/natal-profile-v3\.4\.js\?v=[^"]+"><\/script>/g,'<script src="./natal-profile-v3.4.js?v=3.4"></script>');
+  html=html.replace(/<script src="\.\/natal-profile-v3\.4\.js\?v=[^"]+"><\/script>/g,'<script src="./natal-profile-v3.4.js?v=3.4.1"></script>');
   html=html.replace(/<script src="\.\/synthesis-cleanup-v3\.5\.2\.js\?v=[^"]+"><\/script>/g,'<script src="./synthesis-cleanup-v3.5.2.js?v=3.6.2"></script>');
   html=html.replace(/<script src="\.\/story-conclusion-v3\.6\.js\?v=[^"]+"><\/script>/g,'<script src="./story-conclusion-v3.6.js?v=3.6.1"></script>');
   html=html.replace(/<script src="\.\/validated-card-titles-v3\.6\.3\.js\?v=[^"]+"><\/script>/g,'<script src="./validated-card-titles-v3.6.3.js?v=3.6.3"></script>');
@@ -21,7 +21,7 @@ async function pageWithAstroEngine(response){
     if(!html.includes('natal-influences-v3.1.js'))html=html.replace('</body>','<script src="./natal-influences-v3.1.js?v=3.1"></script></body>');
     if(!html.includes('period-overview-v3.2.js'))html=html.replace('</body>','<script src="./period-overview-v3.2.js?v=3.2"></script></body>');
     if(!html.includes('integrated-period-reading-v3.3.js?v=3.5.1'))html=html.replace('</body>','<script src="./integrated-period-reading-v3.3.js?v=3.5.1"></script></body>');
-    if(!html.includes('natal-profile-v3.4.js'))html=html.replace('</body>','<script src="./natal-profile-v3.4.js?v=3.4"></script></body>');
+    if(!html.includes('natal-profile-v3.4.js?v=3.4.1'))html=html.replace('</body>','<script src="./natal-profile-v3.4.js?v=3.4.1"></script></body>');
     if(!html.includes('synthesis-cleanup-v3.5.2.js?v=3.6.2'))html=html.replace('</body>','<script src="./synthesis-cleanup-v3.5.2.js?v=3.6.2"></script></body>');
     if(!html.includes('story-conclusion-v3.6.js?v=3.6.1'))html=html.replace('</body>','<script src="./story-conclusion-v3.6.js?v=3.6.1"></script></body>');
     if(!html.includes('validated-card-titles-v3.6.3.js?v=3.6.3'))html=html.replace('</body>','<script src="./validated-card-titles-v3.6.3.js?v=3.6.3"></script></body>');
