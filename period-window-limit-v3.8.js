@@ -1,16 +1,17 @@
-/* CRISTARIVA — sélection des fenêtres astrologiques v3.8.2
-   Limite le nombre de fenêtres aux plus significatives pour la question :
-   1 fenêtre jusqu'à 2 semaines, 2 fenêtres jusqu'à 2 mois calendaires, 3 au-delà.
-   Simplifie aussi le texte d'impact en supprimant la terminaison « en lien avec… ».
-   Supprime l'introduction générique superflue du récit Général / spirituel. */
-const CRISTARIVA_PERIOD_WINDOW_LIMIT_VERSION='3.8.2';
+/* CRISTARIVA — sélection et récit des pics astrologiques v3.9
+   Présente les transits comme un récit court et fluide :
+   1 pic jusqu'à 2 semaines, 2 pics maximum jusqu'à 3 mois, 3 au-delà.
+   Ne montre plus les longues fenêtres : seules les dates de pic sont signalées.
+   Diversifie les influences retenues pour éviter les répétitions d'une même planète.
+   Conserve aussi le texte d'impact concis et l'ouverture spirituelle sans phrase générique. */
+const CRISTARIVA_PERIOD_WINDOW_LIMIT_VERSION='3.9';
 
 function cr38WindowLimit(window){
   if(!window?.end)return 1;
   const days=Math.max(0,(window.end-window.start)/86400000);
   if(days<=14.5)return 1;
-  // Deux mois calendaires peuvent représenter jusqu'à 62 jours.
-  if(days<=62.5)return 2;
+  // Jusqu'à trois mois calendaires : deux pics maximum.
+  if(days<=93.5)return 2;
   return 3;
 }
 
@@ -28,7 +29,7 @@ cr37ImpactText=function(hit,intent,en=false){
   }
   const verb=hit.tone==='support'?'peut soutenir':hit.tone==='challenge'?'peut mettre sous tension':'peut activer fortement';
   let text=`${verb} ${trArea}`;
-  if(intent?.sexual&&(['Vénus','Mars'].includes(hit.tr)||['Vénus','Mars'].includes(hit.na)))text+=' ; cette fenêtre peut donc agir sur l’attirance, le désir ou l’initiative, sans permettre de déduire le consentement d’une autre personne';
+  if(intent?.sexual&&(['Vénus','Mars'].includes(hit.tr)||['Vénus','Mars'].includes(hit.na)))text+=' ; cette période peut donc agir sur l’attirance, le désir ou l’initiative, sans permettre de déduire le consentement d’une autre personne';
   return text;
 };
 
@@ -63,12 +64,41 @@ function cr37RelevantWindows(a,theme,window,intent){
   }
 
   const limit=cr38WindowLimit(window);
-  return unique.slice(0,limit).sort((a,b)=>a.first-b.first||a.bestDate-b.bestDate);
+
+  // On privilégie d'abord des planètes transitantes différentes afin d'éviter
+  // deux phrases successives qui répètent exactement le même thème.
+  const selected=[],usedTransit=new Set();
+  for(const h of unique){
+    if(selected.length>=limit)break;
+    if(usedTransit.has(h.tr))continue;
+    selected.push(h);
+    usedTransit.add(h.tr);
+  }
+  // Si la diversité ne suffit pas, on complète avec le meilleur transit restant.
+  if(selected.length<limit){
+    for(const h of unique){
+      if(selected.length>=limit)break;
+      if(selected.includes(h))continue;
+      selected.push(h);
+    }
+  }
+  return selected.sort((a,b)=>a.bestDate-b.bestDate);
 }
 
-function cr38WindowHeading(count,en=false){
-  if(en)return count===1?'Most significant astrological window for your question':'Most significant astrological windows for your question';
-  return count===1?'Fenêtre astrologique la plus significative pour votre question':'Fenêtres astrologiques les plus significatives pour votre question';
+function cr38PeakDate(hit,en=false){
+  return en?`around ${cr3Date(hit.bestDate,true)}`:`autour du ${cr3Date(hit.bestDate,false)}`;
+}
+
+function cr38PeakSentence(hit,index,en=false){
+  const when=cr38PeakDate(hit,en);
+  const aspect=cr37AspectLabel(hit,en);
+  const impact=cr37ImpactText(hit,cr33Intent(),en);
+  if(en){
+    const lead=index===0?'A first significant point appears':'A second significant point appears';
+    return `${lead} ${when}, when ${aspect} ${impact}.`;
+  }
+  const lead=index===0?'Un premier moment significatif ressort':'Un second moment ressort';
+  return `${lead} ${when}, lorsque ${aspect} ${impact}.`;
 }
 
 function cr37WindowsText(a,en=false){
@@ -76,25 +106,16 @@ function cr37WindowsText(a,en=false){
   const intent=cr33Intent(),theme=cr3DominantTheme(state.draw||[],en),window=cr3TimingWindow(state.date,cr3ReadingMoment(),en);
   const relevant=cr37RelevantWindows(a,theme,window,intent);
   if(!relevant.length){
-    if(!window.end)return en?'The Timing card has no fixed endpoint, and no clearly question-relevant planetary window is identifiable at the reading date.':'La carte Datation n’ayant pas de borne finale, aucune fenêtre planétaire clairement liée à votre question n’est identifiable au moment du tirage.';
-    return en?'No distinct planetary window with a sufficiently clear link to the question is detected within the Timing-card period.':'Aucune fenêtre planétaire distincte présentant un lien suffisamment net avec votre question n’est détectée à l’intérieur de la période définie par la carte Datation.';
+    if(!window.end)return en?'No clearly question-relevant planetary peak is identifiable at the reading date.':'Aucun pic planétaire clairement lié à votre question n’est identifiable au moment du tirage.';
+    return en?'No sufficiently significant planetary peak stands out within the period defined by the Timing card.':'Aucun pic planétaire suffisamment significatif ne ressort à l’intérieur de la période définie par la carte Datation.';
   }
-  const parts=relevant.map(h=>`${cr37WhenText(h,en)} — ${cr37AspectLabel(h,en)} : ${cr37ImpactText(h,intent,en)}`);
-  if(en){
-    const intro=relevant.length===1?'The most significant planetary window for your question is':'The most significant planetary windows for your question are';
-    return `${intro}: ${parts.join('; ')}.`;
-  }
-  const intro=relevant.length===1?'La fenêtre astrologique la plus significative par rapport à votre question est':'Les fenêtres astrologiques les plus significatives par rapport à votre question sont';
-  return `${intro} : ${parts.join(' ; ')}.`;
+  return relevant.map((h,i)=>cr38PeakSentence(h,i,en)).join(' ');
 }
 
 function cr37WindowsMarkup(a,en=false){
   if(!a||!state?.date)return '';
-  const intent=cr33Intent(),theme=cr3DominantTheme(state.draw||[],en),window=cr3TimingWindow(state.date,cr3ReadingMoment(),en);
-  const relevant=cr37RelevantWindows(a,theme,window,intent);
-  if(!relevant.length)return `<p class="cr37-none"><b>${en?'Relevant planetary windows':'Fenêtres astrologiques liées à la question'}</b> — ${cr37WindowsText(a,en)}</p>`;
-  const items=relevant.map(h=>`<li><b>${cr3Escape(cr37WhenText(h,en))}</b> — <strong>${cr3Escape(cr37AspectLabel(h,en))}</strong> : ${cr3Escape(cr37ImpactText(h,intent,en))}.</li>`).join('');
-  return `<div class="cr37-windows"><p><b>${cr38WindowHeading(relevant.length,en)}</b></p><ul>${items}</ul></div>`;
+  const text=cr37WindowsText(a,en);
+  return `<p class="cr37-peaks">${cr3Escape(text)}</p>`;
 }
 
 (function cr38Refresh(){
