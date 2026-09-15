@@ -1,4 +1,4 @@
-/* CRISTARIVA — correctifs narratifs et numérotation des pics v3.9.3 */
+/* CRISTARIVA — correctifs narratifs et numérotation des pics v3.9.4 */
 (function(){
   /* Numérotation correcte des pics astrologiques. */
   if(typeof cr38PeakDate==='function'&&typeof cr37AspectLabel==='function'&&typeof cr37ImpactText==='function'){
@@ -113,7 +113,9 @@
 
   if(previousOpening){
     cr51Opening=function(scope,en=false){
-      if(isAdviceQuestion(en))return '';
+      /* Les récits relationnels commencent directement par la première carte :
+         l'annonce générique d'une évolution « par étapes » est supprimée. */
+      if(scope==='relation'||isAdviceQuestion(en))return '';
       return previousOpening(scope,en);
     };
   }
