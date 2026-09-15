@@ -1,46 +1,55 @@
-/* CRISTARIVA — moteur narratif continu v4.0
-   Remplace l'ancienne succession de définitions par un récit unique
-   où chaque carte modifie la dynamique créée par la précédente. */
-const CRISTARIVA_STORY_ENGINE_VERSION='4.0';
+/* CRISTARIVA — moteur narratif continu v4.1
+   Le récit utilise uniquement la lecture correspondant au domaine de la question.
+   Il évite ainsi qu'un texte relationnel contamine une question professionnelle,
+   et supprime toute phrase finale expliquant le fonctionnement du moteur. */
+const CRISTARIVA_STORY_ENGINE_VERSION='4.1';
 
 function cn4Name(card){
   try{return readingEscape(cardName(card));}catch(e){return String(card?.name||'');}
 }
-function cn4Body(text){
-  let s=String(text||'').replace(/\s+/g,' ').trim().replace(/[.!?]\s*$/,'');
-  if(!s)return '';
-  return s.charAt(0).toLocaleLowerCase()+s.slice(1);
+function cn4RawName(card,en){
+  if(en&&card?.en?.name)return String(card.en.name);
+  return String(card?.name||'');
 }
-function cn4Role(card,role,en){
-  try{
-    if(typeof finalRoleSentence==='function')return cn4Body(finalRoleSentence(card,role,en));
-  }catch(e){}
-  try{
-    if(typeof readingClause==='function')return cn4Body(readingClause(card,en));
-  }catch(e){}
-  return en?'the situation is still taking shape':'la situation est encore en train de se définir';
+function cn4Scope(focus){
+  const d=String(state.domain||'').toLocaleLowerCase();
+  const q=String(state.question||'').toLocaleLowerCase();
+  if(focus==='work'||focus==='money'||/profession|travail|emploi|carri[eè]re|projet|work|career/.test(d+' '+q))return 'work';
+  if(['love','return','contact','sex'].includes(focus)||/relation|amour|couple|sentiment|love/.test(d+' '+q))return 'relation';
+  return 'spirit';
+}
+function cn4Field(card,scope,en){
+  const loc=en?(card?.en||{}):card||{};
+  if(scope==='work')return loc.reading_professionnel||loc.meaning||loc.definition||'';
+  if(scope==='relation')return loc.reading_relationnel||loc.meaning||loc.definition||'';
+  return loc.reading_spirituel||loc.meaning||loc.definition||'';
+}
+function cn4EscapeRx(s){return String(s||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
+function cn4ScopedSentence(card,scope,en){
+  let s=String(cn4Field(card,scope,en)||'').replace(/\s+/g,' ').trim();
+  if(!s){
+    try{s=String(preciseReading(card,scope==='work'?'work':scope==='relation'?'love':'life',en)||'').trim();}catch(e){}
+  }
+  s=s.replace(/^(?:Dans (?:une relation|le travail|le cadre [^,]+)|Sur le plan [^,]+),\s*/i,'');
+  s=s.replace(/^(?:In (?:a relationship|the workplace|the professional context|the relational context|the spiritual context)|On (?:a general|an inner|a spiritual) level),\s*/i,'');
+  s=s.replace(/[.!?]\s*$/,'').trim();
+  const raw=cn4RawName(card,en);
+  const display=cn4Name(card);
+  if(raw){
+    const rx=new RegExp('^'+cn4EscapeRx(raw)+'\\b','i');
+    if(rx.test(s))s=s.replace(rx,`<strong>${display}</strong>`);
+    else if(s&&!/^<strong>/i.test(s))s=s.charAt(0).toLocaleLowerCase()+s.slice(1);
+  }
+  if(!s)return en?'the situation is still taking shape':'la situation est encore en train de se définir';
+  return s;
 }
 function cn4Subject(focus,en){
-  try{
-    if(typeof preciseSubject==='function')return preciseSubject(focus,en);
-  }catch(e){}
+  try{if(typeof preciseSubject==='function')return preciseSubject(focus,en);}catch(e){}
   return en?'this situation':'cette situation';
 }
-function cn4Arc(first,last,en){
-  let a='neutral',z='neutral';
-  try{
-    if(typeof finalSemanticKey==='function'){a=finalSemanticKey(first);z=finalSemanticKey(last);}
-  }catch(e){}
-  if(en){
-    if(['separation','hidden','delay'].includes(a)&&['bond','reconcile','positive','new'].includes(z))return 'The movement is therefore not a simple continuation of the starting point: the spread describes a genuine change of atmosphere.';
-    if(['bond','positive','new'].includes(a)&&['separation','hidden','delay'].includes(z))return 'The story therefore becomes more cautious than its opening suggested, because the final direction introduces a limit, distance or slower pace.';
-    if(a===z&&a!=='neutral')return 'The same underlying theme remains present from beginning to end, which gives the spread a particularly coherent direction.';
-    return 'Taken together, the cards describe a progression rather than a collection of separate messages.';
-  }
-  if(['separation','hidden','delay'].includes(a)&&['bond','reconcile','positive','new'].includes(z))return 'Le mouvement n’est donc pas une simple prolongation du point de départ : le tirage raconte un véritable changement d’atmosphère.';
-  if(['bond','positive','new'].includes(a)&&['separation','hidden','delay'].includes(z))return 'L’histoire devient donc plus prudente que ne le laissait penser son ouverture, car la direction finale introduit une limite, une distance ou un rythme plus lent.';
-  if(a===z&&a!=='neutral')return 'Le même thème profond reste présent du début à la fin, ce qui donne au tirage une direction particulièrement cohérente.';
-  return 'Pris ensemble, ces éléments décrivent une progression : chaque carte transforme le sens de celle qui la précède.';
+function cn4Noun(scope,en){
+  if(en)return scope==='work'?'the project':scope==='relation'?'the relationship':'the situation';
+  return scope==='work'?'le projet':scope==='relation'?'le lien':'la situation';
 }
 
 function storyInterpretation(cards){
@@ -48,40 +57,29 @@ function storyInterpretation(cards){
   const en=state.lang==='en';
   const n=cards.length;
   const focus=typeof preciseQuestionFocus==='function'?preciseQuestionFocus():'life';
+  const scope=cn4Scope(focus);
   const subject=cn4Subject(focus,en);
-  const strong=cn4Name;
+  const noun=cn4Noun(scope,en);
+  const sentence=c=>cn4ScopedSentence(c,scope,en);
   let story='';
 
   if(n===1){
-    const a=cards[0];
-    const central=cn4Role(a,'origin',en);
-    if(en){
-      story=`For ${subject}, <strong>${strong(a)}</strong> sets the tone of the reading: ${central}. Rather than announcing an isolated event, this card describes the dynamic that now deserves the most attention.`;
-    }else{
-      story=`Pour ${subject}, <strong>${strong(a)}</strong> donne la tonalité centrale du tirage : ${central}. Plus qu’un événement isolé, cette carte décrit la dynamique qui mérite maintenant le plus d’attention.`;
-    }
+    const central=sentence(cards[0]);
+    story=en
+      ?`For ${subject}, the central message is clear: ${central}. This is the main dynamic to watch now.`
+      :`Pour ${subject}, le message central est clair : ${central}. C’est cette dynamique qui mérite maintenant le plus d’attention.`;
   }else if(n===3){
     const [a,b,c]=cards;
-    const before=cn4Role(a,'origin',en);
-    const now=cn4Role(b,'origin',en);
-    const outcome=cn4Role(c,'outcome',en);
-    if(en){
-      story=`The story begins with <strong>${strong(a)}</strong>: ${before}. What was only the background then becomes clearer in the present through <strong>${strong(b)}</strong>: ${now}. From there, <strong>${strong(c)}</strong> does not merely add a third meaning; it shows what this combination is leading toward: ${outcome}. ${cn4Arc(a,c,true)}`;
-    }else{
-      story=`L’histoire s’ouvre avec <strong>${strong(a)}</strong> : ${before}. Ce qui n’était encore que le décor se précise ensuite dans le présent avec <strong>${strong(b)}</strong> : ${now}. À partir de là, <strong>${strong(c)}</strong> n’ajoute pas simplement un troisième sens ; elle montre ce que la rencontre des deux premières cartes est en train de produire : ${outcome}. ${cn4Arc(a,c,false)}`;
-    }
+    const before=sentence(a), now=sentence(b), outcome=sentence(c);
+    story=en
+      ?`The story begins with ${before}. In the present, ${now}; this changes the meaning of the starting point and shows what ${noun} must now deal with. The third card gives the direction of travel: ${outcome}.`
+      :`L’histoire commence avec ${before}. Dans le présent, ${now} ; cela modifie le sens du point de départ et montre ce que ${noun} doit maintenant intégrer. La troisième carte donne alors la direction de la suite : ${outcome}.`;
   }else{
     const [a,b,c,d,e]=cards;
-    const origin=cn4Role(a,'origin',en);
-    const obstacle=cn4Role(b,'obstacle',en);
-    const resource=cn4Role(c,'resource',en);
-    const movement=cn4Role(d,'movement',en);
-    const outcome=cn4Role(e,'outcome',en);
-    if(en){
-      story=`For ${subject}, <strong>${strong(a)}</strong> first establishes the starting atmosphere: ${origin}. This movement then meets <strong>${strong(b)}</strong>, which changes the course of the story because ${obstacle}. The spread does not stop at that tension: with <strong>${strong(c)}</strong>, a way of responding appears, since ${resource}. That shift allows <strong>${strong(d)}</strong> to show what begins to move next: ${movement}. <strong>${strong(e)}</strong> finally gathers the whole sequence into one direction: ${outcome}. ${cn4Arc(a,e,true)}`;
-    }else{
-      story=`Pour ${subject}, <strong>${strong(a)}</strong> installe d’abord l’atmosphère de départ : ${origin}. Ce mouvement rencontre ensuite <strong>${strong(b)}</strong>, qui change le cours de l’histoire parce que ${obstacle}. Le tirage ne s’arrête pourtant pas à cette tension : avec <strong>${strong(c)}</strong>, une manière d’y répondre apparaît, puisque ${resource}. Ce déplacement permet alors à <strong>${strong(d)}</strong> de montrer ce qui commence réellement à bouger : ${movement}. <strong>${strong(e)}</strong> rassemble enfin toute la séquence dans une même direction : ${outcome}. ${cn4Arc(a,e,false)}`;
-    }
+    const origin=sentence(a), obstacle=sentence(b), resource=sentence(c), movement=sentence(d), outcome=sentence(e);
+    story=en
+      ?`At the start, ${origin}. But ${obstacle}; ${noun} therefore cannot move forward in the same way without taking this point into account. To get past that tension, ${resource}. This adjustment opens the next movement: ${movement}. Finally, the whole sequence leads to a practical direction: ${outcome}.`
+      :`Au départ, ${origin}. Mais ${obstacle} ; ${noun} ne peut donc pas progresser de la même manière sans tenir compte de ce point. Pour dépasser cette tension, ${resource}. Ce réajustement ouvre alors le mouvement suivant : ${movement}. Enfin, toute la séquence conduit à une direction concrète : ${outcome}.`;
   }
 
   const question=state.question?`<p class="reading-question">${en?'Your question':'Votre question'} : « ${readingEscape(state.question)} »</p>`:'';
