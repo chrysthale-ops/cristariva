@@ -95,10 +95,10 @@ function cr38PeakSentence(hit,index,en=false){
   const impact=cr37ImpactText(hit,cr33Intent(),en);
   if(en){
     const lead=index===0?'A first significant point appears':'A second significant point appears';
-    return `${lead} ${when}, when ${aspect} ${impact}.`;
+    return `${lead} ${when}: ${aspect} ${impact}.`;
   }
   const lead=index===0?'Un premier moment significatif ressort':'Un second moment ressort';
-  return `${lead} ${when}, lorsque ${aspect} ${impact}.`;
+  return `${lead} ${when} : ${aspect} ${impact}.`;
 }
 
 function cr37WindowsText(a,en=false){
