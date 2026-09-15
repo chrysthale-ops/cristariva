@@ -1,4 +1,4 @@
-/* CRISTARIVA — correctifs narratifs et numérotation des pics v3.9.4 */
+/* CRISTARIVA — correctifs narratifs et numérotation des pics v3.9.6 */
 (function(){
   /* Numérotation correcte des pics astrologiques. */
   if(typeof cr38PeakDate==='function'&&typeof cr37AspectLabel==='function'&&typeof cr37ImpactText==='function'){
@@ -119,4 +119,91 @@
       return previousOpening(scope,en);
     };
   }
+})();
+
+/* CRISTARIVA — Indéfini : pics prospectifs réels v3.9.6 */
+(function(){
+  function cr396IsIndefinite(window){
+    const card=window?.card||state?.date;
+    return Number(card?.id||0)===130;
+  }
+
+  function cr396FutureIndefiniteWindows(a,theme,window,intent){
+    if(typeof cr395TriggerTransitWindows!=='function'||typeof cr395IsLocalPeak!=='function')return [];
+    const all=cr395TriggerTransitWindows(a,theme,window);
+    const start=new Date(window.start);
+    const nextDay=new Date(start.getTime()+12*60*60*1000);
+    const ranked=all.map(h=>({hit:h,weight:cr37QuestionWeight(h,intent)}))
+      .filter(x=>x.weight>=5||x.hit.priority>=2)
+      .filter(x=>x.hit.bestDate>nextDay)
+      .filter(x=>(x.hit.bestOrb??99)<=1.25&&cr395IsLocalPeak(a,x.hit,x.hit.bestDate))
+      .sort((a,b)=>
+        a.hit.bestDate-b.hit.bestDate ||
+        b.weight-a.weight ||
+        (b.hit.priority||0)-(a.hit.priority||0) ||
+        (a.hit.bestOrb||99)-(b.hit.bestOrb||99)
+      );
+
+    const seen=new Set(),selected=[];
+    for(const item of ranked){
+      const h=item.hit;
+      const key=[h.tr,h.name,h.na,+h.bestDate].join('|');
+      if(seen.has(key))continue;
+      seen.add(key);
+      selected.push(h);
+      break;
+    }
+    return selected;
+  }
+
+  const previousRelevant=typeof cr37RelevantWindows==='function'?cr37RelevantWindows:null;
+  if(previousRelevant){
+    cr37RelevantWindows=function(a,theme,window,intent){
+      if(!cr396IsIndefinite(window))return previousRelevant(a,theme,window,intent);
+      return cr396FutureIndefiniteWindows(a,theme,window,intent);
+    };
+  }
+
+  const previousWindowsText=typeof cr37WindowsText==='function'?cr37WindowsText:null;
+  if(previousWindowsText){
+    cr37WindowsText=function(a,en=false){
+      if(!a||!state?.date)return '';
+      const window=cr3TimingWindow(state.date,cr3ReadingMoment(),en);
+      if(!cr396IsIndefinite(window))return previousWindowsText(a,en);
+      const intent=cr33Intent(),theme=cr3DominantTheme(state.draw||[],en);
+      const relevant=cr37RelevantWindows(a,theme,window,intent);
+      if(!relevant.length){
+        return en
+          ?'The Indefinite Timing card does not justify turning the reading date into a significant astrological moment. No sufficiently clear question-relevant planetary peak stands out immediately after the reading.'
+          :'La carte Datation Indéfini ne justifie pas de transformer la date du tirage en moment astrologique significatif. Aucun pic planétaire suffisamment net et pertinent pour votre question ne ressort immédiatement après le tirage.';
+      }
+      return relevant.map((h,i)=>cr38PeakSentence(h,i,en)).join(' ');
+    };
+  }
+
+  const previousIntegrated=typeof cr33IntegratedPeriodNarrative==='function'?cr33IntegratedPeriodNarrative:null;
+  if(previousIntegrated){
+    cr33IntegratedPeriodNarrative=function(a,en=cr3En()){
+      if(!state?.date)return previousIntegrated(a,en);
+      const window=cr3TimingWindow(state.date,cr3ReadingMoment(),en);
+      if(!cr396IsIndefinite(window))return previousIntegrated(a,en);
+      const intent=cr33Intent(),theme=cr3DominantTheme(state.draw||[],en);
+      const relevant=cr37RelevantWindows(a,theme,window,intent),period={hits:relevant};
+      const q=(state.question||'').trim();
+      const dateName=typeof cr33CardLabel==='function'?cr33CardLabel(state.date,en):(state.date?.name||'');
+      const overall=typeof cr33OverallTone==='function'?cr33OverallTone(period,intent,en):'';
+      const intro=en
+        ?`${q?`For your question “${cr3Escape(q)}”, `:''}the Timing card <b>${cr3Escape(dateName)}</b> does not set a reliable deadline. Astrology therefore looks for the next genuinely significant activation after the reading rather than treating the reading date itself as a peak.${overall?` ${overall}`:''}`
+        :`${q?`Pour votre question « ${cr3Escape(q)} », `:''}la carte Datation <b>${cr3Escape(dateName)}</b> ne fixe pas d’échéance fiable. L’astrologie recherche donc le prochain point d’activation réellement significatif après le tirage, au lieu de considérer la date du tirage elle-même comme un pic.${overall?` ${overall}`:''}`;
+      return `<div class="cr33-integrated cr37-integrated cr396-indefinite"><p>${intro}</p>${cr37WindowsMarkup(a,en)}</div>`;
+    };
+  }
+
+  if(typeof cr362Timing==='function'){
+    cr362Timing=function(a,en=false){return cr37WindowsText(a,en);};
+  }
+
+  const out=document.getElementById('astroResult');
+  if(out&&state?.astro&&typeof formatAstroResult==='function')out.innerHTML=formatAstroResult();
+  if(typeof renderSynthesis==='function')renderSynthesis();
 })();
