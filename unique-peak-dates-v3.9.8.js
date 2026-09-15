@@ -51,7 +51,6 @@ const CRISTARIVA_UNIQUE_PEAK_DATES_VERSION='3.9.8';
     const usedDates=new Set();
     const usedTransit=new Set();
 
-    // 1. Priorité à une planète différente ET une date différente.
     for(const h of unique){
       if(selected.length>=limit)break;
       const date=dayKey(h.bestDate);
@@ -61,7 +60,6 @@ const CRISTARIVA_UNIQUE_PEAK_DATES_VERSION='3.9.8';
       usedTransit.add(h.tr);
     }
 
-    // 2. Si nécessaire, accepter la même planète, mais jamais la même date.
     if(selected.length<limit){
       for(const h of unique){
         if(selected.length>=limit)break;
@@ -99,10 +97,10 @@ const CRISTARIVA_UNIQUE_PEAK_DATES_VERSION='3.9.8';
   if(typeof renderSynthesis==='function')renderSynthesis();
 })();
 
-/* CRISTARIVA — intégration de Pluton v4.1
-   Ajoute Pluton au calcul des longitudes, au portrait natal et aux transits
-   significatifs vers les planètes personnelles. */
-const CRISTARIVA_PLUTO_ASTROLOGY_VERSION='4.1';
+/* CRISTARIVA — intégration de Pluton v4.2
+   Pluton est ajouté au calcul natal et aux transits, puis garanti juste avant
+   chaque rendu du thème astral afin d'éviter qu'une ancienne session l'omette. */
+const CRISTARIVA_PLUTO_ASTROLOGY_VERSION='4.2';
 
 function cr41PlutoHelio(d){
   const S=rad(norm(50.03+0.033459652*d));
@@ -234,15 +232,24 @@ if(cr41BaseImpactText){
 function cr41PatchAstroState(){
   try{
     if(!state?.astro?.birthUTC)return;
-    if(!Number.isFinite(state.astro?.planets?.Pluton)){
+    if(!state.astro.planets)state.astro.planets={};
+    if(!Number.isFinite(state.astro.planets.Pluton)){
       const birthSky=planetLongitudes(new Date(state.astro.birthUTC));
-      state.astro.planets={...(state.astro.planets||{}),Pluton:birthSky.Pluton};
+      if(Number.isFinite(birthSky?.Pluton))state.astro.planets.Pluton=birthSky.Pluton;
     }
     state.astro.now=planetLongitudes(new Date());
   }catch(e){}
 }
 
-(function cr41Refresh(){
+const cr42BaseFormatAstroResult=typeof formatAstroResult==='function'?formatAstroResult:null;
+if(cr42BaseFormatAstroResult){
+  formatAstroResult=function(){
+    cr41PatchAstroState();
+    return cr42BaseFormatAstroResult.apply(this,arguments);
+  };
+}
+
+(function cr42Refresh(){
   cr41PatchAstroState();
   try{
     const out=document.getElementById('astroResult');
