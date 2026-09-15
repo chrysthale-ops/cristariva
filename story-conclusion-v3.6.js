@@ -1,7 +1,7 @@
-/* CRISTARIVA — conclusion littéraire du tirage v3.6.1
-   Ajoute à « L’histoire racontée par vos cartes » une conclusion globale
-   sans citer ni répéter le nom des cartes, et verrouille les 3 domaines validés. */
-const CRISTARIVA_STORY_CONCLUSION_VERSION='3.6.1';
+/* CRISTARIVA — conclusion littéraire du tirage v3.6.2
+   Relie explicitement « L’histoire racontée par vos cartes » à la question posée
+   et au domaine choisi, puis ajoute une conclusion globale contextualisée. */
+const CRISTARIVA_STORY_CONCLUSION_VERSION='3.6.2';
 
 function cr36En(){return state?.lang==='en';}
 function cr36NormalizeDomains(){
@@ -13,6 +13,20 @@ function cr36NormalizeDomains(){
   select.innerHTML=values.map((value,i)=>`<option value="${value}">${labels[i]}</option>`).join('');
   select.value=current;
   if(typeof state==='object'&&state)state.domain=current;
+}
+function cr36Escape(value){
+  if(typeof readingEscape==='function')return readingEscape(value);
+  return String(value??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function cr36Question(en=cr36En()){
+  const q=String(state?.question||'').trim();
+  if(q)return q;
+  return en?'open question':'question ouverte';
+}
+function cr36Domain(en=cr36En()){
+  const raw=String(state?.domain||'Général / spirituel');
+  if(!en)return raw;
+  return ({'Relations':'Relationships','Professionnelle / Projet':'Professional / Project','Général / spirituel':'General / Spiritual'})[raw]||raw;
 }
 function cr36Category(card){
   const raw=(card?.category||'').toLowerCase();
@@ -85,15 +99,58 @@ function cr36Outcome(cards,en=false){
   };
   return (en?enMap:fr)[key]||(en?enMap.neutral:fr.neutral);
 }
+function cr36Decap(text){
+  return String(text||'').replace(/^([A-ZÀÂÄÇÉÈÊËÎÏÔÖÙÛÜ])/u,m=>m.toLowerCase());
+}
 function cr36LiteraryConclusion(cards,en=cr36En()){
   if(!Array.isArray(cards)||!cards.length)return '';
   return `${cr36Arc(cards,en)} ${cr36Outcome(cards,en)}`;
 }
+function cr36ContextualizeStory(html,cards){
+  if(!html||!Array.isArray(cards)||!cards.length||typeof document==='undefined')return html;
+  const en=cr36En(),q=cr36Question(en),domain=cr36Domain(en);
+  const tpl=document.createElement('template');tpl.innerHTML=html;
+  const host=tpl.content.querySelector('.story-reading')||tpl.content;
+
+  host.querySelectorAll('.cr36-question-domain').forEach(el=>el.remove());
+  host.querySelectorAll('p').forEach(p=>{
+    if(p.classList.contains('story-step'))return;
+    const txt=(p.textContent||'').trim();
+    if((!en&&/^Votre question\s*:/i.test(txt))||(en&&/^Your question\s*:/i.test(txt)))p.remove();
+  });
+
+  const context=document.createElement('div');
+  context.className='cr36-question-domain';
+  context.innerHTML=en
+    ?`<p><strong>Your question:</strong> “${cr36Escape(q)}”<br><strong>Domain:</strong> ${cr36Escape(domain)}</p><p class="muted">Each card below is interpreted as a direct answer to this question within the selected domain.</p>`
+    :`<p><strong>Votre question :</strong> « ${cr36Escape(q)} »<br><strong>Domaine :</strong> ${cr36Escape(domain)}</p><p class="muted">Chaque carte ci-dessous est interprétée comme une réponse directe à cette question dans le domaine choisi.</p>`;
+  const heading=host.querySelector('h3');
+  if(heading)heading.insertAdjacentElement('afterend',context);else host.prepend(context);
+
+  const steps=[...host.querySelectorAll('.story-step')];
+  steps.forEach((step,i)=>{
+    if(step.dataset.cr36Context==='1')return;
+    const original=step.innerHTML.trim();
+    if(!original)return;
+    if(i===0){
+      step.innerHTML=en
+        ?`Regarding your question “${cr36Escape(q)}” in the <strong>${cr36Escape(domain)}</strong> domain, ${cr36Decap(original)}`
+        :`Concernant votre question « ${cr36Escape(q)} », dans le domaine <strong>${cr36Escape(domain)}</strong>, ${cr36Decap(original)}`;
+    }else{
+      step.innerHTML=(en?'Within that same question and domain, ':'Toujours pour cette même question et dans ce même domaine, ')+cr36Decap(original);
+    }
+    step.dataset.cr36Context='1';
+  });
+  return tpl.innerHTML;
+}
 function cr36AppendSummary(html,cards){
   if(!html||!Array.isArray(cards)||!cards.length||html.includes('cr36-story-conclusion'))return html;
-  const en=cr36En(),conclusion=cr36LiteraryConclusion(cards,en);
+  const en=cr36En(),q=cr36Question(en),domain=cr36Domain(en),conclusion=cr36LiteraryConclusion(cards,en);
   if(!conclusion)return html;
-  const text=typeof readingEscape==='function'?readingEscape(conclusion):conclusion;
+  const contextual=en
+    ?`For your question “${q}” in the ${domain} domain, ${cr36Decap(conclusion)}`
+    :`Pour votre question « ${q} », dans le domaine ${domain}, ${cr36Decap(conclusion)}`;
+  const text=cr36Escape(contextual);
   const block=`<div class="conclusion cr36-story-conclusion"><strong>${en?'In summary':'En résumé'}</strong><p>${text}</p></div>`;
   const i=html.lastIndexOf('</div>');
   return i>=0?html.slice(0,i)+block+html.slice(i):html+block;
@@ -104,7 +161,19 @@ function cr36AppendSummary(html,cards){
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',cr36NormalizeDomains,{once:true});
   if(typeof storyInterpretation!=='function')return;
   const previous=storyInterpretation;
-  storyInterpretation=function(cards){return cr36AppendSummary(previous(cards),cards);};
+  storyInterpretation=function(cards){
+    const base=previous(cards);
+    return cr36AppendSummary(cr36ContextualizeStory(base,cards),cards);
+  };
   if(typeof interpretation==='function')interpretation=function(cards){return storyInterpretation(cards);};
+
+  const style=document.createElement('style');
+  style.textContent=`
+    .cr36-question-domain{margin:10px 0 16px;padding:13px 15px;border-radius:13px;background:rgba(217,181,109,.10);border:1px solid rgba(217,181,109,.28)}
+    .cr36-question-domain p{margin:.25rem 0;line-height:1.55}
+    .cr36-question-domain .muted{margin-top:.45rem}
+  `;
+  document.head.appendChild(style);
+
   if(typeof renderCards==='function'&&state?.draw?.length)renderCards();
 })();
