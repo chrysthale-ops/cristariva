@@ -1,5 +1,5 @@
-const APP_VERSION='2026.09.15-32';
-const CACHE_NAME='cristariva-v32-20260915-synthese-francais';
+const APP_VERSION='2026.09.15-33';
+const CACHE_NAME='cristariva-v33-20260915-typographie-cartes-uniforme';
 const SHELL=['./','./index.html','./manifest.webmanifest','./manifest-en.webmanifest','./icon-192.png','./icon-512.png','./interpretation-engine-v2.js','./natal-influences-v3.1.js','./period-overview-v3.2.js','./integrated-period-reading-v3.3.js','./natal-profile-v3.4.js','./natal-special-plain-v3.4.2.js','./synthesis-cleanup-v3.5.2.js','./synthesis-french-fix-v3.6.3.js','./story-conclusion-v3.6.js','./validated-card-titles-v3.6.3.js','./cards/014.webp','./cards/024.webp','./cards/109.webp'];
 const ENGINE_TAG='<script src="./interpretation-engine-v2.js?v=3.0"></script><script src="./natal-influences-v3.1.js?v=3.1"></script><script src="./period-overview-v3.2.js?v=3.2"></script><script src="./integrated-period-reading-v3.3.js?v=3.5.1"></script><script src="./natal-profile-v3.4.js?v=3.4.1"></script><script src="./natal-special-plain-v3.4.2.js?v=3.4.2"></script><script src="./synthesis-cleanup-v3.5.2.js?v=3.6.2"></script><script src="./synthesis-french-fix-v3.6.3.js?v=3.6.3"></script><script src="./story-conclusion-v3.6.js?v=3.6.2"></script><script src="./validated-card-titles-v3.6.3.js?v=3.6.3"></script>';
 
