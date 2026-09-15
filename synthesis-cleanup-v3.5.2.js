@@ -1,7 +1,7 @@
-/* CRISTARIVA — synthèse générale autonome v3.6.2
+/* CRISTARIVA — synthèse générale autonome v3.6.3
    La synthèse finale ne répète plus les lectures précédentes : elle répond directement
    à la question, relie le tirage, le profil natal et le rythme, sans recopier leurs formulations. */
-const CRISTARIVA_GLOBAL_SYNTHESIS_VERSION='3.6.2';
+const CRISTARIVA_GLOBAL_SYNTHESIS_VERSION='3.6.3';
 
 function cr362En(){try{return typeof cr3En==='function'?cr3En():state?.lang==='en';}catch(e){return false;}}
 function cr362Esc(v){try{return typeof cr3Escape==='function'?cr3Escape(v):String(v||'');}catch(e){return String(v||'');}}
@@ -59,7 +59,7 @@ function cr362OutcomeNuance(cards,en=false){
     jealousy:'La qualité du lien dépendra surtout de la confiance qui pourra s’installer, sans laisser les comparaisons ou les inquiétudes prendre toute la place.',
     reconcile:'Quelque chose peut se rapprocher ou se renouer, mais seulement si la nouvelle dynamique ne reproduit pas l’ancienne.',
     past:'Le passé reste présent en arrière-plan, mais il ne doit pas dicter à lui seul la forme de ce qui vient.',
-    hidden:'La rencontre ou son évolution demandera un peu de temps avant de révéler clairement ce qu’elle porte réellement.',
+    hidden:'La rencontre ou l’évolution de ce lien demandera un peu de temps avant de révéler clairement ce qu’il peut réellement devenir.',
     delay:'Le mouvement existe, mais il paraît devoir se construire progressivement plutôt que se précipiter.',
     emotion:'La force émotionnelle sera importante ; le véritable enjeu sera de laisser le lien se définir sans l’enfermer trop tôt dans une attente.',
     separation:'La distance ou la réserve restent encore fortes et peuvent retarder une concrétisation.',
