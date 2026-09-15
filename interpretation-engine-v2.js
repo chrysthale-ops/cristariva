@@ -1,6 +1,6 @@
 /* CRISTARIVA — moteur astrologique et synthèse intégrée v3.0
    Le moteur narratif du tirage reste celui intégré à index.html.
-   Cette extension restructure « Que disent les planètes ? » et relie
+   Cette extension restructure « Que disent les planètes me concernant » et relie
    thème natal, période définie par la carte Datation et cartes tirées. */
 const CRISTARIVA_ASTRO_ENGINE_VERSION='3.0';
 
@@ -296,7 +296,7 @@ function cr3Synthesis(a){
     if(period.hits.length)html+=`<p>${period.hits.slice(0,3).map(h=>`${cr3Escape(cr3RangeLabel(h,en))} : ${cr3TransitImpact(h,en)}`).join(' ')}</p>`;
     html+=`<div class="cr3-global-story"><h4>${en?'The combined story':'Le récit global'}</h4><p>${cr3NarrativeBridge(a,cards,theme,window,period,en)}</p></div>`;
   }else{
-    html+=`<p class="muted">${en?'Add your birth data in “What do the planets say?” to incorporate both the natal personality profile and planetary influences over the Timing-card period.':'Ajoutez vos données de naissance dans « Que disent les planètes ? » pour intégrer à la synthèse à la fois le profil natal de personnalité et les influences planétaires sur toute la période de la carte Datation.'}</p>`;
+    html+=`<p class="muted">${en?'Add your birth data in “What do the planets say about me” to incorporate both the natal personality profile and planetary influences over the Timing-card period.':'Ajoutez vos données de naissance dans « Que disent les planètes me concernant » pour intégrer à la synthèse à la fois le profil natal de personnalité et les influences planétaires sur toute la période de la carte Datation.'}</p>`;
   }
   html+=`</div>`;return html;
 }
@@ -323,7 +323,7 @@ renderSynthesis=function(){if(!state.draw.length)return;const box=document.query
   const astroOpt=astroBtn?.closest('.opt');if(astroOpt){astroOpt.classList.add('cr3-astro-section');astroOpt.parentElement?.classList.add('cr3-layout');}
   function localize(){
     if(!astroOpt)return;const en=cr3En(),h=astroOpt.querySelector('h3'),p=astroOpt.querySelector(':scope > p.muted');
-    if(h){h.removeAttribute('data-i18n');h.textContent=en?'What do the planets say?':'Que disent les planètes ?';}
+    if(h){h.removeAttribute('data-i18n');h.textContent=en?'What do the planets say about me':'Que disent les planètes me concernant';}
     if(p){p.removeAttribute('data-i18n');p.textContent=en?'Two connected readings: your birth-chart personality, then the planetary influences from the reading to the horizon defined by the Timing card.':'Deux lectures reliées : votre personnalité dans le thème natal, puis les influences planétaires depuis le tirage jusqu’à l’horizon défini par la carte Datation.';}
     if(astroBtn){astroBtn.removeAttribute('data-i18n');astroBtn.textContent=en?'Analyse my chart and the period':'Analyser mon thème et la période';}
   }
