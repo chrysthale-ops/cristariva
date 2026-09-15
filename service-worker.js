@@ -1,7 +1,7 @@
-const APP_VERSION='2026.09.15-30';
-const CACHE_NAME='cristariva-v30-20260915-question-domaine';
-const SHELL=['./','./index.html','./manifest.webmanifest','./manifest-en.webmanifest','./icon-192.png','./icon-512.png','./interpretation-engine-v2.js','./natal-influences-v3.1.js','./period-overview-v3.2.js','./integrated-period-reading-v3.3.js','./natal-profile-v3.4.js','./synthesis-cleanup-v3.5.2.js','./story-conclusion-v3.6.js','./validated-card-titles-v3.6.3.js','./cards/014.webp','./cards/024.webp','./cards/109.webp'];
-const ENGINE_TAG='<script src="./interpretation-engine-v2.js?v=3.0"></script><script src="./natal-influences-v3.1.js?v=3.1"></script><script src="./period-overview-v3.2.js?v=3.2"></script><script src="./integrated-period-reading-v3.3.js?v=3.5.1"></script><script src="./natal-profile-v3.4.js?v=3.4.1"></script><script src="./synthesis-cleanup-v3.5.2.js?v=3.6.2"></script><script src="./story-conclusion-v3.6.js?v=3.6.2"></script><script src="./validated-card-titles-v3.6.3.js?v=3.6.3"></script>';
+const APP_VERSION='2026.09.15-31';
+const CACHE_NAME='cristariva-v31-20260915-theme-langage-simple';
+const SHELL=['./','./index.html','./manifest.webmanifest','./manifest-en.webmanifest','./icon-192.png','./icon-512.png','./interpretation-engine-v2.js','./natal-influences-v3.1.js','./period-overview-v3.2.js','./integrated-period-reading-v3.3.js','./natal-profile-v3.4.js','./natal-special-plain-v3.4.2.js','./synthesis-cleanup-v3.5.2.js','./story-conclusion-v3.6.js','./validated-card-titles-v3.6.3.js','./cards/014.webp','./cards/024.webp','./cards/109.webp'];
+const ENGINE_TAG='<script src="./interpretation-engine-v2.js?v=3.0"></script><script src="./natal-influences-v3.1.js?v=3.1"></script><script src="./period-overview-v3.2.js?v=3.2"></script><script src="./integrated-period-reading-v3.3.js?v=3.5.1"></script><script src="./natal-profile-v3.4.js?v=3.4.1"></script><script src="./natal-special-plain-v3.4.2.js?v=3.4.2"></script><script src="./synthesis-cleanup-v3.5.2.js?v=3.6.2"></script><script src="./story-conclusion-v3.6.js?v=3.6.2"></script><script src="./validated-card-titles-v3.6.3.js?v=3.6.3"></script>';
 
 async function pageWithAstroEngine(response){
   if(!response)return response;
@@ -11,6 +11,7 @@ async function pageWithAstroEngine(response){
 
   html=html.replace(/<script src="\.\/integrated-period-reading-v3\.3\.js\?v=[^"]+"><\/script>/g,'<script src="./integrated-period-reading-v3.3.js?v=3.5.1"></script>');
   html=html.replace(/<script src="\.\/natal-profile-v3\.4\.js\?v=[^"]+"><\/script>/g,'<script src="./natal-profile-v3.4.js?v=3.4.1"></script>');
+  html=html.replace(/<script src="\.\/natal-special-plain-v3\.4\.2\.js\?v=[^"]+"><\/script>/g,'<script src="./natal-special-plain-v3.4.2.js?v=3.4.2"></script>');
   html=html.replace(/<script src="\.\/synthesis-cleanup-v3\.5\.2\.js\?v=[^"]+"><\/script>/g,'<script src="./synthesis-cleanup-v3.5.2.js?v=3.6.2"></script>');
   html=html.replace(/<script src="\.\/story-conclusion-v3\.6\.js\?v=[^"]+"><\/script>/g,'<script src="./story-conclusion-v3.6.js?v=3.6.2"></script>');
   html=html.replace(/<script src="\.\/validated-card-titles-v3\.6\.3\.js\?v=[^"]+"><\/script>/g,'<script src="./validated-card-titles-v3.6.3.js?v=3.6.3"></script>');
@@ -22,6 +23,7 @@ async function pageWithAstroEngine(response){
     if(!html.includes('period-overview-v3.2.js'))html=html.replace('</body>','<script src="./period-overview-v3.2.js?v=3.2"></script></body>');
     if(!html.includes('integrated-period-reading-v3.3.js?v=3.5.1'))html=html.replace('</body>','<script src="./integrated-period-reading-v3.3.js?v=3.5.1"></script></body>');
     if(!html.includes('natal-profile-v3.4.js?v=3.4.1'))html=html.replace('</body>','<script src="./natal-profile-v3.4.js?v=3.4.1"></script></body>');
+    if(!html.includes('natal-special-plain-v3.4.2.js?v=3.4.2'))html=html.replace('</body>','<script src="./natal-special-plain-v3.4.2.js?v=3.4.2"></script></body>');
     if(!html.includes('synthesis-cleanup-v3.5.2.js?v=3.6.2'))html=html.replace('</body>','<script src="./synthesis-cleanup-v3.5.2.js?v=3.6.2"></script></body>');
     if(!html.includes('story-conclusion-v3.6.js?v=3.6.2'))html=html.replace('</body>','<script src="./story-conclusion-v3.6.js?v=3.6.2"></script></body>');
     if(!html.includes('validated-card-titles-v3.6.3.js?v=3.6.3'))html=html.replace('</body>','<script src="./validated-card-titles-v3.6.3.js?v=3.6.3"></script></body>');
@@ -73,7 +75,7 @@ self.addEventListener('fetch',event=>{
     return;
   }
 
-  if(/\/(interpretation-engine-v2|natal-influences-v3\.1|period-overview-v3\.2|integrated-period-reading-v3\.3|natal-profile-v3\.4|synthesis-cleanup-v3\.5\.2|story-conclusion-v3\.6|validated-card-titles-v3\.6\.3)\.js$/.test(url.pathname)){
+  if(/\/(interpretation-engine-v2|natal-influences-v3\.1|period-overview-v3\.2|integrated-period-reading-v3\.3|natal-profile-v3\.4|natal-special-plain-v3\.4\.2|synthesis-cleanup-v3\.5\.2|story-conclusion-v3\.6|validated-card-titles-v3\.6\.3)\.js$/.test(url.pathname)){
     event.respondWith(
       fetch(request,{cache:'reload'}).then(response=>{
         if(response.ok){const copy=response.clone();caches.open(CACHE_NAME).then(cache=>cache.put(request,copy));}
