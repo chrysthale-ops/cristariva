@@ -1,7 +1,7 @@
-/* CRISTARIVA — récit guidé par l'intention de la question v5.3
+/* CRISTARIVA — récit guidé par l'intention de la question v5.3.1
    Pour les questions centrées sur les envies, désirs, souhaits ou aspirations,
    la question prime sur le vocabulaire générique du domaine de lecture. */
-const CRISTARIVA_QUESTION_INTENT_STORY_VERSION='5.3';
+const CRISTARIVA_QUESTION_INTENT_STORY_VERSION='5.3.1';
 
 function cr53Esc(value){
   try{return typeof cr52Esc==='function'?cr52Esc(value):typeof cr51Esc==='function'?cr51Esc(value):String(value??'');}
@@ -47,7 +47,7 @@ function cr53DesireClause(card,role,en=false){
     if(role==='evolution'){
       if(/break|percee|percée|opening|move|decision|unlock/.test(hay))return 'your desires can become easier to name and act on; something previously blocked may finally turn into a decision, an initiative or a clear expression of what you want';
       if(/change|transform|renew|birth/.test(hay))return 'what you want is changing form and may become more precise as an old expectation gives way to a more current desire';
-      return 'the evolution points toward a clearer and more concrete relationship with what you want';
+      return 'the evolution points toward a clearer and more concrete understanding of what you truly want';
     }
     if(role==='outcome'){
       if(/integr|honest|coher|respect|trust/.test(hay))return 'the desires most likely to matter are those that remain consistent with your values, limits and sense of self-respect';
@@ -64,21 +64,21 @@ function cr53DesireClause(card,role,en=false){
     return 'la première carte montre ce qui nourrit vos envies en profondeur, avant même leur formulation consciente';
   }
   if(role==='obstacle'){
-    if(/joie|plaisir|bonheur/.test(hay))return 'l’obstacle peut être de confondre une envie profonde avec l’attrait de ce qui procure immédiatement du plaisir, du réconfort ou de l’excitation';
+    if(/joie|plaisir|bonheur/.test(hay))return 'il peut être difficile de distinguer une envie profonde de l’attrait de ce qui procure immédiatement du plaisir, du réconfort ou de l’excitation';
     if(/peur|bloc|retard|stagn|doute/.test(hay))return 'une peur ou une hésitation peut compliquer la reconnaissance de ce que vous voulez réellement ou retarder le moment de l’assumer';
     if(/promesse|illusion|mensonge|tromper|fausse/.test(hay))return 'une partie de la difficulté consiste à distinguer ce que vous espérez de ce qui est réellement possible et confirmé par les faits';
-    return 'la deuxième carte montre ce qui peut brouiller, freiner ou compliquer la reconnaissance de vos envies réelles';
+    return 'quelque chose peut encore brouiller, freiner ou compliquer la reconnaissance de vos envies réelles';
   }
   if(role==='resource'){
-    if(/promesse|illusion|mensonge|tromper|fausse/.test(hay))return 'votre force réside dans le discernement : vos envies deviennent plus claires lorsque vous confrontez promesses, projections et scénarios imaginés à ce qui se réalise réellement';
+    if(/promesse|illusion|mensonge|tromper|fausse/.test(hay))return 'le discernement devient votre meilleur appui : vos envies se clarifient lorsque vous confrontez promesses, projections et scénarios imaginés à ce qui se réalise réellement';
     if(/vérité|verite|intégr|integr|honnêt|honnet|clair/.test(hay))return 'la lucidité sur vos motivations permet de distinguer une envie authentique d’une réaction passagère ou d’une projection';
     if(/joie|plaisir|bonheur/.test(hay))return 'le plaisir devient une information utile s’il est considéré comme un indice de ce qui vous attire, et non comme la preuve qu’une voie vous convient forcément';
-    return 'cette carte indique ce qui peut vous aider à trier vos envies essentielles des impulsions, des peurs ou des projections';
+    return 'vous disposez d’un point d’appui pour trier vos envies essentielles des impulsions, des peurs ou des projections';
   }
   if(role==='evolution'){
     if(/percée|percee|débloc|debloc|ouverture|mouvement|décision|decision|conversation|rapprochement/.test(hay))return 'vos envies peuvent devenir plus faciles à nommer et à assumer : ce qui restait bloqué peut se transformer en décision, en initiative ou en expression plus directe de ce que vous voulez';
     if(/transformation|renouveau|naissance|changement/.test(hay))return 'ce que vous voulez est en train de changer de forme et peut devenir plus précis à mesure qu’une ancienne attente laisse place à une envie plus actuelle';
-    return 'l’évolution va vers une relation plus claire et plus concrète avec ce que vous désirez réellement';
+    return 'vous avancez vers une compréhension plus claire et plus concrète de ce que vous désirez réellement';
   }
   if(role==='outcome'){
     if(/intégr|integr|honnêt|honnet|cohér|coher|respect|fiable|confiance/.test(hay))return 'les envies qui ont le plus de valeur sont celles qui restent cohérentes avec vos valeurs, vos limites et le respect que vous vous devez';
@@ -97,11 +97,11 @@ function cr53DesireStory(cards,en=false){
   if(en){
     if(cards.length===1)return `This card focuses directly on what you want. ${clauses[0].charAt(0).toUpperCase()+clauses[0].slice(1)}.`;
     if(cards.length===3)return `Your cards describe the movement of your desires rather than a relationship in itself. At first, ${clauses[0]}. Then, ${clauses[1]}. Finally, ${clauses[2]}. The reading therefore clarifies where your desires come from, how they are changing and which of them remain truly aligned with you.`;
-    return `Your cards tell a coherent story about your desires. At first, ${clauses[0]}. The main obstacle is that ${clauses[1]}. Your strongest support is that ${clauses[2]}. From there, ${clauses[3]}. Finally, ${clauses[4]}. The overall reading is therefore about clarifying what you truly want and separating it from habit, immediate attraction or projection.`;
+    return `Your cards tell a coherent story about your desires. At first, ${clauses[0]}. Then, ${clauses[1]}. What helps you most is this: ${clauses[2]}. From there, ${clauses[3]}. Finally, ${clauses[4]}. The overall reading is therefore about clarifying what you truly want and separating it from habit, immediate attraction or projection.`;
   }
   if(cards.length===1)return `Cette carte éclaire directement ce que vous désirez. ${clauses[0].charAt(0).toUpperCase()+clauses[0].slice(1)}.`;
-  if(cards.length===3)return `Vos cartes décrivent l’évolution de vos envies plutôt qu’un lien en lui-même. Au départ, ${clauses[0]}. Puis, ${clauses[1]}. Enfin, ${clauses[2]}. Le tirage précise ainsi d’où viennent vos envies, comment elles évoluent et lesquelles restent réellement alignées avec vous.`;
-  return `Vos cartes racontent une histoire cohérente autour de vos envies. Au départ, ${clauses[0]}. L’obstacle principal est que ${clauses[1]}. Votre force réside dans le fait que ${clauses[2]}. À partir de là, ${clauses[3]}. Enfin, ${clauses[4]}. Le tirage parle donc avant tout de la clarification de ce que vous voulez réellement, en séparant le désir profond de l’habitude, de l’attrait immédiat ou de la projection.`;
+  if(cards.length===3)return `Vos cartes décrivent l’évolution de vos envies, et non un lien en lui-même. Au départ, ${clauses[0]}. Puis, ${clauses[1]}. Enfin, ${clauses[2]}. Le tirage précise ainsi d’où viennent vos envies, comment elles évoluent et lesquelles restent réellement alignées avec vous.`;
+  return `Vos cartes racontent une histoire cohérente autour de vos envies. Au départ, ${clauses[0]}. Ensuite, ${clauses[1]}. Votre meilleur appui apparaît alors : ${clauses[2]}. À partir de là, ${clauses[3]}. Enfin, ${clauses[4]}. Le tirage parle donc avant tout de la clarification de ce que vous voulez réellement, en séparant le désir profond de l’habitude, de l’attrait immédiat ou de la projection.`;
 }
 
 const cr53BaseStoryInterpretation=typeof storyInterpretation==='function'?storyInterpretation:null;
