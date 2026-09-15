@@ -1,22 +1,18 @@
-/* CRISTARIVA — synthèse générale réellement reformulée v3.6.5
-   La synthèse conserve les idées des analyses précédentes mais reconstruit
-   ses phrases, son vocabulaire et ses enchaînements afin d'éviter toute
-   reprise mot pour mot du récit, du portrait natal ou des transits. */
-const CRISTARIVA_SYNTHESIS_FRENCH_FIX_VERSION='3.6.5';
+/* CRISTARIVA — synthèse générale reformulée v3.6.6
+   La conclusion finale conserve les idées des analyses précédentes mais
+   les réécrit avec un autre vocabulaire, d'autres enchaînements et une
+   formulation réellement synthétique. */
+const CRISTARIVA_SYNTHESIS_FRENCH_FIX_VERSION='3.6.6';
+const cr366LegacyGlobalSynthesis=typeof cr362GlobalSynthesis==='function'?cr362GlobalSynthesis:null;
 
-function cr365Cap(text){
-  const s=String(text||'').trim();
-  return s?s.charAt(0).toLocaleUpperCase()+s.slice(1):'';
-}
+function cr366Esc(v){try{return typeof cr362Esc==='function'?cr362Esc(v):String(v||'');}catch(e){return String(v||'');}}
 
-function cr365RelationIdea(en=false){
-  const id=Number(state?.relation?.id||0);
-  const intent=typeof cr33Intent==='function'?cr33Intent():{};
-  if(en&&typeof cr362RelationAnswer==='function')return cr362RelationAnswer(true);
+function cr366RelationIdea(){
+  const id=Number(state?.relation?.id||0),intent=typeof cr33Intent==='function'?cr33Intent():{};
   const fr={
     96:'la proximité semble devoir s’installer d’abord sur un terrain amical avant de pouvoir gagner en profondeur',
-    97:'le contexte familial ou les attaches déjà présentes paraissent peser fortement sur la suite',
-    98:'la dynamique peut évoluer vers une véritable place de partenaire, à condition que cette orientation se confirme concrètement',
+    97:'les attaches familiales ou un cadre déjà connu paraissent peser fortement sur la suite',
+    98:'la dynamique peut évoluer vers une véritable place de partenaire si cette orientation se confirme dans les faits',
     99:'une responsabilité de protection, de famille ou d’enfant semble compter dans la manière dont la situation se construit',
     100:'une personne encore nouvelle dans votre histoire pourrait prendre progressivement davantage de place',
     101:'la relation semble surtout structurée par une proximité fraternelle ou très familière',
@@ -36,15 +32,14 @@ function cr365RelationIdea(en=false){
     115:'une présentation, un intermédiaire ou une mise en relation semble pouvoir provoquer le mouvement attendu'
   };
   if(fr[id])return fr[id];
-  if(intent.past)return 'quelque chose d’inachevé ou d’ancien semble revenir dans le champ actuel';
+  if(intent.past)return 'quelque chose d’ancien ou d’inachevé semble revenir dans le champ actuel';
   if(intent.newPerson)return 'une présence nouvelle paraît pouvoir entrer progressivement dans la situation';
   if(intent.work)return 'le développement semble devoir passer par un cadre concret, professionnel ou lié à un projet';
   if(intent.sexual)return 'une dimension d’attirance physique semble importante, mais elle ne prend sens que si elle est réciproque';
   return 'la situation paraît pouvoir gagner en netteté à mesure que les faits se précisent';
 }
 
-function cr365OutcomeIdea(cards,en=false){
-  if(en&&typeof cr362OutcomeNuance==='function')return cr362OutcomeNuance(cards,true);
+function cr366OutcomeIdea(cards){
   if(!Array.isArray(cards)||!cards.length)return '';
   let key='neutral';
   try{if(typeof finalSemanticKey==='function')key=finalSemanticKey(cards[cards.length-1]);}catch(e){}
@@ -72,12 +67,10 @@ function cr365OutcomeIdea(cards,en=false){
   return fr[key]||fr.neutral;
 }
 
-function cr365NatalLens(a,en=false){
-  if(en&&typeof cr363NatalLens==='function')return cr363NatalLens(a,true);
+function cr366NatalLens(a){
   if(!a||typeof cr34BigThree!=='function')return '';
   try{
-    const big=cr34BigThree(a,false);
-    const sun=big?.sun||'',moon=big?.moon||'';
+    const big=cr34BigThree(a,false),sun=big?.sun||'',moon=big?.moon||'';
     const sunMap={
       'Bélier':'un tempérament qui cherche à agir franchement et à sentir que les choses avancent',
       'Taureau':'une personnalité qui privilégie la continuité, la fiabilité et ce qui peut durer',
@@ -112,11 +105,8 @@ function cr365NatalLens(a,en=false){
   }catch(e){return '';}
 }
 
-function cr365TransitEffect(hit,en=false){
+function cr366TransitEffect(hit){
   if(!hit)return '';
-  if(en)return '';
-  const tr=hit.tr;
-  const tone=hit.tone;
   const support={
     'Jupiter':'favorise un climat plus ouvert, confiant et réceptif aux possibilités',
     'Vénus':'met davantage en valeur l’agrément, l’attirance et la qualité des échanges',
@@ -133,11 +123,10 @@ function cr365TransitEffect(hit,en=false){
     'Uranus':'peut introduire de l’imprévu et rendre la situation moins facile à stabiliser immédiatement',
     'Neptune':'peut brouiller les repères et rendre nécessaire une distinction plus nette entre intuition et projection'
   };
-  return (tone==='challenge'?challenge:support)[tr]||'met davantage en relief les enjeux de cette période';
+  return (hit.tone==='challenge'?challenge:support)[hit.tr]||'met davantage en relief les enjeux de cette période';
 }
 
-function cr365Timing(a,en=false){
-  if(en&&typeof cr362Timing==='function')return cr362Timing(a,true);
+function cr366Timing(a){
   if(!a||!state?.date)return '';
   try{
     const intent=typeof cr33Intent==='function'?cr33Intent():{};
@@ -150,42 +139,38 @@ function cr365Timing(a,en=false){
       const period=cr3PeriodSummary(a,theme,window,false);
       hit=cr33BestWindow(period,intent);
     }
-    if(!hit)return 'Le calendrier astrologique ne concentre pas suffisamment la dynamique sur une date unique pour en faire un repère fort dans la conclusion.';
+    if(!hit)return 'Le calendrier astrologique reste trop diffus pour faire d’une date précise le repère principal de la conclusion.';
     const date=typeof cr3Date==='function'?cr3Date(hit.bestDate,false):'';
-    const aspect=String(hit.name||'').toLowerCase();
-    const na=String(hit.na||'').replace(/^./,c=>c.toUpperCase());
-    const tr=String(hit.tr||'').replace(/^./,c=>c.toUpperCase());
-    const connector=aspect==='conjonction'?'avec':aspect==='opposition'?'à':aspect==='carré'?'à':aspect==='trigone'?'à':aspect==='sextile'?'à':'à';
-    const aspectPhrase=aspect?`Le ${aspect} de ${tr} ${connector} votre ${na} natale`:`Le passage de ${tr}`;
-    return `Sur le plan du calendrier, le repère le plus porteur se situe autour du ${date}. ${aspectPhrase} ${cr365TransitEffect(hit,false)}.`;
+    const aspect=String(hit.name||'').toLowerCase(),tr=String(hit.tr||''),na=String(hit.na||'');
+    const adjective=['Lune','Vénus'].includes(na)?'natale':'natal';
+    const connector=aspect==='conjonction'?'avec':'à';
+    return `Côté calendrier, le passage le plus porteur se situe autour du ${date}. Le ${aspect} de ${tr} ${connector} votre ${na} ${adjective} ${cr366TransitEffect(hit)}.`;
   }catch(e){return '';}
 }
 
-function cr365GlobalSynthesis(a){
+function cr366GlobalSynthesis(a){
   const en=typeof cr362En==='function'?cr362En():state?.lang==='en';
+  if(en&&cr366LegacyGlobalSynthesis)return cr366LegacyGlobalSynthesis(a);
   const cards=state?.draw||[];
   if(!cards.length)return '';
-  if(en&&typeof cr362GlobalSynthesis==='function')return cr362GlobalSynthesis(a);
   const q=(state?.question||'').trim();
-  const answer=cr365RelationIdea(false);
-  const nuance=cr365OutcomeIdea(cards,false);
-  const natal=cr365NatalLens(a,false);
-  const timing=cr365Timing(a,false);
-  const lead=q?`Pour « ${cr362Esc(q)} », ${answer}.`:`${cr365Cap(answer)}.`;
-  const text=[lead,nuance,natal,timing].filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
+  const text=[
+    q?`Pour « ${cr366Esc(q)} », ${cr366RelationIdea()}.`:`${cr366RelationIdea().charAt(0).toUpperCase()+cr366RelationIdea().slice(1)}.`,
+    cr366OutcomeIdea(cards),
+    cr366NatalLens(a),
+    cr366Timing(a)
+  ].filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
   return `<div class="story-reading cr3-global cr362-global" data-global-synthesis="${CRISTARIVA_SYNTHESIS_FRENCH_FIX_VERSION}"><h3>CRISTARIVA — synthèse générale</h3><p>${text}</p></div>`;
 }
 
-if(typeof cr362GlobalSynthesis==='function'){
-  cr362GlobalSynthesis=cr365GlobalSynthesis;
-  if(typeof cr33GlobalSynthesis==='function')cr33GlobalSynthesis=cr365GlobalSynthesis;
-  if(typeof cr3Synthesis==='function')cr3Synthesis=function(a){return cr365GlobalSynthesis(a);};
-  if(typeof renderSynthesis==='function'){
-    renderSynthesis=function(){
-      if(!state?.draw?.length)return;
-      const box=document.getElementById('synthesis');
-      if(box)box.innerHTML=cr365GlobalSynthesis(state.astro||null);
-    };
-    renderSynthesis();
-  }
+cr362GlobalSynthesis=cr366GlobalSynthesis;
+if(typeof cr33GlobalSynthesis==='function')cr33GlobalSynthesis=cr366GlobalSynthesis;
+if(typeof cr3Synthesis==='function')cr3Synthesis=function(a){return cr366GlobalSynthesis(a);};
+if(typeof renderSynthesis==='function'){
+  renderSynthesis=function(){
+    if(!state?.draw?.length)return;
+    const box=document.getElementById('synthesis');
+    if(box)box.innerHTML=cr366GlobalSynthesis(state.astro||null);
+  };
+  renderSynthesis();
 }
