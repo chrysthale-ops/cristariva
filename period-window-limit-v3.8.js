@@ -1,8 +1,9 @@
-/* CRISTARIVA — sélection des fenêtres astrologiques v3.8.1
+/* CRISTARIVA — sélection des fenêtres astrologiques v3.8.2
    Limite le nombre de fenêtres aux plus significatives pour la question :
    1 fenêtre jusqu'à 2 semaines, 2 fenêtres jusqu'à 2 mois calendaires, 3 au-delà.
-   Simplifie aussi le texte d'impact en supprimant la terminaison « en lien avec… ». */
-const CRISTARIVA_PERIOD_WINDOW_LIMIT_VERSION='3.8.1';
+   Simplifie aussi le texte d'impact en supprimant la terminaison « en lien avec… ».
+   Supprime l'introduction générique superflue du récit Général / spirituel. */
+const CRISTARIVA_PERIOD_WINDOW_LIMIT_VERSION='3.8.2';
 
 function cr38WindowLimit(window){
   if(!window?.end)return 1;
@@ -30,6 +31,16 @@ cr37ImpactText=function(hit,intent,en=false){
   if(intent?.sexual&&(['Vénus','Mars'].includes(hit.tr)||['Vénus','Mars'].includes(hit.na)))text+=' ; cette fenêtre peut donc agir sur l’attirance, le désir ou l’initiative, sans permettre de déduire le consentement d’une autre personne';
   return text;
 };
+
+// Le récit Général / spirituel commence directement par les cartes.
+// On conserve les introductions spécifiques Relations et Professionnel / Projet.
+const cr382PreviousStoryOpening=typeof cr51Opening==='function'?cr51Opening:null;
+if(cr382PreviousStoryOpening){
+  cr51Opening=function(scope,en=false){
+    if(scope==='spirit')return '';
+    return cr382PreviousStoryOpening(scope,en);
+  };
+}
 
 function cr37RelevantWindows(a,theme,window,intent){
   const all=cr37AllTransitWindows(a,theme,window);
