@@ -1,15 +1,35 @@
-/* CRISTARIVA — sélection des fenêtres astrologiques v3.8
+/* CRISTARIVA — sélection des fenêtres astrologiques v3.8.1
    Limite le nombre de fenêtres aux plus significatives pour la question :
-   1 fenêtre jusqu'à 2 semaines, 2 fenêtres jusqu'à 2 mois, 3 au-delà. */
-const CRISTARIVA_PERIOD_WINDOW_LIMIT_VERSION='3.8';
+   1 fenêtre jusqu'à 2 semaines, 2 fenêtres jusqu'à 2 mois calendaires, 3 au-delà.
+   Simplifie aussi le texte d'impact en supprimant la terminaison « en lien avec… ». */
+const CRISTARIVA_PERIOD_WINDOW_LIMIT_VERSION='3.8.1';
 
 function cr38WindowLimit(window){
   if(!window?.end)return 1;
   const days=Math.max(0,(window.end-window.start)/86400000);
   if(days<=14.5)return 1;
-  if(days<=60)return 2;
+  // Deux mois calendaires peuvent représenter jusqu'à 62 jours.
+  if(days<=62.5)return 2;
   return 3;
 }
+
+// Version concise des impacts : on conserve l'effet du transit lui-même,
+// sans ajouter la terminaison « en lien avec [planète natale] ».
+cr37ImpactText=function(hit,intent,en=false){
+  const trFr={Jupiter:'l’ouverture, la confiance et les possibilités',Saturne:'les limites, la patience et la construction durable',Uranus:'les changements soudains, la liberté et les retournements',Neptune:'l’intuition, l’idéalisation et les zones floues',Mars:'le désir, l’initiative et le passage à l’action','Vénus':'l’attirance, le lien et l’harmonie'};
+  const trEn={Jupiter:'openness, confidence and possibilities',Saturne:'limits, patience and long-term construction',Uranus:'sudden change, freedom and reversals',Neptune:'intuition, idealisation and ambiguity',Mars:'desire, initiative and action','Vénus':'attraction, bonding and harmony'};
+  const trArea=(en?trEn:trFr)[hit.tr]||cr3Planet(hit.tr,en);
+  if(en){
+    const verb=hit.tone==='support'?'can support':hit.tone==='challenge'?'can put pressure on':'can strongly activate';
+    let text=`${verb} ${trArea}`;
+    if(intent?.sexual&&(['Vénus','Mars'].includes(hit.tr)||['Vénus','Mars'].includes(hit.na)))text+='; this may affect attraction, desire or initiative, but it does not establish another person’s consent';
+    return text;
+  }
+  const verb=hit.tone==='support'?'peut soutenir':hit.tone==='challenge'?'peut mettre sous tension':'peut activer fortement';
+  let text=`${verb} ${trArea}`;
+  if(intent?.sexual&&(['Vénus','Mars'].includes(hit.tr)||['Vénus','Mars'].includes(hit.na)))text+=' ; cette fenêtre peut donc agir sur l’attirance, le désir ou l’initiative, sans permettre de déduire le consentement d’une autre personne';
+  return text;
+};
 
 function cr37RelevantWindows(a,theme,window,intent){
   const all=cr37AllTransitWindows(a,theme,window);
