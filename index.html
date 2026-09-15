@@ -120,6 +120,21 @@ html{scroll-padding-top:130px}
  .home-links{margin-top:0}
  #tirage .actions .btn{width:100%}
 }
+
+/* CRISTARIVA — taille du tirage à 1 carte v46 */
+#drawCards.single-card-draw{
+  grid-template-columns:minmax(0,340px);
+  justify-content:center;
+}
+#drawCards.single-card-draw>.card{
+  width:100%;
+  max-width:340px;
+  justify-self:center;
+}
+@media(max-width:800px){
+  #drawCards.single-card-draw{grid-template-columns:minmax(0,min(280px,82vw));}
+  #drawCards.single-card-draw>.card{max-width:min(280px,82vw);}
+}
 </style>
 <link href="manifest.webmanifest" rel="manifest"/><meta content="#120d1c" name="theme-color"/><link href="icon-192.png" rel="apple-touch-icon"/>
 </head>
@@ -784,7 +799,9 @@ function applyStaticLanguage(){
 function renderCards(){
  if(!state.draw.length)return;
  const positions=(state.lang==='en'?POSITIONS_EN:POSITIONS_FR)[state.draw.length];
- $('#drawCards').innerHTML=state.draw.map((c,i)=>cardHTML(c,positions[i][0])).join('');
+ const drawCards=$('#drawCards');
+ drawCards.classList.toggle('single-card-draw',state.draw.length===1);
+ drawCards.innerHTML=state.draw.map((c,i)=>cardHTML(c,positions[i][0])).join('');
  $('#reading').innerHTML=storyInterpretation(state.draw);
 }
 function renderComplementary(){
@@ -1055,7 +1072,7 @@ try{const saved=new URLSearchParams(location.search).get('lang')||localStorage.g
 applyLanguage();
 </script>
 <script>if('serviceWorker' in navigator){
-const CRISTARIVA_PWA_VERSION='2026.09.14-27';
+const CRISTARIVA_PWA_VERSION='2026.09.15-46';
 let cristarivaReloading=false;
 const cristarivaRefreshOnce=()=>{
  if(cristarivaReloading)return;
@@ -1069,7 +1086,7 @@ navigator.serviceWorker.addEventListener('message',event=>{
  if(event.data&&event.data.type==='CRISTARIVA_UPDATED')cristarivaRefreshOnce();
 });
 const cristarivaCheckUpdate=()=>navigator.serviceWorker.register(
- './service-worker.js?v=20260914-27',
+ './service-worker.js?v=20260915-46',
  {scope:'./',updateViaCache:'none'}
 ).then(reg=>{
  if(reg.waiting)reg.waiting.postMessage('SKIP_WAITING');
