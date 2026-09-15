@@ -9,7 +9,7 @@ function cr52Esc(value){
 function cr52RawQuestion(){return String(state?.question||'').replace(/\s+/g,' ').trim();}
 function cr52PlainQuestion(){return cr52RawQuestion().toLowerCase();}
 function cr52IsWoundQuestion(q=cr52PlainQuestion()){
-  return /\b(blessur|trauma|traumatis|souffrance|souffrances|guérison|guerison|guérir|guerir|cicatrice|cicatrices)\b/i.test(q);
+  return /\b(blessur\w*|trauma\w*|traumatis\w*|souffr\w*|guér\w*|guer\w*|cicatric\w*)\b/i.test(q);
 }
 function cr52TopicFromQuestion(q=cr52RawQuestion(),en=false){
   const raw=String(q||'').trim();
