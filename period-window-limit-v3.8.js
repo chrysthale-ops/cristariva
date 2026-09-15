@@ -1,10 +1,11 @@
-/* CRISTARIVA — sélection et récit des pics astrologiques v3.9
+/* CRISTARIVA — sélection et récit des pics astrologiques v3.9.1
    Présente les transits comme un récit court et fluide :
    1 pic jusqu'à 2 semaines, 2 pics maximum jusqu'à 3 mois, 3 au-delà.
    Ne montre plus les longues fenêtres : seules les dates de pic sont signalées.
    Diversifie les influences retenues pour éviter les répétitions d'une même planète.
-   Conserve aussi le texte d'impact concis et l'ouverture spirituelle sans phrase générique. */
-const CRISTARIVA_PERIOD_WINDOW_LIMIT_VERSION='3.9';
+   Conserve aussi le texte d'impact concis et l'ouverture spirituelle sans phrase générique.
+   Supprime les conclusions automatiques ajoutées après le récit des cartes. */
+const CRISTARIVA_PERIOD_WINDOW_LIMIT_VERSION='3.9.1';
 
 function cr38WindowLimit(window){
   if(!window?.end)return 1;
@@ -41,6 +42,12 @@ if(cr382PreviousStoryOpening){
     if(scope==='spirit')return '';
     return cr382PreviousStoryOpening(scope,en);
   };
+}
+
+// Le récit doit se terminer avec ce qu'apporte réellement la dernière carte.
+// Aucune phrase générique ou morale n'est ajoutée automatiquement après elle.
+if(typeof cr51Closing==='function'){
+  cr51Closing=function(){return '';};
 }
 
 function cr37RelevantWindows(a,theme,window,intent){
