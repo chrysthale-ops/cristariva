@@ -1,5 +1,5 @@
 /* CRISTARIVA — astrology for the person represented by the Relation card.
-   v1.2: cross-analyses keep the technical calculations internal and render only plain-language narratives. */
+   v1.3: cross-analysis 2 is rendered only when a Timing card defines a period. */
 (function(){
 'use strict';
 const section=document.getElementById('relationAstroSection');
@@ -100,9 +100,11 @@ function transitNarrative(c,r){
 function crossMarkup(c,r){
   const label=state.relation?cardName(state.relation):text('la relation tirée','the drawn relationship');
   const note=(!c.birthTimeKnown||!r.birthTimeKnown)?`<p class="cr-cross-note">${cr3Escape(text('Une heure de naissance étant inconnue, la partie émotionnelle de cette comparaison reste un peu plus indicative et aucun élément dépendant précisément de l’heure n’est utilisé.','Because one birth time is unknown, the emotional part of this comparison remains somewhat more approximate, and no element that depends precisely on birth time is used.'))}</p>`:'';
-  const period=state.date?text('sur la période définie par la carte Datation','over the period defined by the Timing card'):text('au moment du tirage','at the time of the reading');
-  return `<section class="cr-cross-analysis cr-cross-natal"><h3>${cr3Escape(text('Analyse croisée 1 · La dynamique naturelle du lien','Cross-analysis 1 · The bond’s natural dynamic'))}</h3><p>${cr3Escape(text(`Pour la personne associée à « ${label} », la comparaison de vos deux profils astrologiques fait ressortir la manière dont vos fonctionnements peuvent naturellement se rapprocher ou se heurter.`,`For the person associated with “${label}”, comparing your two astrological profiles highlights how your ways of functioning may naturally come together or clash.`))}</p><p>${cr3Escape(natalNarrative(c,r))}</p>${note}</section>`+
-    `<section class="cr-cross-analysis cr-cross-transits"><h3>${cr3Escape(text('Analyse croisée 2 · L’évolution du lien sur la période','Cross-analysis 2 · How the bond evolves over the period'))}</h3><p>${cr3Escape(text(`Cette seconde lecture observe comment vos deux dynamiques évoluent ensemble ${period}. Elle retient uniquement les deux phases communes les plus significatives.`,`This second reading looks at how both of your dynamics evolve together ${period}. It keeps only the two most significant shared phases.`))}</p><p>${cr3Escape(transitNarrative(c,r))}</p></section>`;
+  const natal=`<section class="cr-cross-analysis cr-cross-natal"><h3>${cr3Escape(text('Analyse croisée 1 · La dynamique naturelle du lien','Cross-analysis 1 · The bond’s natural dynamic'))}</h3><p>${cr3Escape(text(`Pour la personne associée à « ${label} », la comparaison de vos deux profils astrologiques fait ressortir la manière dont vos fonctionnements peuvent naturellement se rapprocher ou se heurter.`,`For the person associated with “${label}”, comparing your two astrological profiles highlights how your ways of functioning may naturally come together or clash.`))}</p><p>${cr3Escape(natalNarrative(c,r))}</p>${note}</section>`;
+  if(!state.date)return natal;
+  const period=text('sur la période définie par la carte Datation','over the period defined by the Timing card');
+  const transits=`<section class="cr-cross-analysis cr-cross-transits"><h3>${cr3Escape(text('Analyse croisée 2 · L’évolution du lien sur la période','Cross-analysis 2 · How the bond evolves over the period'))}</h3><p>${cr3Escape(text(`Cette seconde lecture observe comment vos deux dynamiques évoluent ensemble ${period}. Elle retient uniquement les deux phases communes les plus significatives.`,`This second reading looks at how both of your dynamics evolve together ${period}. It keeps only the two most significant shared phases.`))}</p><p>${cr3Escape(transitNarrative(c,r))}</p></section>`;
+  return natal+transits;
 }
 
 const originalRenderSynthesis=renderSynthesis;
