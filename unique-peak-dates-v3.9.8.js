@@ -1,8 +1,8 @@
-/* CRISTARIVA — dates de pics astrologiques distinctes v3.9.8
+/* CRISTARIVA — dates de pics astrologiques distinctes v3.9.9
    Deux moments significatifs ne doivent pas être affichés le même jour.
    Pour les périodes finies, le moteur recherche le meilleur second pic sur
    une autre date ; pour les fenêtres spéciales, il supprime les doublons de jour. */
-const CRISTARIVA_UNIQUE_PEAK_DATES_VERSION='3.9.8';
+const CRISTARIVA_UNIQUE_PEAK_DATES_VERSION='3.9.9';
 
 (function(){
   if(typeof cr37RelevantWindows!=='function')return;
@@ -251,6 +251,51 @@ if(cr42BaseFormatAstroResult){
 
 (function cr42Refresh(){
   cr41PatchAstroState();
+  try{
+    const out=document.getElementById('astroResult');
+    if(out&&state?.astro&&typeof formatAstroResult==='function')out.innerHTML=formatAstroResult();
+    if(typeof renderSynthesis==='function')renderSynthesis();
+  }catch(e){}
+})();
+
+/* CRISTARIVA — formulation nuancée des impacts de transit v4.3
+   Remplace les verbes génériques répétés par une formulation propre à chaque planète. */
+const CRISTARIVA_TRANSIT_LANGUAGE_VERSION='4.3';
+(function(){
+  if(typeof cr37ImpactText!=='function')return;
+  const previousImpact=cr37ImpactText;
+  const fr={
+    Jupiter:{support:'favorise l’ouverture, renforce la confiance et élargit le champ des possibilités',challenge:'invite à ajuster le niveau de confiance et à évaluer les possibilités avec davantage de mesure',active:'amplifie l’ouverture, la confiance et le besoin d’élargir les possibilités'},
+    Saturne:{support:'aide à consolider les limites utiles, la patience et la construction dans la durée',challenge:'demande davantage de patience, de réalisme et de solidité dans ce qui se construit',active:'accentue les questions de cadre, de responsabilité et de construction durable'},
+    Uranus:{support:'favorise un changement libérateur et l’ouverture à une direction nouvelle',challenge:'bouscule les repères et peut provoquer des changements brusques, des revirements ou un besoin pressant de liberté',active:'accélère les changements, le besoin de liberté et les retournements de situation'},
+    Neptune:{support:'renforce l’intuition et la réceptivité, à condition de garder un lien clair avec les faits',challenge:'rend plus délicate la distinction entre intuition, idéalisation et zones floues',active:'accentue l’intuition, l’imaginaire et la sensibilité aux zones encore indécises'},
+    Mars:{support:'donne davantage d’élan au désir, à l’initiative et au passage à l’action',challenge:'rend les initiatives plus vives et demande de canaliser l’impatience ou les réactions trop rapides',active:'accentue le désir, l’initiative et la volonté de passer à l’action'},
+    'Vénus':{support:'favorise l’attirance, le rapprochement et la recherche d’harmonie',challenge:'questionne l’équilibre entre attirance, attentes affectives et recherche d’harmonie',active:'met davantage l’accent sur l’attirance, le lien et le besoin d’harmonie'},
+    Pluton:{support:'favorise une transformation profonde, la régénération et une reconstruction durable',challenge:'met au premier plan les rapports de force, les résistances au changement et les transformations devenues difficiles à différer',active:'intensifie les transformations profondes, la régénération et les changements de direction décisifs'}
+  };
+  const eng={
+    Jupiter:{support:'encourages openness, strengthens confidence and broadens the range of possibilities',challenge:'calls for confidence and possibilities to be reassessed with greater measure',active:'amplifies openness, confidence and the need to broaden possibilities'},
+    Saturne:{support:'helps consolidate useful boundaries, patience and long-term construction',challenge:'calls for more patience, realism and solidity in what is being built',active:'emphasises structure, responsibility and long-term construction'},
+    Uranus:{support:'encourages liberating change and a new direction',challenge:'shakes up existing reference points and may bring abrupt changes, reversals or an urgent need for freedom',active:'accelerates change, the need for freedom and reversals of direction'},
+    Neptune:{support:'strengthens intuition and receptivity, provided they remain connected to facts',challenge:'makes it more difficult to distinguish intuition, idealisation and ambiguity',active:'heightens intuition, imagination and sensitivity to what remains unclear'},
+    Mars:{support:'gives more momentum to desire, initiative and action',challenge:'makes initiatives more forceful and calls for impatience or overly quick reactions to be channelled',active:'heightens desire, initiative and the urge to act'},
+    'Vénus':{support:'favours attraction, rapprochement and the search for harmony',challenge:'questions the balance between attraction, emotional expectations and the search for harmony',active:'places greater emphasis on attraction, bonding and the need for harmony'},
+    Pluton:{support:'supports deep transformation, regeneration and lasting reconstruction',challenge:'brings power dynamics, resistance to change and unavoidable transformations to the foreground',active:'intensifies deep transformation, regeneration and decisive changes of direction'}
+  };
+
+  cr37ImpactText=function(hit,intent,en=false){
+    const set=(en?eng:fr)[hit?.tr];
+    if(!set)return previousImpact(hit,intent,en);
+    const key=hit?.tone==='support'?'support':hit?.tone==='challenge'?'challenge':'active';
+    let text=set[key];
+    if(intent?.sexual&&(['Vénus','Mars'].includes(hit?.tr)||['Vénus','Mars'].includes(hit?.na))){
+      text+=en
+        ?'; this period may affect attraction, desire or initiative, but it does not establish another person’s consent'
+        :' ; cette période peut agir sur l’attirance, le désir ou l’initiative, sans permettre de déduire le consentement d’une autre personne';
+    }
+    return text;
+  };
+
   try{
     const out=document.getElementById('astroResult');
     if(out&&state?.astro&&typeof formatAstroResult==='function')out.innerHTML=formatAstroResult();
