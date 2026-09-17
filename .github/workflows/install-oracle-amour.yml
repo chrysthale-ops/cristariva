@@ -16,17 +16,55 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          import base64, gzip, re
-          parts=sorted(Path('.cristariva-assets').glob('oracle-amour-part*.b64'))
-          if not parts:
+          import base64, gzip, re, itertools, zlib
+          files=sorted(Path('.cristariva-assets').glob('oracle-amour-part*.b64'))
+          if not files:
               raise SystemExit('Aucun fragment Oracle Amour trouvé')
-          text=''.join(p.read_text(encoding='utf-8-sig') for p in parts)
-          text=''.join(re.findall(r'[A-Za-z0-9+/=]', text))
-          text += '=' * ((4 - len(text) % 4) % 4)
-          raw=base64.b64decode(text, validate=False)
-          data=gzip.decompress(raw)
+          parts=[]
+          for p in files:
+              raw=p.read_text(encoding='utf-8-sig')
+              clean=''.join(re.findall(r'[A-Za-z0-9+/=]', raw))
+              parts.append(clean)
+              print(p.name, 'raw=',len(raw),'clean=',len(clean),'start=',clean[:16],'end=',clean[-16:],'equals=',clean.count('='))
+          def decode_text(txt):
+              txt=txt.rstrip('=')
+              txt += '='*((4-len(txt)%4)%4)
+              return base64.b64decode(txt, validate=False)
+          candidates=[]
+          for perm in itertools.permutations(range(len(parts))):
+              txt=''.join(parts[i] for i in perm)
+              try:
+                  raw=decode_text(txt)
+                  data=gzip.decompress(raw)
+                  candidates.append((f'text permutation {perm}',data))
+              except Exception as e:
+                  print('FAIL text',perm,type(e).__name__,str(e)[:120])
+          # Also test decoding each fragment separately before concatenation.
+          try:
+              raw=b''.join(decode_text(x) for x in parts)
+              data=gzip.decompress(raw)
+              candidates.append(('per-part decode 0,1,2',data))
+          except Exception as e:
+              print('FAIL per-part',type(e).__name__,str(e)[:120])
+          # Diagnostic: locate first bad compressed block for natural ordering.
+          try:
+              raw=decode_text(''.join(parts))
+              d=zlib.decompressobj(16+zlib.MAX_WBITS)
+              produced=0
+              for off in range(0,len(raw),256):
+                  try:
+                      out=d.decompress(raw[off:off+256]); produced+=len(out)
+                  except Exception as e:
+                      print('INCREMENTAL_FAIL compressed_offset=',off,'produced=',produced,'error=',repr(e)); break
+              else:
+                  out=d.flush(); produced+=len(out); print('INCREMENTAL_OK produced=',produced)
+          except Exception as e:
+              print('DIAGNOSTIC_DECODE_FAIL',repr(e))
+          if not candidates:
+              raise SystemExit('Aucune permutation simple ne reconstruit le paquet Oracle Amour')
+          label,data=candidates[0]
           Path('oracle-amour-data.js').write_bytes(data)
-          print(f'Oracle Amour reconstruit: {len(parts)} fragments, {len(data)} octets JS')
+          print('Oracle Amour reconstruit via',label,'=>',len(data),'octets JS')
           PY
       - name: Patch website and Android PWA
         run: python scripts/install_oracle_amour.py
@@ -34,6 +72,14 @@ jobs:
         run: |
           node --check oracle-amour-data.js
           node --check oracle-amour-integration.js
+          node - <<'NODE'
+          global.window=global;
+          require('./oracle-amour-data.js');
+          if(!global.AMOUR_DATA) throw new Error('AMOUR_DATA absent');
+          const d=global.AMOUR_DATA;
+          if(d.main.length!==60 || d.relation.length!==10 || d.dating.length!==10) throw new Error(`Comptage Oracle Amour invalide: ${d.main.length}/${d.relation.length}/${d.dating.length}`);
+          console.log('Oracle Amour validé:',d.main.length,d.relation.length,d.dating.length);
+          NODE
           grep -q "Sentimental" oracle-amour-integration.js
           grep -q "RELATION NON DÉFINIE" oracle-amour-data.js
           grep -q "oracle-amour-integration.js" index.html
