@@ -2,3 +2,4 @@ Oracle Amour CRISTARIVA ready for integration — Sentimental domain, 80-card ca
 Triggered 2026-09-17.
 Retry after CRLF-safe Base64 decoding fix.
 Retry with Python reconstruction and Base64 padding repair.
+Diagnostic retry: permutations, per-fragment decoding and compressed-stream localization.
