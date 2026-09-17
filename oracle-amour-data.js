@@ -7,6 +7,8 @@ function fallbackImage(id,name){
   return 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(svg);
 }
 const imgs=window.AMOUR_IMAGES||{}, rows=window.AMOUR_CARD_DATA||[];
-const all=rows.map(r=>{const [id,name,category,definition,keywords]=r,group=id<=60?'main':id<=70?'relation':'dating';const image=imgs[id]||fallbackImage(id,name);const c={id,name,category,definition,keywords,group,oracle:'amour',image,imageEn:image,meaning:definition,message:definition,reading_relationnel:definition,reading_professionnel:definition,reading_spirituel:definition,intensity:''};c.en={name,definition,category,keywords,intensity:'',meaning:definition,message:definition,reading_relationnel:definition,reading_professionnel:definition,reading_spirituel:definition};return c});
+/* Une ancienne version Android pouvait charger deux fois les fragments. On déduplique donc systématiquement par numéro de carte. */
+const uniqueRows=[...new Map(rows.filter(r=>Array.isArray(r)&&Number.isFinite(Number(r[0]))).map(r=>[Number(r[0]),r])).values()].sort((a,b)=>Number(a[0])-Number(b[0]));
+const all=uniqueRows.map(r=>{const [id,name,category,definition,keywords]=r,group=id<=60?'main':id<=70?'relation':'dating';const image=imgs[id]||fallbackImage(id,name);const c={id,name,category,definition,keywords,group,oracle:'amour',image,imageEn:image,meaning:definition,message:definition,reading_relationnel:definition,reading_professionnel:definition,reading_spirituel:definition,intensity:''};c.en={name,definition,category,keywords,intensity:'',meaning:definition,message:definition,reading_relationnel:definition,reading_professionnel:definition,reading_spirituel:definition};return c});
 window.AMOUR_DATA={main:all.filter(c=>c.group==='main'),relation:all.filter(c=>c.group==='relation'),dating:all.filter(c=>c.group==='dating')};
 })();

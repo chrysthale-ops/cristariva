@@ -1,148 +1,76 @@
-/* CRISTARIVA — astrology for the person represented by the Relation card.
-   v1.4: cross-analysis 2 keeps up to two distinct shared phases and avoids repeating the same narrative theme. */
+/* CRISTARIVA — chargeur direct Android/Web pour l'Oracle Amour.
+   Ce fichier remplace l'ancien point d'entrée relation-astrology.js.
+   Le code astrologique original est conservé dans relation-astrology-core-v1.4.js. */
 (function(){
-'use strict';
-const section=document.getElementById('relationAstroSection');
-if(!section||typeof cr3AstroMarkup!=='function')return;
-const el=id=>document.getElementById(id), enabled=el('relationAstroEnabled'), form=el('relationAstroForm'), result=el('relationAstroResult'), suggestions=el('relationPlaceSuggestions');
-const fields=['relationBirthdate','relationBirthtime','relationBirthplace'];
-let chosenPlace=null,revision=0,searchRevision=0,timer=null,busy=false,boundRelation=null;
-state.relationAstro=null;
-const en=()=>state.lang==='en', text=(fr,eng)=>en()?eng:fr;
+  'use strict';
 
-const style=document.createElement('style');
-style.textContent='.cr-cross-analysis{margin-top:18px;padding:18px 20px;border:1px solid rgba(138,100,46,.22);border-radius:16px;background:rgba(255,255,255,.38)}.cr-cross-analysis h3{margin:.1rem 0 .8rem;font-family:Georgia,serif;font-size:1.18rem}.cr-cross-analysis p{margin:.58rem 0;line-height:1.68}.cr-cross-analysis .cr-cross-note{margin:.7rem 0 0;font-size:.88rem;color:#68717c;line-height:1.5}.cr-cross-analysis+.cr-cross-analysis{margin-top:12px}';
-document.head.appendChild(style);
-
-function thirdPerson(prose){
-  const verbs={acceptez:'accepte',accordez:'accorde',adaptez:'adapte',agissez:'agit',aimez:'aime',analysez:'analyse',apportez:'apporte',apprenez:'apprend',appréciez:'apprécie',arrivez:'arrive',assumez:'assume',avancez:'avance',avez:'a',changez:'change',cherchez:'cherche',choisissez:'choisit',comprenez:'comprend',concentrez:'concentre',consolidez:'consolide',constatez:'constate',construisez:'construit',créez:'crée',donnez:'donne',faites:'fait',fonctionnez:'fonctionne',gagnez:'gagne',innovez:'innove',montrez:'montre',mobilisez:'mobilise',osez:'ose',passez:'passe',pensez:'pense',pesez:'pèse',pouvez:'peut',prenez:'prend',progressez:'progresse',recherchez:'recherche',ressentez:'ressent',réfléchissez:'réfléchit',réagissez:'réagit',révélez:'révèle',savez:'sait',sentez:'sent',souhaitez:'souhaite',structurez:'structure',tenez:'tient',transformez:'transforme',traversez:'traverse',vivez:'vit',voyez:'voit',voulez:'veut',êtes:'est',affirmez:'affirme',poursuivez:'poursuit'};
-  const feminine=new Set(['Lune','personnalité','sensibilité','volonté','vie','manière','façon','confiance','pensée','solidité','capacité','liberté','présence','attitude','trajectoire','méthode','place','position']);
-  let s=String(prose).replace(/vous-même/g,'elle-même').replace(/\b(Votre|votre)\s+((?:<[^>]+>\s*)*)([\wÀ-ÿ’]+)/g,(_,p,t,n)=>{let w=feminine.has(n)?'sa':'son';if(p==='Votre')w=w[0].toUpperCase()+w.slice(1);return w+' '+t+n;}).replace(/\b(Vos|vos)\b/g,m=>m==='Vos'?'Ses':'ses');
-  const c=Object.keys(verbs).join('|');
-  s=s.replace(new RegExp('\\b([Vv]ous) (vous )?(ne )?('+c+')\\b','g'),(_,sub,ref,neg,v)=>`${sub==='Vous'?'Elle':'elle'} ${ref?'se ':''}${neg?(v==='avez'||v==='êtes'?'n’':'ne '):''}${verbs[v]}`)
-    .replace(/\bvous (détacher|mettre|prononcer|sentir|attacher|autoriser|censurer|exprimer|voir)\b/g,'se $1').replace(/\bvous\b/g,'lui').replace(/\bque elle\b/g,'qu’elle').replace(/\blorsque elle\b/g,'lorsqu’elle').replace(/\bles vôtres\b/g,'les siens');
-  return s.replace(new RegExp('\\b('+c+')\\b','g'),v=>verbs[v]);
-}
-
-function currentProfile(){return enabled.checked&&boundRelation===state.relation?state.relationAstro:null;}
-function relationMarkup(a){
-  const tpl=document.createElement('template');tpl.innerHTML=cr3AstroMarkup(a);
-  const natal=tpl.content.querySelector('.cr3-astro-part');
-  if(natal)natal.innerHTML=thirdPerson(natal.innerHTML);
-  const heading=natal?.querySelector('h4');if(heading)heading.textContent=text('La personnalité astrologique de cette personne','This person’s astrological personality');
-  if(!a.birthTimeKnown&&natal){const n=document.createElement('p');n.className='muted';n.textContent=text('Heure inconnue : calcul à midi local, sans Ascendant. La position de la Lune reste indicative.','Unknown time: calculated at local noon, without an Ascendant. The Moon’s position remains approximate.');natal.prepend(n);}
-  const scope=document.createElement('p');scope.className='cr3-period-label';scope.textContent=text('Thème de la personne associée à la carte Relation « ','Birth chart of the person associated with the Relationship card “')+cardName(state.relation)+text(' ». Les transits ci-dessous sont calculés sur son thème natal.','”. The transits below are calculated against their birth chart.');
-  return scope.outerHTML+tpl.innerHTML;
-}
-
-const CROSS=['Soleil','Lune','Mercure','Vénus','Mars','Jupiter','Saturne'], PERSONAL=['Soleil','Lune','Mercure','Vénus','Mars'], TRANSITS=['Jupiter','Saturne','Uranus','Neptune','Mars','Vénus'];
-const SUPPORT=new Set(['trigone','sextile']), CHALLENGE=new Set(['carré','opposition']), CONJ_SUPPORT=new Set(['Lune|Vénus','Soleil|Lune','Soleil|Vénus','Mercure|Mercure','Vénus|Mars','Vénus|Vénus','Lune|Jupiter','Soleil|Jupiter','Vénus|Jupiter']);
-function canon(a,b){return[a,b].sort((x,y)=>CROSS.indexOf(x)-CROSS.indexOf(y)).join('|');}
-function natalTone(a,b,n){if(SUPPORT.has(n))return'support';if(CHALLENGE.has(n))return'challenge';if(n==='conjonction'&&CONJ_SUPPORT.has(canon(a,b)))return'support';return'intensify';}
-function natalHits(c,r){
-  const w={Soleil:4,Lune:6,Mercure:5,'Vénus':7,Mars:6,Jupiter:3,Saturne:4},out=[];
-  for(const a of CROSS)for(const b of CROSS){if(!Number.isFinite(c?.planets?.[a])||!Number.isFinite(r?.planets?.[b]))continue;const q=aspect(c.planets[a],r.planets[b]);if(!q||q.orb>6)continue;const tone=natalTone(a,b,q.name);let score=(w[a]||0)+(w[b]||0)+Math.max(0,8-q.orb)+(tone==='support'||tone==='challenge'?3:0)+(q.name==='conjonction'?2:0);out.push({a,b,tone,score});}
-  return out.sort((x,y)=>y.score-x.score);
-}
-function area(a,b){const p=new Set([a,b]);if(p.has('Vénus')&&p.has('Mars'))return'attraction';if(p.has('Lune')&&p.has('Vénus'))return'tenderness';if(p.has('Soleil')&&p.has('Lune'))return'emotionalFit';if(p.has('Mercure'))return'communication';if(p.has('Saturne'))return'stability';if(p.has('Jupiter'))return'openness';if(p.has('Mars'))return'initiative';if(p.has('Vénus'))return'affection';if(p.has('Lune'))return'sensitivity';return'temperament';}
-const STORY={
- attraction:{support:['L’attirance peut s’installer assez spontanément entre vous, avec une manière complémentaire de montrer le désir et d’aller vers l’autre.','Attraction can arise quite naturally between you, with complementary ways of expressing desire and moving toward one another.'],challenge:['L’attirance peut être forte, mais vos façons d’exprimer le désir ou de prendre l’initiative ne sont pas toujours synchronisées.','Attraction can be strong, but your ways of expressing desire or taking initiative are not always synchronized.']},
- tenderness:{support:['Une vraie douceur peut circuler dans le lien : l’un tend naturellement à rassurer l’autre et à nourrir le sentiment d’être compris affectivement.','Real tenderness can flow through the bond: one of you naturally tends to reassure the other and strengthen the feeling of being emotionally understood.'],challenge:['La façon de donner de l’affection et celle de rechercher de la sécurité émotionnelle peuvent parfois ne pas coïncider.','The way affection is given and the way emotional security is sought may not always match.']},
- emotionalFit:{support:['Vos élans personnels et vos besoins affectifs peuvent assez bien se répondre, ce qui favorise le sentiment de se reconnaître et de se comprendre sans devoir tout expliquer.','Your personal drives and emotional needs can respond well to each other, supporting a sense of mutual recognition without having to explain everything.'],challenge:['Ce que l’un veut faire et ce que l’autre ressent peuvent parfois partir dans des directions différentes.','What one person wants to do and what the other feels can sometimes pull in different directions.']},
- communication:{support:['La compréhension peut devenir un point d’appui du lien : vous pouvez mettre les choses en mots et trouver plus facilement un terrain commun.','Mutual understanding can become a strength of the bond: you can put things into words and find common ground more easily.'],challenge:['La communication est une zone plus sensible : vous ne raisonnez pas toujours de la même manière et un même échange peut être compris différemment par chacun.','Communication is a more sensitive area: you do not always reason in the same way, and the same exchange may be understood differently by each of you.']},
- stability:{support:['Le lien peut gagner en solidité lorsque les attentes sont claires et que chacun respecte le rythme de construction de l’autre.','The bond can gain solidity when expectations are clear and each person respects the other’s pace of building.'],challenge:['Le rythme de construction peut devenir un sujet de friction : l’un peut ressentir des limites ou des lenteurs là où l’autre voudrait avancer plus librement.','The pace of building can become a source of friction: one may feel limits or delays where the other would prefer to move more freely.']},
- openness:{support:['Vous pouvez vous encourager mutuellement à reprendre confiance et à donner davantage de place au lien.','You can encourage one another to regain confidence and give the bond more room.'],challenge:['Vos attentes quant à ce que le lien pourrait devenir peuvent parfois être différentes ou prendre plus de place que la réalité du moment.','Your expectations about what the bond could become may differ or grow larger than the reality of the moment.']},
- initiative:{support:['Les initiatives de l’un peuvent stimuler l’autre et donner au lien un mouvement vivant.','One person’s initiatives can stimulate the other and give the bond lively momentum.'],challenge:['Vos réactions et vos initiatives peuvent se heurter si chacun agit à son propre rythme sans percevoir celui de l’autre.','Your reactions and initiatives may clash if each person acts at their own pace without sensing the other’s.']},
- affection:{support:['Vous disposez d’un terrain affectif commun qui peut faciliter la proximité et le plaisir d’être ensemble.','You share emotional common ground that can support closeness and enjoyment of being together.'],challenge:['Vos manières d’aimer et d’exprimer l’attachement ne sont pas toujours les mêmes, ce qui peut créer des attentes différentes.','Your ways of loving and expressing attachment are not always the same, which can create different expectations.']},
- sensitivity:{support:['La sensibilité de chacun peut trouver un écho chez l’autre, ce qui facilite l’empathie et la perception des besoins non dits.','Each person’s sensitivity can resonate with the other’s, making empathy and unspoken needs easier to perceive.'],challenge:['Vos réactions émotionnelles peuvent s’amplifier dans les moments d’incertitude et créer de la distance là où il faudrait surtout clarifier.','Your emotional reactions can intensify during uncertain moments and create distance where clarification would help more.']},
- temperament:{support:['Vos tempéraments présentent assez de points d’accord pour faciliter une adaptation mutuelle.','Your temperaments share enough common ground to support mutual adaptation.'],challenge:['Vos tempéraments ne réagissent pas toujours de la même manière, ce qui demande davantage d’ajustement.','Your temperaments do not always react in the same way, which requires more adjustment.']}
-};
-function uniqueAreas(hits,tone,max=3){const seen=new Set(),out=[];for(const h of hits){if(h.tone!==tone)continue;const a=area(h.a,h.b);if(seen.has(a))continue;seen.add(a);out.push(a);if(out.length>=max)break;}return out;}
-function natalNarrative(c,r){
-  const hits=natalHits(c,r),support=uniqueAreas(hits,'support'),challenge=uniqueAreas(hits,'challenge'),parts=[];
-  if(!support.length&&!challenge.length)return text('La comparaison ne fait pas ressortir de dynamique relationnelle dominante assez nette pour décrire un fonctionnement commun fiable.','The comparison does not show a sufficiently clear dominant relational pattern to describe a reliable shared dynamic.');
-  if(support.length&&challenge.length)parts.push(text('Le lien associe de vraies facilités de rapprochement à quelques différences de fonctionnement qui demandent d’être comprises plutôt que forcées.','The bond combines genuine ease of rapprochement with a few differences in how you function that need to be understood rather than forced.'));
-  else if(support.length)parts.push(text('Le lien repose surtout sur des affinités naturelles qui peuvent rendre le rapprochement plus spontané.','The bond rests mainly on natural affinities that can make rapprochement feel more spontaneous.'));
-  else parts.push(text('Le lien demande davantage d’ajustements que de spontanéité : plusieurs différences de fonctionnement peuvent être sensibles dans la manière de vous comprendre et d’avancer ensemble.','The bond requires more adjustment than spontaneity: several differences can be felt in the way you understand each other and move forward together.'));
-  support.forEach(a=>parts.push(text(...STORY[a].support)));
-  if(challenge.length&&support.length)parts.push(text('En revanche, les points suivants demandent davantage d’attention.','On the other hand, the following points need more attention.'));
-  challenge.forEach(a=>parts.push(text(...STORY[a].challenge)));
-  return parts.join(' ');
-}
-
-function fallbackHits(profile){const natal=profile?.planets||{},at=cr3ReadingMoment(),sky=planetLongitudes(at),out=[];for(const tr of TRANSITS)for(const na of PERSONAL){if(!Number.isFinite(sky[tr])||!Number.isFinite(natal[na]))continue;const q=aspect(sky[tr],natal[na]);if(q&&q.orb<=6)out.push({tr,na,tone:cr3TransitTone(q.name),bestOrb:q.orb,first:new Date(at),last:new Date(at),bestDate:new Date(at)});}return out;}
-function profileHits(profile){if(!profile)return[];try{if(state.date&&typeof cr37RelevantWindows==='function')return cr37RelevantWindows(profile,cr3DominantTheme(state.draw||[],en()),cr3TimingWindow(state.date,cr3ReadingMoment(),en()),cr33Intent())||[];}catch(_){}return fallbackHits(profile);}
-const dval=v=>{const d=v instanceof Date?v:new Date(v);return Number.isFinite(+d)?+d:0;};
-function near(a,b){const a0=dval(a.first||a.bestDate),a1=dval(a.last||a.bestDate),b0=dval(b.first||b.bestDate),b1=dval(b.last||b.bestDate);if(!a0||!b0)return false;if(Math.max(a0,b0)<=Math.min(a1||a0,b1||b0))return true;return Math.abs(dval(a.bestDate)-dval(b.bestDate))<=21*86400000;}
-function pairTone(a,b){if(a.tone==='challenge'||b.tone==='challenge')return'challenge';if(a.tone==='support'||b.tone==='support')return'support';return'intensify';}
-function pairScore(p){const a=p.a,b=p.b,days=Math.abs(dval(a.bestDate)-dval(b.bestDate))/86400000;return Math.max(0,12-Math.min(days,12))+Math.max(0,6-(a.bestOrb??a.orb??6))+Math.max(0,6-(b.bestOrb??b.orb??6))+(a.tr===b.tr?5:0)+((p.tone==='support'||p.tone==='challenge')?3:0);}
-function sharedPairs(c,r){const out=[];for(const a of profileHits(c))for(const b of profileHits(r)){if(!near(a,b))continue;const p={a,b,tone:pairTone(a,b)};p.score=pairScore(p);out.push(p);}return out;}
-function when(p){const a=dval(p.a.bestDate),b=dval(p.b.bestDate);if(!a||!b)return text('Sur une même phase de la période','During the same phase of the period');if(Math.abs(a-b)<=3*86400000){const m=new Date((a+b)/2);return text(`Autour du ${cr3Date(m,false)}`,`Around ${cr3Date(m,true)}`);}const first=new Date(Math.min(a,b)),last=new Date(Math.max(a,b));return text(`Entre le ${cr3Date(first,false)} et le ${cr3Date(last,false)}`,`Between ${cr3Date(first,true)} and ${cr3Date(last,true)}`);}
-function tArea(h){if(h.na==='Mercure')return'communication';if(h.na==='Vénus')return'affection';if(h.na==='Mars')return'initiative';if(h.na==='Lune')return'sensitivity';if(h.na==='Soleil')return'direction';return'tempo';}
-const PERIOD={
- communication:{support:['les échanges peuvent devenir plus simples et plus faciles à comprendre des deux côtés','exchanges can become simpler and easier for both sides to understand'],challenge:['les mots peuvent être mal interprétés ou les décisions plus difficiles à synchroniser','words may be misread or decisions may be harder to synchronize']},
- affection:{support:['la proximité affective peut être plus facile à exprimer et à recevoir','emotional closeness may become easier to express and receive'],challenge:['les attentes affectives peuvent devenir plus sensibles ou se manifester à des rythmes différents','emotional expectations may become more sensitive or emerge at different rhythms']},
- initiative:{support:['les initiatives peuvent se répondre et donner au lien davantage de mouvement','initiatives can respond to one another and give the bond more momentum'],challenge:['les initiatives peuvent se heurter ou donner l’impression que l’un pousse pendant que l’autre retient','initiatives may clash or create the feeling that one person is pushing while the other holds back']},
- sensitivity:{support:['vous pouvez être plus réceptifs l’un à l’autre et mieux percevoir ce qui a besoin d’être rassuré','you may be more receptive to one another and better sense what needs reassurance'],challenge:['les réactions émotionnelles peuvent être plus fortes et rendre chacun plus susceptible de se protéger ou de prendre de la distance','emotional reactions may be stronger and make each person more likely to protect themselves or step back']},
- direction:{support:['vos envies d’avancer peuvent davantage converger, ce qui facilite une évolution commune','your desire to move forward may converge more easily, supporting shared development'],challenge:['vous pouvez ne pas vouloir avancer dans la même direction au même moment','you may not want to move in the same direction at the same time']},
- tempo:{support:['vos rythmes paraissent momentanément plus compatibles, ce qui rend les ajustements plus naturels','your rhythms appear temporarily more compatible, making adjustments more natural'],challenge:['vos rythmes peuvent être plus difficiles à accorder, avec davantage d’attente, de réserve ou de décalage','your rhythms may be harder to align, with more waiting, reserve, or mismatch']}
-};
-function phaseMeaningKeys(p){if(p.tone==='intensify')return['intensify'];return[...new Set([tArea(p.a),tArea(p.b)])].map(a=>`${p.tone}:${a}`);}
-function phaseNarrative(p,used=null){
-  if(p.tone==='intensify'){
-    const key='intensify';if(used?.has(key))return'';used?.add(key);
-    return `${when(p)}, ${text('vos deux rythmes sont davantage mobilisés en même temps, mais sans orientation nette vers un rapprochement ou un éloignement','both of your rhythms are more strongly activated at the same time, but without a clear direction toward rapprochement or distancing')}.`;
+  function loadScript(src, marker, force){
+    return new Promise(function(resolve,reject){
+      if(!force){
+        const exists=[...document.scripts].some(function(s){
+          return (marker && s.dataset && s.dataset.cristariva===marker) ||
+                 (s.src && s.src.indexOf(src.split('?')[0].replace('./',''))!==-1);
+        });
+        if(exists) return resolve();
+      }
+      const el=document.createElement('script');
+      el.src=src;
+      el.async=false;
+      if(marker) el.dataset.cristariva=marker;
+      el.onload=resolve;
+      el.onerror=function(){reject(new Error('Impossible de charger '+src));};
+      document.body.appendChild(el);
+    });
   }
-  let areas=[...new Set([tArea(p.a),tArea(p.b)])];
-  if(used)areas=areas.filter(a=>!used.has(`${p.tone}:${a}`));
-  if(!areas.length)return'';
-  areas.forEach(a=>used?.add(`${p.tone}:${a}`));
-  const phrases=areas.map(a=>text(...PERIOD[a][p.tone]));
-  let body=phrases[0];
-  if(phrases[1]&&phrases[1]!==phrases[0])body+=text(` ; parallèlement, ${phrases[1]}`,`; at the same time, ${phrases[1]}`);
-  return `${when(p)}, ${body}.`;
-}
-function transitNarrative(c,r){
-  const all=sharedPairs(c,r);if(!all.length)return text('Sur la période étudiée, aucun mouvement commun assez net ne ressort pour décrire une phase précise de rapprochement ou d’éloignement.','Over the period studied, no sufficiently clear shared movement stands out to describe a precise phase of rapprochement or distancing.');
-  const ranked=[...all].sort((a,b)=>b.score-a.score),seenWhen=new Set(),seenMeaning=new Set(),selected=[];
-  for(const p of ranked){
-    const dateKey=when(p);if(seenWhen.has(dateKey))continue;
-    const keys=phaseMeaningKeys(p),addsSomething=keys.some(k=>!seenMeaning.has(k));
-    if(!addsSomething)continue;
-    seenWhen.add(dateKey);selected.push(p);keys.forEach(k=>seenMeaning.add(k));
-    if(selected.length===2)break;
+
+  /* Préserver toutes les fonctions astrologiques existantes. */
+  loadScript('./relation-astrology-core-v1.4.js?v=1.4','relation-astrology-core').catch(function(e){
+    console.error('CRISTARIVA astrologie relationnelle',e);
+  });
+
+  const LOVE_SCRIPTS=[
+    './oracle-amour-images-01-05.js?v=1.1',
+    './oracle-amour-images-06-10.js?v=1.1',
+    './oracle-amour-cards-01-20.js?v=4.0',
+    './oracle-amour-cards-21-40.js?v=4.0',
+    './oracle-amour-cards-41-60.js?v=4.0',
+    './oracle-amour-cards-61-80.js?v=4.0',
+    './oracle-amour-data.js?v=4.1',
+    './oracle-amour-integration.js?v=4.1',
+    './oracle-amour-compat.js?v=4.1'
+  ];
+
+  async function ensureOracleAmour(){
+    if(window.__CRISTARIVA_LOVE_DIRECT_BOOTSTRAP__) return window.__CRISTARIVA_LOVE_DIRECT_BOOTSTRAP__;
+    window.__CRISTARIVA_LOVE_DIRECT_BOOTSTRAP__=(async function(){
+      /* Si l'ancien service worker a déjà injecté et exécuté l'Oracle Amour,
+         ne rien charger une seconde fois. */
+      const hasSentimental=function(){
+        return !!document.querySelector('#domain option[value="Sentimental"]');
+      };
+      if(window.AMOUR_DATA && hasSentimental()) return true;
+
+      for(const src of LOVE_SCRIPTS){
+        try{ await loadScript(src,'love-'+src.split('/').pop().split('?')[0],false); }
+        catch(e){ console.error('CRISTARIVA Oracle Amour',e); }
+      }
+
+      /* Réparer le cas où les données étaient présentes mais où l'intégration
+         n'avait pas encore ajouté le domaine Sentimental. */
+      if(window.AMOUR_DATA && !hasSentimental()){
+        try{ await loadScript('./oracle-amour-integration.js?v=4.1-repair','love-integration-repair',true); }
+        catch(e){ console.error('CRISTARIVA réparation Sentimental',e); }
+      }
+      return !!(window.AMOUR_DATA && hasSentimental());
+    })();
+    return window.__CRISTARIVA_LOVE_DIRECT_BOOTSTRAP__;
   }
-  selected.sort((a,b)=>Math.min(dval(a.a.bestDate),dval(a.b.bestDate))-Math.min(dval(b.a.bestDate),dval(b.b.bestDate)));
-  const usedNarrative=new Set(),parts=selected.map(p=>phaseNarrative(p,usedNarrative)).filter(Boolean),hasSupport=all.some(p=>p.tone==='support'),hasChallenge=all.some(p=>p.tone==='challenge');
-  if(!parts.length)parts.push(text('Sur la période étudiée, les influences communes détectées se recouvrent trop pour constituer deux phases réellement distinctes.','Over the period studied, the shared influences overlap too much to form two genuinely distinct phases.'));
-  if(!hasSupport&&hasChallenge)parts.push(text('Aucune phase commune de soutien suffisamment nette ne ressort sur cette période.','No sufficiently clear shared supportive phase stands out during this period.'));
-  else if(hasSupport&&!hasChallenge)parts.push(text('Aucune phase commune de tension suffisamment nette ne ressort sur cette période.','No sufficiently clear shared challenging phase stands out during this period.'));
-  return parts.join(' ');
-}
 
-function crossMarkup(c,r){
-  const label=state.relation?cardName(state.relation):text('la relation tirée','the drawn relationship');
-  const note=(!c.birthTimeKnown||!r.birthTimeKnown)?`<p class="cr-cross-note">${cr3Escape(text('Une heure de naissance étant inconnue, la partie émotionnelle de cette comparaison reste un peu plus indicative et aucun élément dépendant précisément de l’heure n’est utilisé.','Because one birth time is unknown, the emotional part of this comparison remains somewhat more approximate, and no element that depends precisely on birth time is used.'))}</p>`:'';
-  const natal=`<section class="cr-cross-analysis cr-cross-natal"><h3>${cr3Escape(text('Analyse croisée 1 · La dynamique naturelle du lien','Cross-analysis 1 · The bond’s natural dynamic'))}</h3><p>${cr3Escape(text(`Pour la personne associée à « ${label} », la comparaison de vos deux profils astrologiques fait ressortir la manière dont vos fonctionnements peuvent naturellement se rapprocher ou se heurter.`,`For the person associated with “${label}”, comparing your two astrological profiles highlights how your ways of functioning may naturally come together or clash.`))}</p><p>${cr3Escape(natalNarrative(c,r))}</p>${note}</section>`;
-  if(!state.date)return natal;
-  const period=text('sur la période définie par la carte Datation','over the period defined by the Timing card');
-  const transits=`<section class="cr-cross-analysis cr-cross-transits"><h3>${cr3Escape(text('Analyse croisée 2 · L’évolution du lien sur la période','Cross-analysis 2 · How the bond evolves over the period'))}</h3><p>${cr3Escape(text(`Cette seconde lecture observe comment vos deux dynamiques évoluent ensemble ${period}. Elle retient jusqu’à deux phases communes réellement distinctes, sans répéter une même influence sous deux fenêtres différentes.`,`This second reading looks at how both of your dynamics evolve together ${period}. It keeps up to two genuinely distinct shared phases, without repeating the same influence under two different windows.`))}</p><p>${cr3Escape(transitNarrative(c,r))}</p></section>`;
-  return natal+transits;
-}
-
-const originalRenderSynthesis=renderSynthesis;
-renderSynthesis=function(){originalRenderSynthesis.apply(this,arguments);const r=currentProfile(),c=state.astro,box=el('synthesis');if(!r||!c||!state.draw?.length||!box)return;box.querySelectorAll('.cr-cross-analysis').forEach(n=>n.remove());const target=box.querySelector('.cr3-global'),markup=crossMarkup(c,r);if(target)target.insertAdjacentHTML('afterend',markup);else box.insertAdjacentHTML('beforeend',markup);};
-function refreshSynthesis(){if(!el('synthesis').classList.contains('hidden'))renderSynthesis();}
-function refresh(){section.querySelectorAll('[data-relation-fr]').forEach(n=>n.textContent=n.getAttribute(en()?'data-relation-en':'data-relation-fr'));el('relationBirthplace').placeholder=text('Commencez à écrire une ville','Start typing a city');el('relationAstroFields').hidden=!enabled.checked;el('relationAstroContext').textContent=state.relation?text('Carte Relation tirée : ','Relationship card drawn: ')+cardName(state.relation):text('Tirez une carte Relation pour préciser la personne concernée.','Draw a Relationship card to identify the person concerned.');el('relationAstroBtn').disabled=busy||!enabled.checked||!state.relation;el('relationAstroRemove').hidden=!currentProfile();if(currentProfile()){result.style.display='block';result.innerHTML=relationMarkup(currentProfile());}}
-function invalidate(){revision++;busy=false;state.relationAstro=null;boundRelation=null;result.innerHTML='';result.style.display='none';refresh();refreshSynthesis();}
-function hideSuggestions(){searchRevision++;clearTimeout(timer);suggestions.hidden=true;suggestions.replaceChildren();}
-function showPlaces(places){suggestions.replaceChildren();suggestions.hidden=false;if(!places.length){suggestions.textContent=text('Aucun lieu trouvé. Ajoutez le pays ou la région.','No place found. Add the country or region.');return;}places.forEach(place=>{const b=document.createElement('button');b.type='button';b.className='btn';b.textContent=placeLabel(place);b.addEventListener('click',()=>{chosenPlace=place;el('relationBirthplace').value=placeLabel(place);hideSuggestions();invalidate();});suggestions.append(b);});}
-
-el('relationBirthplace').addEventListener('input',()=>{chosenPlace=null;hideSuggestions();const query=el('relationBirthplace').value.trim(),search=searchRevision;if(query.length<3)return;timer=setTimeout(async()=>{try{const places=await geocodeMany(query);if(search!==searchRevision||!enabled.checked)return;showPlaces(places);}catch(_){if(search!==searchRevision)return;suggestions.textContent=text('La recherche de lieux est indisponible. Vérifiez votre connexion et réessayez.','Place search is unavailable. Check your connection and try again.');suggestions.hidden=false;}},300);});
-el('relationBirthplace').addEventListener('keydown',e=>{if(e.key==='Escape')hideSuggestions();if(e.key==='ArrowDown'&&!suggestions.hidden){e.preventDefault();suggestions.querySelector('button')?.focus();}});
-document.addEventListener('click',e=>{if(!el('relationPlaceField').contains(e.target))hideSuggestions();});
-fields.forEach(id=>el(id).addEventListener('input',invalidate));enabled.addEventListener('change',()=>{hideSuggestions();invalidate();});
-el('relationAstroRemove').addEventListener('click',()=>{enabled.checked=false;chosenPlace=null;fields.forEach(id=>el(id).value='');hideSuggestions();invalidate();enabled.focus();});
-form.addEventListener('submit',async e=>{e.preventDefault();invalidate();if(!enabled.checked||!state.relation)return;const request=revision,relation=state.relation,date=el('relationBirthdate').value,clock=el('relationBirthtime').value,place=el('relationBirthplace').value.trim(),isCurrent=()=>request===revision&&enabled.checked&&relation===state.relation;busy=true;refresh();result.style.display='block';result.textContent=text('Calcul et interprétation de son thème natal…','Calculating and interpreting their birth chart…');try{if(!date||!place)throw Error('required');let g=chosenPlace;if(!g){const places=await geocodeMany(place);if(!isCurrent())return;if(places.length!==1){showPlaces(places);throw Error('select-place');}g=places[0];}if(!g.timezone||!Number.isFinite(g.latitude)||!Number.isFinite(g.longitude))throw Error('birth-timezone');const birth=birthInstant(date,clock,g.timezone);if(birth>new Date())throw Error('birth-date');const planets=planetLongitudes(birth);if(!isCurrent())return;state.relationAstro={birthplace:placeLabel(g),birthUTC:birth.toISOString(),birthTimezone:g.timezone,birthTimeKnown:!!clock,planets,sun:zodiac(planets.Soleil),moon:zodiac(planets.Lune),asc:clock?zodiac(ascendant(birth,g.latitude,g.longitude)):null,dominant:astroThemes(planets),now:planetLongitudes(cr3ReadingMoment())};boundRelation=relation;hideSuggestions();refreshSynthesis();}catch(error){if(!isCurrent())return;const messages={required:['Ajoutez au minimum sa date et son lieu de naissance.','Add at least their birth date and birthplace.'],'select-place':['Choisissez le lieu de naissance dans les suggestions.','Choose the birthplace from the suggestions.'],'birth-date':['Vérifiez la date de naissance : elle doit être valide et passée.','Check the birth date: it must be valid and in the past.'],'birth-time':['Vérifiez l’heure de naissance.','Check the birth time.'],'birth-timezone':['Le fuseau horaire du lieu est indisponible. Choisissez une ville dans les suggestions.','The birthplace’s time zone is unavailable. Choose a city in the suggestions.'],'birth-time-gap':['Cette heure locale n’a pas existé lors du changement d’heure. Vérifiez l’heure de naissance.','This local time did not exist during the clock change. Check the birth time.'],'birth-time-ambiguous':['L’heure saisie est ambiguë lors du changement d’heure. Vérifiez l’heure de naissance.','This birth time is ambiguous during the clock change. Check the birth time.']},message=messages[error.message]||['Le lieu n’a pas pu être identifié. Vérifiez votre connexion et réessayez.','The birthplace could not be identified. Check your connection and try again.'];result.innerHTML=`<p role="alert">${cr3Escape(text(...message))}</p>`;}finally{if(isCurrent()){busy=false;refresh();}}});
-el('relationBtn').addEventListener('click',()=>{hideSuggestions();invalidate();});el('dateBtn').addEventListener('click',()=>{refresh();refreshSynthesis();});el('drawBtn').addEventListener('click',()=>{hideSuggestions();invalidate();});el('langBtn').addEventListener('click',()=>{hideSuggestions();refresh();refreshSynthesis();});refresh();
+  /* Attendre la fin du parsing évite les doubles chargements avec une ancienne
+     version du service worker Android encore active pendant la transition. */
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',function(){ setTimeout(ensureOracleAmour,0); },{once:true});
+  }else{
+    setTimeout(ensureOracleAmour,0);
+  }
 })();
