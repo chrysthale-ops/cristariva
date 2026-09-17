@@ -1,8 +1,8 @@
-/* CRISTARIVA — dates de pics astrologiques distinctes v3.9.9
+/* CRISTARIVA — dates de pics astrologiques distinctes v4.0
    Deux moments significatifs ne doivent pas être affichés le même jour.
    Pour les périodes finies, le moteur recherche le meilleur second pic sur
    une autre date ; pour les fenêtres spéciales, il supprime les doublons de jour. */
-const CRISTARIVA_UNIQUE_PEAK_DATES_VERSION='3.9.9';
+const CRISTARIVA_UNIQUE_PEAK_DATES_VERSION='4.0';
 
 (function(){
   if(typeof cr37RelevantWindows!=='function')return;
@@ -24,34 +24,18 @@ const CRISTARIVA_UNIQUE_PEAK_DATES_VERSION='3.9.9';
   }
 
   function finiteDistinctWindows(a,theme,window,intent){
-    if(typeof cr37AllTransitWindows!=='function'||typeof cr37QuestionWeight!=='function')return previousRelevant(a,theme,window,intent);
-
-    const all=cr37AllTransitWindows(a,theme,window);
-    const ranked=all.map(h=>({hit:h,weight:cr37QuestionWeight(h,intent)}))
-      .filter(x=>x.weight>=5||x.hit.priority>=2)
-      .sort((a,b)=>
-        b.weight-a.weight ||
-        (b.hit.priority||0)-(a.hit.priority||0) ||
-        (a.hit.bestOrb||99)-(b.hit.bestOrb||99) ||
-        (b.hit.points||0)-(a.hit.points||0)
-      );
-
-    const unique=[];
-    const seenAspect=new Set();
-    for(const item of ranked){
-      const h=item.hit;
-      const key=[h.tr,h.name,h.na,+new Date(h.first),+new Date(h.last)].join('|');
-      if(seenAspect.has(key))continue;
-      seenAspect.add(key);
-      unique.push(h);
-    }
-
+    /* IMPORTANT : previousRelevant contient le garde-fou chargé juste avant
+       ce module. Pour les cartes Datation finies (sauf « Immédiat »), il
+       exclut déjà le jour civil du tirage, affine le minimum d’orbe et ne
+       conserve que de vrais pics futurs. On ne recalcule donc plus ici la
+       sélection à partir des transits bruts, car cela annulait ce garde-fou. */
+    const hits=previousRelevant(a,theme,window,intent)||[];
     const limit=typeof cr38WindowLimit==='function'?cr38WindowLimit(window):2;
     const selected=[];
     const usedDates=new Set();
     const usedTransit=new Set();
 
-    for(const h of unique){
+    for(const h of hits){
       if(selected.length>=limit)break;
       const date=dayKey(h.bestDate);
       if(!date||usedDates.has(date)||usedTransit.has(h.tr))continue;
@@ -61,7 +45,7 @@ const CRISTARIVA_UNIQUE_PEAK_DATES_VERSION='3.9.9';
     }
 
     if(selected.length<limit){
-      for(const h of unique){
+      for(const h of hits){
         if(selected.length>=limit)break;
         if(selected.includes(h))continue;
         const date=dayKey(h.bestDate);
