@@ -1,13 +1,13 @@
 /* CRISTARIVA — service worker Oracle Amour / domaine Sentimental — 17 septembre 2026 */
-const CACHE_NAME='cristariva-oracle-amour-v2-20260917';
+const CACHE_NAME='cristariva-oracle-amour-v3-20260917';
 const LOVE_SCRIPTS=[
- './oracle-amour-cards-01-20.js?v=1.0',
- './oracle-amour-cards-21-40.js?v=1.0',
- './oracle-amour-cards-41-60.js?v=1.0',
- './oracle-amour-cards-61-80.js?v=1.0',
- './oracle-amour-data.js?v=1.1',
- './oracle-amour-integration.js?v=1.0',
- './oracle-amour-compat.js?v=1.0'
+ './oracle-amour-cards-01-20.js?v=2.0',
+ './oracle-amour-cards-21-40.js?v=2.0',
+ './oracle-amour-cards-41-60.js?v=2.0',
+ './oracle-amour-cards-61-80.js?v=2.0',
+ './oracle-amour-data.js?v=2.0',
+ './oracle-amour-integration.js?v=2.0',
+ './oracle-amour-compat.js?v=2.0'
 ];
 const SHELL=['./','./index.html','./manifest.webmanifest','./manifest-en.webmanifest','./icon-192.png','./icon-512.png',...LOVE_SCRIPTS];
 
@@ -17,14 +17,18 @@ async function injectOracleAmour(response){
   if(!response.ok||!type.includes('text/html'))return response;
   const source=await response.text();
   if(source.includes('oracle-amour-integration.js')){
-    return new Response(source,{status:response.status,statusText:response.statusText,headers:response.headers});
+    const headers=new Headers(response.headers);
+    headers.delete('content-length');
+    headers.delete('content-encoding');
+    headers.set('x-cristariva-version','oracle-amour-v3-20260917');
+    return new Response(source,{status:response.status,statusText:response.statusText,headers});
   }
   const tags=LOVE_SCRIPTS.map(src=>`<script src="${src}"></script>`).join('');
   const html=source.replace('</body>',tags+'</body>');
   const headers=new Headers(response.headers);
   headers.delete('content-length');
   headers.delete('content-encoding');
-  headers.set('x-cristariva-version','oracle-amour-v2-20260917');
+  headers.set('x-cristariva-version','oracle-amour-v3-20260917');
   return new Response(html,{status:response.status,statusText:response.statusText,headers});
 }
 
