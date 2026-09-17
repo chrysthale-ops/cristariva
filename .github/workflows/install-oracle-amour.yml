@@ -15,7 +15,7 @@ jobs:
       - name: Rebuild embedded Oracle Amour data
         run: |
           cat .cristariva-assets/oracle-amour-part*.b64 > /tmp/oracle-amour.b64
-          base64 -d /tmp/oracle-amour.b64 | gzip -d > oracle-amour-data.js
+          base64 --decode --ignore-garbage /tmp/oracle-amour.b64 | gzip -d > oracle-amour-data.js
       - name: Patch website and Android PWA
         run: python scripts/install_oracle_amour.py
       - name: Validate
