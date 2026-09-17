@@ -1,0 +1,40 @@
+name: Install Oracle Amour CRISTARIVA
+on:
+  push:
+    branches: [main]
+    paths: ['.cristariva-assets/oracle-amour-ready.txt']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - name: Rebuild embedded Oracle Amour data
+        run: |
+          cat .cristariva-assets/oracle-amour-part*.b64 > /tmp/oracle-amour.b64
+          base64 -d /tmp/oracle-amour.b64 | gzip -d > oracle-amour-data.js
+      - name: Patch website and Android PWA
+        run: python scripts/install_oracle_amour.py
+      - name: Validate
+        run: |
+          node --check oracle-amour-data.js
+          node --check oracle-amour-integration.js
+          grep -q "Sentimental" oracle-amour-integration.js
+          grep -q "RELATION NON DÉFINIE" oracle-amour-data.js
+          grep -q "oracle-amour-integration.js" index.html
+          grep -q "cristariva-v56-20260917-oracle-amour" service-worker.js
+      - name: Clean temporary payload
+        run: |
+          rm -rf .cristariva-assets
+          rm -f scripts/install_oracle_amour.py
+          rm -f .github/workflows/install-oracle-amour.yml
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Add Oracle Amour and Sentimental domain"
+          git push origin HEAD:main
