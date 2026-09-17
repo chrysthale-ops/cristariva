@@ -14,8 +14,20 @@ jobs:
         with: {fetch-depth: 0}
       - name: Rebuild embedded Oracle Amour data
         run: |
-          cat .cristariva-assets/oracle-amour-part*.b64 > /tmp/oracle-amour.b64
-          base64 --decode --ignore-garbage /tmp/oracle-amour.b64 | gzip -d > oracle-amour-data.js
+          python - <<'PY'
+          from pathlib import Path
+          import base64, gzip, re
+          parts=sorted(Path('.cristariva-assets').glob('oracle-amour-part*.b64'))
+          if not parts:
+              raise SystemExit('Aucun fragment Oracle Amour trouvé')
+          text=''.join(p.read_text(encoding='utf-8-sig') for p in parts)
+          text=''.join(re.findall(r'[A-Za-z0-9+/=]', text))
+          text += '=' * ((4 - len(text) % 4) % 4)
+          raw=base64.b64decode(text, validate=False)
+          data=gzip.decompress(raw)
+          Path('oracle-amour-data.js').write_bytes(data)
+          print(f'Oracle Amour reconstruit: {len(parts)} fragments, {len(data)} octets JS')
+          PY
       - name: Patch website and Android PWA
         run: python scripts/install_oracle_amour.py
       - name: Validate
