@@ -1,0 +1,52 @@
+name: Bump future-window cache
+
+on:
+  push:
+    paths:
+      - '.github/workflows/bump-future-window-cache.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Bump astrology module and service-worker cache versions
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          index = Path('index.html')
+          html = index.read_text(encoding='utf-8')
+          old_tag = 'unique-peak-dates-v3.9.8.js?v=3.9.8'
+          new_tag = 'unique-peak-dates-v3.9.8.js?v=4.0'
+          if old_tag not in html:
+              raise SystemExit('Expected unique-peak tag not found in index.html')
+          html = html.replace(old_tag, new_tag)
+          index.write_text(html, encoding='utf-8')
+
+          sw = Path('service-worker.js')
+          text = sw.read_text(encoding='utf-8')
+          text = text.replace("const APP_VERSION='2026.09.15-54';", "const APP_VERSION='2026.09.17-55';", 1)
+          text = text.replace("const CACHE_NAME='cristariva-v54-20260915-relation-astrology';", "const CACHE_NAME='cristariva-v55-20260917-future-window-guard';", 1)
+          if old_tag not in text:
+              raise SystemExit('Expected unique-peak tag not found in service-worker.js')
+          text = text.replace(old_tag, new_tag)
+          sw.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Commit cache bump and remove one-time workflow
+        shell: bash
+        run: |
+          git config user.name "CRISTARIVA maintenance"
+          git config user.email "actions@users.noreply.github.com"
+          git rm .github/workflows/bump-future-window-cache.yml
+          git add index.html service-worker.js
+          git commit -m "Refresh cache for future astrology window fix"
+          git push origin HEAD:main
