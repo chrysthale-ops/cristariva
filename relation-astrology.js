@@ -1,5 +1,5 @@
 /* CRISTARIVA — astrology for the person represented by the Relation card.
-   v1.3: cross-analysis 2 is rendered only when a Timing card defines a period. */
+   v1.4: cross-analysis 2 keeps up to two distinct shared phases and avoids repeating the same narrative theme. */
 (function(){
 'use strict';
 const section=document.getElementById('relationAstroSection');
@@ -87,11 +87,34 @@ const PERIOD={
  direction:{support:['vos envies d’avancer peuvent davantage converger, ce qui facilite une évolution commune','your desire to move forward may converge more easily, supporting shared development'],challenge:['vous pouvez ne pas vouloir avancer dans la même direction au même moment','you may not want to move in the same direction at the same time']},
  tempo:{support:['vos rythmes paraissent momentanément plus compatibles, ce qui rend les ajustements plus naturels','your rhythms appear temporarily more compatible, making adjustments more natural'],challenge:['vos rythmes peuvent être plus difficiles à accorder, avec davantage d’attente, de réserve ou de décalage','your rhythms may be harder to align, with more waiting, reserve, or mismatch']}
 };
-function phaseNarrative(p){if(p.tone==='intensify')return `${when(p)}, ${text('vos deux rythmes sont davantage mobilisés en même temps, mais sans orientation nette vers un rapprochement ou un éloignement','both of your rhythms are more strongly activated at the same time, but without a clear direction toward rapprochement or distancing')}.`;const areas=[...new Set([tArea(p.a),tArea(p.b)])],phrases=areas.map(a=>text(...PERIOD[a][p.tone]));let body=phrases[0];if(phrases[1]&&phrases[1]!==phrases[0])body+=text(` ; parallèlement, ${phrases[1]}`,`; at the same time, ${phrases[1]}`);return `${when(p)}, ${body}.`;}
+function phaseMeaningKeys(p){if(p.tone==='intensify')return['intensify'];return[...new Set([tArea(p.a),tArea(p.b)])].map(a=>`${p.tone}:${a}`);}
+function phaseNarrative(p,used=null){
+  if(p.tone==='intensify'){
+    const key='intensify';if(used?.has(key))return'';used?.add(key);
+    return `${when(p)}, ${text('vos deux rythmes sont davantage mobilisés en même temps, mais sans orientation nette vers un rapprochement ou un éloignement','both of your rhythms are more strongly activated at the same time, but without a clear direction toward rapprochement or distancing')}.`;
+  }
+  let areas=[...new Set([tArea(p.a),tArea(p.b)])];
+  if(used)areas=areas.filter(a=>!used.has(`${p.tone}:${a}`));
+  if(!areas.length)return'';
+  areas.forEach(a=>used?.add(`${p.tone}:${a}`));
+  const phrases=areas.map(a=>text(...PERIOD[a][p.tone]));
+  let body=phrases[0];
+  if(phrases[1]&&phrases[1]!==phrases[0])body+=text(` ; parallèlement, ${phrases[1]}`,`; at the same time, ${phrases[1]}`);
+  return `${when(p)}, ${body}.`;
+}
 function transitNarrative(c,r){
   const all=sharedPairs(c,r);if(!all.length)return text('Sur la période étudiée, aucun mouvement commun assez net ne ressort pour décrire une phase précise de rapprochement ou d’éloignement.','Over the period studied, no sufficiently clear shared movement stands out to describe a precise phase of rapprochement or distancing.');
-  const ranked=[...all].sort((a,b)=>b.score-a.score),seen=new Set(),selected=[];for(const p of ranked){const k=when(p);if(seen.has(k))continue;seen.add(k);selected.push(p);if(selected.length===2)break;}selected.sort((a,b)=>dval(a.a.bestDate)-dval(b.a.bestDate));
-  const parts=selected.map(phaseNarrative),hasSupport=all.some(p=>p.tone==='support'),hasChallenge=all.some(p=>p.tone==='challenge');
+  const ranked=[...all].sort((a,b)=>b.score-a.score),seenWhen=new Set(),seenMeaning=new Set(),selected=[];
+  for(const p of ranked){
+    const dateKey=when(p);if(seenWhen.has(dateKey))continue;
+    const keys=phaseMeaningKeys(p),addsSomething=keys.some(k=>!seenMeaning.has(k));
+    if(!addsSomething)continue;
+    seenWhen.add(dateKey);selected.push(p);keys.forEach(k=>seenMeaning.add(k));
+    if(selected.length===2)break;
+  }
+  selected.sort((a,b)=>Math.min(dval(a.a.bestDate),dval(a.b.bestDate))-Math.min(dval(b.a.bestDate),dval(b.b.bestDate)));
+  const usedNarrative=new Set(),parts=selected.map(p=>phaseNarrative(p,usedNarrative)).filter(Boolean),hasSupport=all.some(p=>p.tone==='support'),hasChallenge=all.some(p=>p.tone==='challenge');
+  if(!parts.length)parts.push(text('Sur la période étudiée, les influences communes détectées se recouvrent trop pour constituer deux phases réellement distinctes.','Over the period studied, the shared influences overlap too much to form two genuinely distinct phases.'));
   if(!hasSupport&&hasChallenge)parts.push(text('Aucune phase commune de soutien suffisamment nette ne ressort sur cette période.','No sufficiently clear shared supportive phase stands out during this period.'));
   else if(hasSupport&&!hasChallenge)parts.push(text('Aucune phase commune de tension suffisamment nette ne ressort sur cette période.','No sufficiently clear shared challenging phase stands out during this period.'));
   return parts.join(' ');
@@ -103,7 +126,7 @@ function crossMarkup(c,r){
   const natal=`<section class="cr-cross-analysis cr-cross-natal"><h3>${cr3Escape(text('Analyse croisée 1 · La dynamique naturelle du lien','Cross-analysis 1 · The bond’s natural dynamic'))}</h3><p>${cr3Escape(text(`Pour la personne associée à « ${label} », la comparaison de vos deux profils astrologiques fait ressortir la manière dont vos fonctionnements peuvent naturellement se rapprocher ou se heurter.`,`For the person associated with “${label}”, comparing your two astrological profiles highlights how your ways of functioning may naturally come together or clash.`))}</p><p>${cr3Escape(natalNarrative(c,r))}</p>${note}</section>`;
   if(!state.date)return natal;
   const period=text('sur la période définie par la carte Datation','over the period defined by the Timing card');
-  const transits=`<section class="cr-cross-analysis cr-cross-transits"><h3>${cr3Escape(text('Analyse croisée 2 · L’évolution du lien sur la période','Cross-analysis 2 · How the bond evolves over the period'))}</h3><p>${cr3Escape(text(`Cette seconde lecture observe comment vos deux dynamiques évoluent ensemble ${period}. Elle retient uniquement les deux phases communes les plus significatives.`,`This second reading looks at how both of your dynamics evolve together ${period}. It keeps only the two most significant shared phases.`))}</p><p>${cr3Escape(transitNarrative(c,r))}</p></section>`;
+  const transits=`<section class="cr-cross-analysis cr-cross-transits"><h3>${cr3Escape(text('Analyse croisée 2 · L’évolution du lien sur la période','Cross-analysis 2 · How the bond evolves over the period'))}</h3><p>${cr3Escape(text(`Cette seconde lecture observe comment vos deux dynamiques évoluent ensemble ${period}. Elle retient jusqu’à deux phases communes réellement distinctes, sans répéter une même influence sous deux fenêtres différentes.`,`This second reading looks at how both of your dynamics evolve together ${period}. It keeps up to two genuinely distinct shared phases, without repeating the same influence under two different windows.`))}</p><p>${cr3Escape(transitNarrative(c,r))}</p></section>`;
   return natal+transits;
 }
 
