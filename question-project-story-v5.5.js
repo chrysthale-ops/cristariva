@@ -49,7 +49,7 @@ function cr55ProjectClause(card,role,en=false){
   if(/complex|dépendance|dependance|plusieurs\s+(?:acteurs|facteurs|contraintes)|contraintes.*ordre logique/.test(hay))return role==='outcome'
     ?'l’idée peut avancer, mais sa concrétisation demande d’ordonner les contraintes, les interlocuteurs et les dépendances au lieu de vouloir tout résoudre en même temps'
     :'plusieurs paramètres se croisent ; le projet devient plus lisible lorsque les problèmes sont séparés et traités dans un ordre logique';
-  if(/providence|protection|soutien|allié|allie|aide|guidance/.test(hay))return 'un soutien utile ou une circonstance protectrice peut vous détourner d’une mauvaise option et sécuriser davantage la prochaine étape';
+  if(/providence|protection|soutien|allié|allie|aide|guidance/.test(hay))return 'un soutien utile ou une circonstance protectrice peuvent vous détourner d’une mauvaise option et sécuriser davantage la prochaine étape';
   if(/refus|rejet|refusé|refuse|non retenu|non accept|porte fermée/.test(hay))return role==='origin'
     ?'une première limite ou une réponse défavorable a pu vous obliger à repenser la manière de présenter, faire valider ou concrétiser votre idée'
     :'une limite ou une réponse défavorable ne condamne pas l’idée, mais impose d’ajuster la voie choisie, la proposition ou les conditions';
