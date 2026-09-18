@@ -1,0 +1,107 @@
+name: Install Oracle Amour HD cards
+on:
+  push:
+    branches: [main]
+    paths: ['.cristariva-assets/amour-hd-ready.txt']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - name: Rebuild the 80-card image pack
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import base64, zipfile, io
+          parts=sorted(Path('.cristariva-assets').glob('amour-hd-part*.b64'))
+          if len(parts)!=18:
+              raise SystemExit(f'18 fragments attendus, {len(parts)} trouvés')
+          txt=''.join(p.read_text(encoding='utf-8').strip() for p in parts)
+          raw=base64.b64decode(txt)
+          with zipfile.ZipFile(io.BytesIO(raw)) as z:
+              names=z.namelist()
+              expected=[f'{i:03d}.webp' for i in range(1,81)]
+              if names!=expected:
+                  raise SystemExit('Contenu du paquet HD inattendu')
+              out=Path('cards/amour'); out.mkdir(parents=True,exist_ok=True)
+              for n in names:
+                  (out/n).write_bytes(z.read(n))
+          print('80 cartes HD extraites dans cards/amour')
+          PY
+      - name: Patch Oracle Amour and Android PWA
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          # Oracle Amour uses the real card files, not low-res embedded thumbnails.
+          p=Path('oracle-amour-data.js'); s=p.read_text(encoding='utf-8')
+          s=s.replace("const imgs=window.AMOUR_IMAGES||{}, rows=window.AMOUR_CARD_DATA||[];","const rows=window.AMOUR_CARD_DATA||[];")
+          s=s.replace("const all=uniqueRows.map(r=>{const [id,name,category,definition,keywords]=r,group=id<=60?'main':id<=70?'relation':'dating';const image=imgs[id]||fallbackImage(id,name);",
+                      "const all=uniqueRows.map(r=>{const [id,name,category,definition,keywords]=r,group=id<=60?'main':id<=70?'relation':'dating';const image=`./cards/amour/${String(id).padStart(3,'0')}.webp`;")
+          p.write_text(s,encoding='utf-8')
+          # The 130-card title lock must never rename Oracle Amour cards.
+          p=Path('validated-card-titles-v3.6.3.js'); s=p.read_text(encoding='utf-8')
+          s=s.replace("function cr363Title(card){return card?(CR363_SHORT_TITLES[Number(card.id)]||card.name||''):'';}",
+                      "function cr363Title(card){if(!card)return '';if(card.oracle==='amour')return card.name||'';return CR363_SHORT_TITLES[Number(card.id)]||card.name||'';}")
+          s=s.replace("if(Array.isArray(DATA[group]))DATA[group].forEach(card=>{const title=CR363_SHORT_TITLES[Number(card.id)];if(title)card.name=title;});",
+                      "if(Array.isArray(DATA[group]))DATA[group].forEach(card=>{if(card?.oracle==='amour')return;const title=CR363_SHORT_TITLES[Number(card.id)];if(title)card.name=title;});")
+          s=s.replace("if(Array.isArray(state.draw))state.draw.forEach(card=>{const title=CR363_SHORT_TITLES[Number(card.id)];if(title)card.name=title;});",
+                      "if(Array.isArray(state.draw))state.draw.forEach(card=>{if(card?.oracle==='amour')return;const title=CR363_SHORT_TITLES[Number(card.id)];if(title)card.name=title;});")
+          s=s.replace("['relation','date'].forEach(key=>{const card=state[key],title=CR363_SHORT_TITLES[Number(card?.id)];if(card&&title)card.name=title;});",
+                      "['relation','date'].forEach(key=>{const card=state[key];if(card?.oracle==='amour')return;const title=CR363_SHORT_TITLES[Number(card?.id)];if(card&&title)card.name=title;});")
+          p.write_text(s,encoding='utf-8')
+          # Direct loader: remove old low-res image bundles and bump love modules.
+          p=Path('relation-astrology.js'); s=p.read_text(encoding='utf-8')
+          s=s.replace("    './oracle-amour-images-01-05.js?v=1.1',\n    './oracle-amour-images-06-10.js?v=1.1',\n","")
+          s=re.sub(r"oracle-amour-cards-01-20\.js\?v=[^']+","oracle-amour-cards-01-20.js?v=6.0",s)
+          s=re.sub(r"oracle-amour-cards-21-40\.js\?v=[^']+","oracle-amour-cards-21-40.js?v=6.0",s)
+          s=re.sub(r"oracle-amour-cards-41-60\.js\?v=[^']+","oracle-amour-cards-41-60.js?v=6.0",s)
+          s=re.sub(r"oracle-amour-cards-61-80\.js\?v=[^']+","oracle-amour-cards-61-80.js?v=6.0",s)
+          s=re.sub(r"oracle-amour-data\.js\?v=[^']+","oracle-amour-data.js?v=6.0",s)
+          s=re.sub(r"oracle-amour-integration\.js\?v=[^']+","oracle-amour-integration.js?v=6.0",s)
+          s=re.sub(r"oracle-amour-compat\.js\?v=[^']+","oracle-amour-compat.js?v=6.0",s)
+          p.write_text(s,encoding='utf-8')
+          # New Android/Web cache version.
+          p=Path('service-worker.js'); s=p.read_text(encoding='utf-8')
+          s=re.sub(r"const CACHE_NAME='[^']+';","const CACHE_NAME='cristariva-v6-20260918-oracle-amour-hd';",s,count=1)
+          s=s.replace(" './oracle-amour-images-01-05.js','./oracle-amour-images-06-10.js',\n","")
+          s=re.sub(r"version:'[^']+'","version:'2026.09.18-v6'",s,count=1)
+          p.write_text(s,encoding='utf-8')
+          p=Path('index.html'); s=p.read_text(encoding='utf-8')
+          s=re.sub(r"const CRISTARIVA_PWA_VERSION='[^']+';","const CRISTARIVA_PWA_VERSION='2026.09.18-60';",s)
+          s=re.sub(r"service-worker\.js\?v=[^'\"]+","service-worker.js?v=20260918-60",s)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Validate cards and scripts
+        run: |
+          test "$(find cards/amour -maxdepth 1 -name '*.webp' | wc -l)" -eq 80
+          python - <<'PY'
+          from pathlib import Path
+          cards=sorted(Path('cards/amour').glob('*.webp'))
+          assert len(cards)==80
+          assert all(p.stat().st_size>10000 for p in cards)
+          assert cards[0].name=='001.webp' and cards[-1].name=='080.webp'
+          print('80 cartes HD valides, total',sum(p.stat().st_size for p in cards),'octets')
+          PY
+          node --check oracle-amour-data.js
+          node --check oracle-amour-integration.js
+          node --check relation-astrology.js
+          grep -q "cards/amour" oracle-amour-data.js
+          grep -q "card.oracle==='amour'" validated-card-titles-v3.6.3.js
+          grep -q "cristariva-v6-20260918-oracle-amour-hd" service-worker.js
+      - name: Clean transfer fragments
+        run: |
+          rm -f .cristariva-assets/amour-hd-part*.b64 .cristariva-assets/amour-hd-ready.txt
+          rm -f .cristariva-assets/amour-cardpack-part*.b64 .cristariva-assets/amour80-part*.b64
+          rm -f cards/amour/*.b64
+      - name: Commit and publish
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Integrate 80 Oracle Amour HD cards on web and Android"
+          git push origin HEAD:main
