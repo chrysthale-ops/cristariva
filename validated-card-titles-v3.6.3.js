@@ -18,7 +18,7 @@ const CR363_SHORT_TITLES={
 111:'À distance',112:'Ancien lien',113:'Admirateur',114:'Mentor',115:'Intermédiaire',116:'Immédiat',117:'3 jours',118:'1 semaine',119:'15 jours',120:'3 semaines',
 121:'1 mois',122:'6 semaines',123:'2 mois',124:'3 mois',125:'6 mois',126:'9 mois',127:'1 an',128:'Saison prochaine',129:'Déclencheur',130:'Indéfini'
 };
-function cr363Title(card){return card?(CR363_SHORT_TITLES[Number(card.id)]||card.name||''):'';}
+function cr363Title(card){return card?(card.oracle==='amour'?(card.name||''):(CR363_SHORT_TITLES[Number(card.id)]||card.name||'')):'';}
 function cr363ApplyTitles(){
   try{
     if(typeof DATA==='object'&&DATA){
@@ -27,8 +27,8 @@ function cr363ApplyTitles(){
       });
     }
     if(typeof state==='object'&&state){
-      if(Array.isArray(state.draw))state.draw.forEach(card=>{const title=CR363_SHORT_TITLES[Number(card.id)];if(title)card.name=title;});
-      ['relation','date'].forEach(key=>{const card=state[key],title=CR363_SHORT_TITLES[Number(card?.id)];if(card&&title)card.name=title;});
+      if(Array.isArray(state.draw))state.draw.forEach(card=>{if(card?.oracle==='amour')return;const title=CR363_SHORT_TITLES[Number(card.id)];if(title)card.name=title;});
+      ['relation','date'].forEach(key=>{const card=state[key];if(card?.oracle==='amour')return;const title=CR363_SHORT_TITLES[Number(card?.id)];if(card&&title)card.name=title;});
     }
   }catch(e){}
 }

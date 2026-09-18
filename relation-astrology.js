@@ -29,15 +29,9 @@
   });
 
   const LOVE_SCRIPTS=[
-    './oracle-amour-images-01-05.js?v=1.1',
-    './oracle-amour-images-06-10.js?v=1.1',
-    './oracle-amour-cards-01-20.js?v=4.0',
-    './oracle-amour-cards-21-40.js?v=4.0',
-    './oracle-amour-cards-41-60.js?v=4.0',
-    './oracle-amour-cards-61-80.js?v=4.0',
-    './oracle-amour-data.js?v=4.1',
-    './oracle-amour-integration.js?v=4.1',
-    './oracle-amour-compat.js?v=4.1'
+    './oracle-amour-data.js?v=20260918-pdf80',
+    './oracle-amour-integration.js?v=20260918-pdf80',
+    './oracle-amour-compat.js?v=20260918-pdf80'
   ];
 
   async function ensureOracleAmour(){
@@ -58,7 +52,7 @@
       /* Réparer le cas où les données étaient présentes mais où l'intégration
          n'avait pas encore ajouté le domaine Sentimental. */
       if(window.AMOUR_DATA && !hasSentimental()){
-        try{ await loadScript('./oracle-amour-integration.js?v=4.1-repair','love-integration-repair',true); }
+        try{ await loadScript('./oracle-amour-integration.js?v=20260918-pdf80-repair','love-integration-repair',true); }
         catch(e){ console.error('CRISTARIVA réparation Sentimental',e); }
       }
       return !!(window.AMOUR_DATA && hasSentimental());
