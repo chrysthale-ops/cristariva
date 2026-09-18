@@ -1,6 +1,10 @@
 /* CRISTARIVA — chargeur direct Android/Web pour l'Oracle Amour.
    Ce fichier remplace l'ancien point d'entrée relation-astrology.js.
-   Le code astrologique original est conservé dans relation-astrology-core-v1.4.js. */
+   Le code astrologique original est conservé dans relation-astrology-core-v1.4.js.
+
+   Finition narrative 2026-09-18 : évite les répétitions successives d'amorces
+   telles que « L’enjeu est alors de… » dans L’histoire racontée par vos cartes.
+*/
 (function(){
   'use strict';
 
@@ -58,6 +62,60 @@
       return !!(window.AMOUR_DATA && hasSentimental());
     })();
     return window.__CRISTARIVA_LOVE_DIRECT_BOOTSTRAP__;
+  }
+
+  /* Finition générale du récit : lorsque plusieurs cartes aboutissent à la
+     même amorce, on conserve la première puis on varie les suivantes afin que
+     le paragraphe reste naturel et réellement narratif. */
+  function polishRepeatedStoryOpeners(html){
+    try{
+      if(!html || document.documentElement.lang==='en') return html;
+      const tpl=document.createElement('template');
+      tpl.innerHTML=String(html);
+      const p=tpl.content.querySelector('.story-continuous');
+      if(!p) return html;
+
+      let count=0;
+      const variants=[
+        'L’enjeu est alors de ',
+        'Il devient ensuite important de ',
+        'Il faut également ',
+        'Un autre point consiste à ',
+        'Dans le même mouvement, il importe de ',
+        'La suite demande aussi de '
+      ];
+
+      p.innerHTML=p.innerHTML.replace(/L[’']enjeu est alors de\s+/gi,function(){
+        const replacement=variants[Math.min(count,variants.length-1)];
+        count+=1;
+        return replacement;
+      });
+
+      return tpl.innerHTML;
+    }catch(e){
+      return html;
+    }
+  }
+
+  /* relation-astrology.js est chargé après les moteurs narratifs : cette
+     surcouche agit donc sur tous les récits, quel que soit le domaine choisi. */
+  try{
+    if(typeof storyInterpretation==='function'){
+      const baseStoryInterpretation=storyInterpretation;
+      storyInterpretation=function(cards){
+        return polishRepeatedStoryOpeners(baseStoryInterpretation(cards));
+      };
+      interpretation=function(cards){return storyInterpretation(cards);};
+
+      if(window.state && Array.isArray(state.draw) && state.draw.length){
+        const target=document.getElementById('reading');
+        if(target && /L’histoire racontée par vos cartes|The story told by your cards/.test(target.textContent||'')){
+          target.innerHTML=storyInterpretation(state.draw);
+        }
+      }
+    }
+  }catch(e){
+    console.error('CRISTARIVA finition narrative',e);
   }
 
   /* Attendre la fin du parsing évite les doubles chargements avec une ancienne
