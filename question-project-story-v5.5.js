@@ -1,11 +1,12 @@
-/* CRISTARIVA — récit centré sur les projets + finition narrative globale v5.9
+/* CRISTARIVA — récit centré sur les projets + finition narrative globale v5.10
    Le récit interprète la situation directement : il ne récite pas les définitions,
    ne cite pas les noms des cartes et évite les répétitions mécaniques.
 
-   v5.9 : la finition globale élimine aussi les phrases elliptiques issues des
+   v5.10 : la finition globale élimine aussi les phrases elliptiques issues des
    définitions (« Peut révéler… », « Peut montrer… », « Peut indiquer… »,
-   « Demande… ») afin que chaque proposition soit une vraie phrase narrative. */
-const CRISTARIVA_PROJECT_STORY_VERSION='5.9';
+   « Demande… », « Relie… », etc.) afin que chaque proposition soit une vraie
+   phrase narrative. */
+const CRISTARIVA_PROJECT_STORY_VERSION='5.10';
 
 function cr55Question(){return String(state?.question||'').replace(/\s+/g,' ').trim();}
 function cr55Esc(v){try{return typeof cr53Esc==='function'?cr53Esc(v):typeof cr51Esc==='function'?cr51Esc(v):String(v??'');}catch(e){return String(v??'');}}
@@ -97,6 +98,9 @@ function cr57PolishFrenchNarrative(s){
     .replace(new RegExp(boundary+'Peut\\s+traduire\\s+','gi'),(m,b)=>b+'Cette dynamique peut traduire ')
     .replace(new RegExp(boundary+'Peut\\s+favoriser\\s+','gi'),(m,b)=>b+'Cette évolution peut favoriser ')
     .replace(new RegExp(boundary+'Demande\\s+','gi'),(m,b)=>b+'La situation demande ')
+    .replace(new RegExp(boundary+'Relie\\s+','gi'),(m,b)=>b+'Cette dynamique relie ')
+    .replace(new RegExp(boundary+'Associe\\s+','gi'),(m,b)=>b+'La situation associe ')
+    .replace(new RegExp(boundary+'Souligne\\s+','gi'),(m,b)=>b+'L’attention se porte alors sur ')
     .replace(new RegExp(boundary+'Cela\\s+peut\\s+indiquer\\s+','gi'),(m,b)=>b+'La suite laisse alors entrevoir ')
     .replace(new RegExp(boundary+'Cela\\s+peut\\s+montrer\\s+','gi'),(m,b)=>b+'Un autre aspect apparaît alors : ')
     .replace(new RegExp(boundary+'Cela\\s+peut\\s+révéler\\s+','gi'),(m,b)=>b+'Une prise de conscience peut alors faire émerger ');
