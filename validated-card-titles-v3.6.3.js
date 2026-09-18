@@ -1,8 +1,13 @@
-/* CRISTARIVA — verrou des titres courts validés v3.6.3
+/* CRISTARIVA — verrou des titres courts validés v3.6.4
    Garantit les titres français validés des 130 cartes dans le catalogue,
    les tirages et « L’histoire racontée par vos cartes », y compris si une
-   ancienne page PWA a conservé des intitulés poétiques en mémoire. */
-const CRISTARIVA_VALIDATED_TITLES_VERSION='3.6.3';
+   ancienne page PWA a conservé des intitulés poétiques en mémoire.
+
+   v3.6.4 : ajoute une lecture sémantique étendue pour la synthèse générale afin
+   d’éviter qu’un grand nombre de tirages différents retombent sur le même texte
+   neutre par défaut.
+*/
+const CRISTARIVA_VALIDATED_TITLES_VERSION='3.6.4';
 const CR363_SHORT_TITLES={
 1:'Direction',2:'Trahison',3:'Joie',4:'Éloignement',5:'Émotions',6:'Indice',7:'Tempête',8:'Échos',9:'Équité',10:'Transmission',
 11:'Incompatibilité',12:'Bonheur',13:'Échec',14:'Lune',15:'Rythme',16:'Stabilité',17:'Dépendance',18:'Guérison',19:'Amour',20:'Échéance',
@@ -46,3 +51,111 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   if(typeof renderCards==='function'&&state?.draw?.length)renderCards();
 },{once:true});
 else if(typeof renderCards==='function'&&state?.draw?.length)renderCards();
+
+/* -------------------------------------------------------------------------
+   Synthèse générale — diversification sémantique v3.6.9
+   Le précédent moteur général ne reconnaissait explicitement que quelques
+   titres (Éveil, Ancrage, Rythme, Origines, Retour, Percée...). Tous les autres
+   tirages retombaient sur deux phrases neutres identiques. Cette couche classe
+   l’ensemble des cartes principales en familles de sens et utilise séparément
+   le début, le cœur et l’issue du tirage.
+--------------------------------------------------------------------------- */
+const CRISTARIVA_GENERAL_SYNTHESIS_VARIETY_VERSION='3.6.9';
+
+function cr363GeneralBlob(card){
+  return [card?.name,card?.definition,card?.meaning,card?.message,card?.reading_spirituel]
+    .filter(Boolean).join(' ').toLocaleLowerCase();
+}
+function cr363GeneralFamily(card){
+  const x=cr363GeneralBlob(card);
+  if(/trahison|tempête|tempete|dépendance|dependance|peur|emprise|blocage|dissimulation|conflit|opposition|mensonge|jalousie|désillusion|desillusion|complexité|complexite|manipulation|instabilité|instabilite|fausse promesse|projection|épuisement|epuisement|impasse/.test(x))return'tension';
+  if(/éloignement|eloignement|incompatibilité|incompatibilite|échec|echec|\bfin\b|perte|refus|abandon|indifférence|indifference|rupture|rejet|juste distance|retard/.test(x))return'distance';
+  if(/direction|\bcap\b|choix|\bvoie\b|intégrité|integrite|repère|repere|perspective|vision/.test(x))return'choice';
+  if(/échos|echos|regrets|mémoire|memoire|origines|retour|passé|passe|empreinte/.test(x))return'past';
+  if(/indice|transmission|clarté|clarte|communication|écoute|ecoute|sincérité|sincerite|\bsigne\b/.test(x))return'clarity';
+  if(/transformation|transition|mutation|libération|liberation|envol|progression/.test(x))return'change';
+  if(/joie|bonheur|succès|succes|percée|percee|éclosion|eclosion|renouveau|naissance|potentiel|providence|opportunité|opportunite/.test(x))return'opening';
+  if(/stabilité|stabilite|équité|equite|paix|ancrage|maîtrise|maitrise/.test(x))return'stability';
+  if(/émotions|emotions|amour|union|cohésion|cohesion|soutien|réconciliation|reconciliation|connexion|réciprocité|reciprocite|passion|appartenance/.test(x))return'feeling';
+  if(/lune|intuition|guérison|guerison|protection|introspection|éveil|eveil|sagesse/.test(x))return'inner';
+  if(/rythme|échéance|echeance|patience|cycles|détour|detour/.test(x))return'time';
+  return'neutral';
+}
+function cr363GeneralMiddle(cards){
+  if(!Array.isArray(cards)||cards.length<3)return null;
+  const middle=cards.slice(1,-1);
+  const priority=['tension','distance','choice','past','clarity','change','opening','stability','feeling','inner','time'];
+  for(const family of priority){const found=middle.find(c=>cr363GeneralFamily(c)===family);if(found)return found;}
+  return middle[Math.floor(middle.length/2)]||middle[0]||null;
+}
+function cr363GeneralOrigin(card){
+  const family=cr363GeneralFamily(card),name=String(card?.name||'').trim();
+  const map={
+    tension:'Le climat de départ est marqué par une tension ou un frein qui demande d’abord à être identifié sans l’amplifier.',
+    distance:'Le tirage part d’un besoin de recul, de protection ou de détachement qui modifie la manière d’aborder la situation.',
+    choice:'Le point de départ met déjà la question de l’orientation au premier plan : quelque chose demande à être choisi, hiérarchisé ou assumé.',
+    past:'Un élément ancien, un souvenir ou un schéma déjà connu continue d’influencer la manière dont la situation est vécue aujourd’hui.',
+    clarity:'Le tirage s’ouvre sur un besoin de compréhension plus nette, de parole précise ou d’information qui permette de mieux lire ce qui se joue.',
+    change:'Une transformation est déjà engagée : l’ancien fonctionnement perd de sa place et oblige à regarder autrement la suite.',
+    opening:'Une énergie d’ouverture domine le début du tirage et rend une possibilité nouvelle plus visible qu’auparavant.',
+    stability:'Le besoin de retrouver un axe stable, fiable et cohérent constitue le socle principal de la situation.',
+    feeling:'La tonalité de départ est fortement émotionnelle : ce qui est ressenti, partagé ou recherché dans le lien prend beaucoup de place.',
+    inner:'Le début du tirage invite surtout à écouter ce qui se passe intérieurement avant de chercher une réponse uniquement dans les événements extérieurs.',
+    time:'Le rythme est d’emblée essentiel : la situation ne semble pas demander une réponse immédiate mais une progression au bon tempo.',
+    neutral:name?`Le thème de « ${name} » donne la tonalité de départ et mérite d’être replacé dans les faits concrets de la situation.`:'Le point de départ demande encore à être précisé par les faits.'
+  };
+  return map[family]||map.neutral;
+}
+function cr363GeneralPivot(card){
+  if(!card)return'';
+  const family=cr363GeneralFamily(card),name=String(card?.name||'').trim();
+  const map={
+    tension:'Au cœur du tirage, une résistance ou une contradiction demande à être traversée plutôt que contournée.',
+    distance:'Au centre de la dynamique, la distance sert de filtre : elle peut protéger, clarifier ou révéler ce qui mérite réellement d’être poursuivi.',
+    choice:'Le mouvement dépend ensuite d’une décision plus nette ; rester entre plusieurs directions entretient surtout l’incertitude.',
+    past:'Le point sensible se situe dans ce qui revient du passé : l’enjeu est d’en comprendre l’influence sans le reproduire automatiquement.',
+    clarity:'Le cœur de la situation demande davantage de clarté ; les mots, les faits ou une information précise peuvent modifier la compréhension d’ensemble.',
+    change:'La dynamique centrale est celle d’un changement de cadre, de regard ou de fonctionnement qui ne permet plus de continuer exactement comme avant.',
+    opening:'Une possibilité constructive apparaît au centre du tirage et peut devenir un levier si elle reçoit une traduction concrète.',
+    stability:'Ce qui peut faire évoluer la situation est la recherche d’un équilibre plus stable, moins soumis aux réactions immédiates.',
+    feeling:'Les émotions deviennent le véritable moteur du tirage ; elles gagnent à être reconnues sans être confondues avec une certitude sur les événements.',
+    inner:'Le cœur du tirage ramène à une compréhension intérieure plus fine, comme si la situation demandait d’abord un ajustement de perception.',
+    time:'La progression se joue dans le rythme : accélérer artificiellement risquerait de masquer ce qui est encore en train de mûrir.',
+    neutral:name?`Au centre du tirage, « ${name} » introduit une nuance spécifique qui modifie la lecture du point de départ.`:'Au centre du tirage, un élément nouveau vient nuancer la première impression.'
+  };
+  return map[family]||map.neutral;
+}
+function cr363GeneralThreadV2(cards){
+  if(!Array.isArray(cards)||!cards.length)return'';
+  const first=cr363GeneralOrigin(cards[0]);
+  if(cards.length===1)return first;
+  const pivot=cr363GeneralPivot(cr363GeneralMiddle(cards));
+  return [first,pivot].filter(Boolean).join(' ');
+}
+function cr363GeneralOutcomeV2(cards){
+  if(!Array.isArray(cards)||!cards.length)return'';
+  const last=cards[cards.length-1],family=cr363GeneralFamily(last),name=String(last?.name||'').trim();
+  const map={
+    tension:'La direction finale demande donc surtout de réduire la tension, de clarifier le point de friction et de ne pas forcer une résolution avant que ce frein soit réellement compris.',
+    distance:'La dernière tonalité reste celle du recul ou de la limite : la suite paraît plus lisible lorsque l’espace nécessaire est respecté.',
+    choice:'La synthèse conduit à une décision : la situation gagnera en cohérence dès qu’une direction sera réellement privilégiée.',
+    past:'La dernière carte maintient le passé dans le champ, mais davantage comme une matière à comprendre et transformer que comme un scénario à répéter.',
+    clarity:'L’issue va vers davantage de lisibilité : une parole, un constat ou une information plus nette devrait permettre de sortir des suppositions.',
+    change:'La direction finale confirme un changement réel ; la suite demande d’accepter une forme nouvelle plutôt que de restaurer exactement l’ancien équilibre.',
+    opening:'La fin du tirage ouvre une possibilité constructive : quelque chose peut progresser, se débloquer ou prendre davantage de place si cette ouverture est concrètement saisie.',
+    stability:'La direction finale recherche la consolidation : moins de dispersion, davantage de continuité et des choix plus cohérents avec ce qui peut réellement durer.',
+    feeling:'La synthèse reste centrée sur le ressenti et la qualité du lien ; la suite dépendra de la manière dont ces émotions trouvent une expression concrète et équilibrée.',
+    inner:'La conclusion est avant tout intérieure : le principal mouvement est une prise de conscience susceptible de modifier ensuite votre manière d’agir ou de choisir.',
+    time:'La dernière carte confirme une évolution progressive : le bon rythme compte davantage ici qu’une réponse immédiate ou spectaculaire.',
+    neutral:name?`La dernière carte, « ${name} », donne une direction spécifique au tirage ; sa portée devra maintenant être vérifiée dans les faits plutôt que remplacée par une conclusion générale.`:'La direction finale reste ouverte et devra être confirmée par les faits.'
+  };
+  return map[family]||map.neutral;
+}
+
+/* Les fonctions de la synthèse générale sont déjà définies lorsque ce fichier
+   est chargé. Les réaffecter ici suffit : cr367GlobalSynthesis les appelle au
+   moment où l’utilisateur demande la synthèse. */
+try{
+  if(typeof cr367GeneralThread==='function')cr367GeneralThread=cr363GeneralThreadV2;
+  if(typeof cr367GeneralOutcome==='function')cr367GeneralOutcome=cr363GeneralOutcomeV2;
+}catch(e){}
