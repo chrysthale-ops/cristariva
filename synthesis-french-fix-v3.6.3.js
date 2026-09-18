@@ -1,5 +1,5 @@
-/* CRISTARIVA — synthèse finale sensible au domaine v3.6.7 */
-const CRISTARIVA_SYNTHESIS_FRENCH_FIX_VERSION='3.6.7';
+/* CRISTARIVA — synthèse finale sensible au domaine v3.6.8 */
+const CRISTARIVA_SYNTHESIS_FRENCH_FIX_VERSION='3.6.8';
 const cr367Legacy=typeof cr362GlobalSynthesis==='function'?cr362GlobalSynthesis:null;
 function cr367Esc(v){try{return typeof cr362Esc==='function'?cr362Esc(v):String(v||'');}catch(e){return String(v||'');}}
 function cr367Cap(v){const s=String(v||'').trim();return s?s.charAt(0).toUpperCase()+s.slice(1):'';}
@@ -50,6 +50,30 @@ function cr367GeneralNatal(a){
     return `Votre thème réunit ${sm[s]||'une recherche personnelle de sens'} et ${mm[m]||'un besoin intérieur de cohérence'}.${atext} Pour une question d’orientation, ce qui vous correspond durablement doit donc à la fois résonner intérieurement et pouvoir prendre une forme réelle dans votre vie.`;
   }catch(e){return'';}}
 
+function cr367WorkLead(cards){
+  const n=(cards||[]).map(c=>String(c?.name||'').toLowerCase());
+  if(n.some(x=>/blocage|impasse|retard|échec|echec/.test(x)))return'la situation demande d’abord de traiter un obstacle concret avant de pouvoir progresser. Les moyens disponibles, l’organisation et les décisions prises seront déterminants pour la suite';
+  if(n.some(x=>/choix|cap|direction|voie/.test(x)))return'la progression du projet dépend surtout d’une direction claire et de priorités bien définies. Les arbitrages pratiques compteront davantage que les intentions générales';
+  if(n.some(x=>/succès|succes|percée|percee|progression|opportunité|opportunite/.test(x)))return'le projet présente un potentiel d’avancement réel, à condition de transformer les possibilités en actions organisées et mesurables';
+  if(n.some(x=>/communication|transmission|échos|echos/.test(x)))return'les échanges, la coordination et la circulation de l’information semblent jouer un rôle central dans l’évolution du projet';
+  return'la réponse paraît se dessiner dans un contexte professionnel concret. Les circonstances pratiques, professionnelles ou organisationnelles joueront un rôle déterminant dans la manière dont la situation se développera';
+}
+
+function cr367WorkOutcome(cards){
+  let k='neutral';try{if(typeof finalSemanticKey==='function')k=finalSemanticKey(cards[cards.length-1]);}catch(e){}
+  const m={delay:'Le projet semble demander davantage de temps, de préparation ou de consolidation avant une avancée nette.',spirit:'L’intuition peut nourrir la réflexion, mais la décision gagnera à être confirmée par des éléments concrets et vérifiables.',choice:'La suite dépend d’un arbitrage clair entre plusieurs options, priorités ou méthodes de travail.',truth:'Une information plus précise ou une meilleure lecture de la situation peut permettre de sécuriser la décision.',new:'Une nouvelle piste, méthode ou opportunité peut ouvrir une phase différente du projet.',change:'Une adaptation de l’organisation, de la stratégie ou des moyens paraît nécessaire pour poursuivre efficacement.',work:'La dynamique reste centrée sur la mise en œuvre, l’organisation et les résultats attendus.',positive:'Le projet bénéficie d’une dynamique constructive si les actions restent cohérentes, structurées et suivies.',neutral:'La suite dépendra surtout de la qualité de l’organisation, des choix effectués et de leur mise en œuvre concrète.'};
+  return m[k]||m.neutral;
+}
+
+function cr367WorkNatal(a){
+  if(!a||typeof cr34BigThree!=='function')return'';
+  try{const b=cr34BigThree(a,false),s=b?.sun||'',m=b?.moon||'',asc=b?.asc||'';
+    const sm={'Poissons':'une perception intuitive des situations et une forte capacité d’imagination','Bélier':'un fort esprit d’initiative et une capacité à lancer rapidement l’action','Taureau':'une approche constante, pragmatique et orientée vers la solidité','Gémeaux':'une grande souplesse intellectuelle et une facilité à faire circuler l’information','Cancer':'une attention marquée au cadre de travail, à la continuité et aux besoins de l’équipe','Lion':'une capacité à porter une vision, créer et prendre des responsabilités','Vierge':'un sens de l’analyse, de la méthode et de l’amélioration concrète','Balance':'une aptitude à la coopération, à la négociation et à la recherche d’équilibre','Scorpion':'une capacité d’analyse approfondie, de stratégie et de transformation','Sagittaire':'une vision large, tournée vers le développement et de nouvelles possibilités','Capricorne':'un sens de la structure, des objectifs et de la progression à long terme','Verseau':'une forte capacité d’innovation, d’autonomie et de remise en question des méthodes établies'};
+    const mm={'Taureau':'un besoin de stabilité, de continuité et de résultats tangibles','Bélier':'un besoin d’autonomie, de rythme et de décisions rapides','Gémeaux':'un besoin d’échanges, d’informations et de variété','Cancer':'un besoin de cadre fiable et de continuité dans le fonctionnement','Lion':'un besoin de reconnaissance, de responsabilité et de marge de création','Vierge':'un besoin d’ordre, de méthode et de précision','Balance':'un besoin de coopération et de fonctionnement équilibré','Scorpion':'un besoin de maîtrise, de profondeur et de contrôle des enjeux essentiels','Sagittaire':'un besoin de perspective, d’autonomie et de développement','Capricorne':'un besoin de structure, d’objectifs clairs et de résultats durables','Verseau':'un besoin d’autonomie, d’innovation et de liberté dans les méthodes','Poissons':'un besoin de sens, d’inspiration et de cohérence avec la vision du projet'};
+    const atext=asc==='Vierge'?' Votre manière d’agir renforce aussi le besoin de vérifier, organiser et rendre les solutions réellement praticables.':'';
+    return `Dans le domaine professionnel, votre thème associe ${sm[s]||'une manière personnelle d’identifier les possibilités'} à ${mm[m]||'un besoin de cadre et de cohérence dans l’action'}.${atext} Vous pouvez ainsi repérer rapidement le potentiel d’un projet, tout en ayant besoin que sa faisabilité, son organisation et les résultats observables confirment cette première impression.`;
+  }catch(e){return'';}}
+
 function cr367PickHit(a){
   if(!a||!state?.date)return null;try{const i=cr33Intent(),t=cr3DominantTheme(state.draw||[],false),w=cr3TimingWindow(state.date,cr3ReadingMoment(),false);let h=typeof cr37RelevantWindows==='function'?cr37RelevantWindows(a,t,w,i)||[]:[];if(h[0])return h[0];const p=cr3PeriodSummary(a,t,w,false);return cr33BestWindow(p,i);}catch(e){return null;}}
 function cr367Timing(a,general=false){
@@ -58,6 +82,13 @@ function cr367Timing(a,general=false){
   const rm={'Jupiter':'favorise un climat plus ouvert et plus confiant','Vénus':'met davantage en valeur l’agrément et la qualité des échanges','Mars':'donne plus d’élan pour exprimer ou décider','Saturne':'invite à consolider ce qui mérite de durer','Uranus':'peut provoquer une ouverture inattendue','Neptune':'accentue la sensibilité tout en demandant de rester attentif aux projections'};
   const eff=(general?gm:rm)[h.tr]||'met davantage en relief les enjeux de cette période';
   return `${general?'Autour du':'Côté calendrier, le passage le plus porteur se situe autour du'} ${d}${general?',':' ;'} le ${asp} de ${tr} ${co} votre ${na} ${adj} ${eff}.`;
+}
+
+function cr367WorkTiming(a){
+  const h=cr367PickHit(a);if(!h)return'';const d=cr3Date(h.bestDate,false),asp=String(h.name||'').toLowerCase(),tr=String(h.tr||''),na=String(h.na||''),adj=['Lune','Vénus'].includes(na)?'natale':'natal',co=asp==='conjonction'?'avec':'à';
+  const wm={'Jupiter':'peut favoriser l’expansion, la visibilité, les opportunités ou l’ouverture de nouvelles possibilités','Vénus':'peut faciliter les accords, la coopération, la négociation et la valorisation du projet','Mars':'renforce l’initiative, la capacité de décision et le passage à l’action','Saturne':'favorise la structuration, la planification et la consolidation de ce qui doit durer','Uranus':'peut soutenir l’innovation, un changement de méthode ou une solution inattendue','Neptune':'stimule l’inspiration et la vision, tout en demandant de vérifier soigneusement la faisabilité'};
+  const eff=wm[h.tr]||'met davantage en relief les enjeux professionnels et pratiques de cette période';
+  return `Côté calendrier, le passage le plus porteur se situe autour du ${d} ; le ${asp} de ${tr} ${co} votre ${na} ${adj} ${eff}.`;
 }
 
 function cr367RelationLead(){
@@ -70,9 +101,11 @@ function cr367RelationNatal(a){if(!a||typeof cr34BigThree!=='function')return'';
 function cr367GlobalSynthesis(a){
   const en=typeof cr362En==='function'?cr362En():state?.lang==='en';if(en&&cr367Legacy)return cr367Legacy(a);
   const cards=state?.draw||[];if(!cards.length)return'';const q=(state?.question||'').trim();
-  let parts=[];
-  if(cr367Scope()==='general'){
+  let parts=[];const scope=cr367Scope();
+  if(scope==='general'){
     const core=cr367GeneralThread(cards);parts=[q?`Pour « ${cr367Esc(q)} », ${core.charAt(0).toLowerCase()+core.slice(1)}`:core,cr367GeneralOutcome(cards),cr367GeneralRelation(),cr367GeneralNatal(a),cr367Timing(a,true)];
+  }else if(scope==='work'){
+    const lead=cr367WorkLead(cards);parts=[q?`Pour « ${cr367Esc(q)} », ${lead}.`:`${cr367Cap(lead)}.`,cr367WorkOutcome(cards),cr367WorkNatal(a),cr367WorkTiming(a)];
   }else{
     const lead=cr367RelationLead();parts=[q?`Pour « ${cr367Esc(q)} », ${lead}.`:`${cr367Cap(lead)}.`,typeof cr362OutcomeNuance==='function'?cr362OutcomeNuance(cards,false):'',cr367RelationNatal(a),cr367Timing(a,false)];
   }
