@@ -62,9 +62,13 @@ function cr51NarrativizeFrenchSentence(sentence){
   let s=String(sentence||'').trim();
   if(!s)return s;
 
-  s=s.replace(/^cette\s+carte\s+/i,'').replace(/^elle\s+/i,'cela ');
+  s=s.replace(/^(?:cette|la)\s+carte\s+/i,'').replace(/^elle\s+/i,'cela ');
 
   let m;
+  if(/^cela\s+parle\s+de\s+continuité,\s+de\s+sécurité\s+et\s+de\s+fondations\s+durables$/i.test(s))
+    return 'La continuité, la sécurité et les fondations durables prennent davantage d’importance';
+  if(/^cela\s+parle\s+de\s+moments\s+agréables\s+partagés,\s+de\s+rire,\s+de\s+séduction\s+et\s+d[’']une\s+relation\s+qui\s+nourrit\s+aussi\s+le\s+bien-être\s+immédiat$/i.test(s))
+    return 'Des moments agréables partagés, du rire et de la séduction peuvent alors redonner au lien davantage de légèreté et de bien-être immédiat';
   if((m=s.match(/^(?:représente|represente|symbolise)\s+(.+)$/i)))
     return 'On voit alors se dessiner '+cr51LowerFirst(m[1]);
   if((m=s.match(/^signale\s+la\s+réapparition\s+(.+)$/i)))
