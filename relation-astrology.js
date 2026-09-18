@@ -6,6 +6,10 @@
    telles que « L’enjeu est alors de… » dans L’histoire racontée par vos cartes.
    Charge également la synthèse générale fluide v3.7 afin que la synthèse réponde
    directement à la question sans exposer la mécanique du tirage.
+
+   Cohérence astrologique v1.5 : l’analyse croisée de période met en regard les
+   transits individuels simultanés sans transformer automatiquement un carré ou
+   une opposition individuel en conflit relationnel commun.
 */
 (function(){
   'use strict';
@@ -29,10 +33,15 @@
     });
   }
 
-  /* Préserver toutes les fonctions astrologiques existantes. */
-  loadScript('./relation-astrology-core-v1.4.js?v=1.4','relation-astrology-core').catch(function(e){
-    console.error('CRISTARIVA astrologie relationnelle',e);
-  });
+  /* Préserver toutes les fonctions astrologiques existantes, puis installer la
+     garde de cohérence de l’analyse croisée une fois le moteur chargé. */
+  loadScript('./relation-astrology-core-v1.4.js?v=1.4','relation-astrology-core')
+    .then(function(){
+      return loadScript('./relation-period-consistency-v1.5.js?v=1.5','relation-period-consistency-v1.5',false);
+    })
+    .catch(function(e){
+      console.error('CRISTARIVA astrologie relationnelle',e);
+    });
 
   /* La synthèse générale est désormais formulée comme une réponse continue à
      la question, sans « point de départ », « au cœur du tirage », « issue », etc. */
