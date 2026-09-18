@@ -1,7 +1,15 @@
-/* CRISTARIVA — récit fluide global v5.3
+/* CRISTARIVA — récit fluide global v5.4
    Même exigence de narration dans les trois domaines :
-   interpréter la situation sans commenter les cartes, les positions ou les étapes du tirage. */
-const CRISTARIVA_FLUID_STORY_VERSION='5.3';
+   interpréter la situation sans commenter les cartes, les positions ou les étapes du tirage.
+
+   v5.4 :
+   - ne remplace plus le nom d'une carte à l'intérieur de sa propre définition ;
+   - évite les concaténations du type « simplece » et les répétitions telles que
+     « du passé du passé » ;
+   - transforme les amorces définitionnelles (Représente, Signale, Annonce,
+     Indique, Invite, Ouvre, etc.) en formulations narratives.
+*/
+const CRISTARIVA_FLUID_STORY_VERSION='5.4';
 
 function cr51Esc(value){
   try{return typeof readingEscape==='function'?readingEscape(String(value??'')):String(value??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -27,48 +35,150 @@ function cr51Replacement(card,en=false){
   }
   return {past:'ce qui revient du passé',tension:'cette tension',bond:'le lien',insight:'cette prise de conscience',movement:'le mouvement',change:'la transformation en cours',ground:'un repère intérieur plus stable',ambiguity:'l’incertitude',opening:'l’ouverture',neutral:'cet élément'}[f]||'cet élément';
 }
+
+/* Retire uniquement un titre de carte placé au début de la lecture.
+   On ne remplace surtout plus le nom de la carte à l'intérieur du texte :
+   « le simple retour du passé » doit rester intact. */
+function cr51StripLeadingCardName(text,card,en=false){
+  const raw=cr51RawName(card,en).trim();
+  if(!raw)return text;
+  const article=en?'(?:the|a|an)\\s+':"(?:(?:le|la|les|un|une)\\s+|l[’'])";
+  try{
+    return String(text||'').replace(
+      new RegExp('^\\s*(?:'+article+')?'+cr51Rx(raw)+'\\s*(?:[:;,.—–-]+\\s*)?','i'),
+      ''
+    ).trim();
+  }catch(e){return text;}
+}
+
+function cr51LowerFirst(s){s=String(s||'').trim();return s?s.charAt(0).toLocaleLowerCase()+s.slice(1):'';}
+function cr51CapFirst(s){s=String(s||'').trim();return s?s.charAt(0).toLocaleUpperCase()+s.slice(1):'';}
+
+/* Les définitions de l'oracle utilisent parfois une forme dictionnaire :
+   « Représente… », « Signale… », « Invite à… ». Dans le récit, ces amorces
+   sont transformées afin que le texte raconte une évolution au lieu de réciter
+   la fiche de la carte. */
+function cr51NarrativizeFrenchSentence(sentence){
+  let s=String(sentence||'').trim();
+  if(!s)return s;
+
+  s=s.replace(/^cette\s+carte\s+/i,'').replace(/^elle\s+/i,'cela ');
+
+  let m;
+  if((m=s.match(/^(?:représente|represente|symbolise)\s+(.+)$/i)))
+    return 'On voit alors se dessiner '+cr51LowerFirst(m[1]);
+  if((m=s.match(/^signale\s+la\s+réapparition\s+(.+)$/i)))
+    return 'Une réapparition devient alors possible : celle '+cr51LowerFirst(m[1]);
+  if((m=s.match(/^signale\s+(.+)$/i)))
+    return 'Un élément important apparaît alors : '+cr51LowerFirst(m[1]);
+  if((m=s.match(/^annonce\s+(.+)$/i)))
+    return 'La suite peut alors faire apparaître '+cr51LowerFirst(m[1]);
+  if((m=s.match(/^indique\s+(.+)$/i)))
+    return 'Peu à peu, on voit apparaître '+cr51LowerFirst(m[1]);
+  if((m=s.match(/^montre\s+(.+)$/i)))
+    return 'La situation fait apparaître '+cr51LowerFirst(m[1]);
+  if((m=s.match(/^souligne\s+(.+)$/i)))
+    return 'L’attention se porte alors sur '+cr51LowerFirst(m[1]);
+  if((m=s.match(/^invite\s+à\s+(.+)$/i)))
+    return 'L’enjeu est alors de '+cr51LowerFirst(m[1]);
+  if((m=s.match(/^ouvre\s+un\s+(.+)$/i)))
+    return 'Un '+cr51LowerFirst(m[1])+' peut alors s’ouvrir';
+  if((m=s.match(/^ouvre\s+une\s+(.+)$/i)))
+    return 'Une '+cr51LowerFirst(m[1])+' peut alors s’ouvrir';
+  if((m=s.match(/^ouvre\s+(.+)$/i)))
+    return 'Une nouvelle possibilité peut alors s’ouvrir autour de '+cr51LowerFirst(m[1]);
+
+  if((m=s.match(/^cela\s+(?:représente|represente|symbolise)\s+(.+)$/i)))
+    return 'On voit alors se dessiner '+cr51LowerFirst(m[1]);
+  if((m=s.match(/^cela\s+signale\s+la\s+réapparition\s+(.+)$/i)))
+    return 'Une réapparition devient alors possible : celle '+cr51LowerFirst(m[1]);
+  if((m=s.match(/^cela\s+signale\s+(.+)$/i)))
+    return 'Un élément important apparaît alors : '+cr51LowerFirst(m[1]);
+  if((m=s.match(/^cela\s+annonce\s+(.+)$/i)))
+    return 'La suite peut alors faire apparaître '+cr51LowerFirst(m[1]);
+  if((m=s.match(/^cela\s+indique\s+(.+)$/i)))
+    return 'Peu à peu, on voit apparaître '+cr51LowerFirst(m[1]);
+  if((m=s.match(/^cela\s+montre\s+(.+)$/i)))
+    return 'La situation fait apparaître '+cr51LowerFirst(m[1]);
+  if((m=s.match(/^cela\s+invite\s+à\s+(.+)$/i)))
+    return 'L’enjeu est alors de '+cr51LowerFirst(m[1]);
+  if((m=s.match(/^cela\s+parle\s+de\s+(.+)$/i)))
+    return 'Cette dimension prend davantage de place : '+m[1]
+      .replace(/^de\s+/i,'')
+      .replace(/,\s*de\s+/gi,', ')
+      .replace(/\s+et\s+de\s+/gi,' et ');
+  if((m=s.match(/^cela\s+favorise\s+(.+)$/i)))
+    return 'Cette évolution peut favoriser '+cr51LowerFirst(m[1]);
+  if((m=s.match(/^cela\s+rappelle\s+(?:que\s+|qu[’'])(.+)$/i)))
+    return 'Dans cette dynamique, '+cr51LowerFirst(m[1]);
+  if((m=s.match(/^cela\s+donne\s+une\s+forme\s+(.+?)\s+au\s+lien$/i)))
+    return 'Le lien prend alors une forme '+cr51LowerFirst(m[1]);
+
+  s=s
+    .replace(/^cela\s+demande\s+de\b/i,'Cela demande de')
+    .replace(/^cela\s+demande\s+à\b/i,'Cela demande à')
+    .replace(/^choisit\b/i,'vous conduit à choisir')
+    .replace(/^demande\s+de\b/i,'Cela demande de')
+    .replace(/^demande\s+à\b/i,'Cela demande à')
+    .replace(/^aide\s+à\b/i,'Cela aide à')
+    .replace(/^rappelle\s+que\s+/i,'Dans cette dynamique, ')
+    .replace(/^rappelle\b/i,'Cela rappelle')
+    .replace(/^parle\s+de\s+/i,'Cette dimension prend davantage de place : ')
+    .replace(/^met\b/i,'Cela met')
+    .replace(/^favorise\s+/i,'Cette évolution peut favoriser ')
+    .replace(/^ramène\b/i,'Cela ramène')
+    .replace(/^force\b/i,'Cela oblige');
+  return s;
+}
+
+function cr51NarrativizeFrenchStart(text){
+  const source=String(text||'').trim();
+  if(!source)return source;
+  const parts=source.match(/[^.!?]+(?:[.!?]+|$)/g)||[source];
+  return parts.map(part=>{
+    const trimmed=part.trim();
+    const pm=trimmed.match(/([.!?]+)$/);
+    const punct=pm?pm[1]:'';
+    const body=punct?trimmed.slice(0,-punct.length).trim():trimmed;
+    const rewritten=cr51NarrativizeFrenchSentence(body).replace(/[.!?]+$/,'').trim();
+    return rewritten+(punct||'.');
+  }).join(' ').trim();
+}
+
+function cr51NarrativeCleanup(text,en=false){
+  let s=String(text||'').replace(/\s+/g,' ').trim();
+  if(!s)return s;
+  if(!en){
+    s=s
+      .replace(/\bsimplece\b/gi,'simple ce')
+      .replace(/\bcecet\b/gi,'cet')
+      .replace(/\bcequi\b/gi,'ce qui')
+      .replace(/\bquecela\b/gi,'que cela')
+      .replace(/\bdu passé\s+du passé\b/gi,'du passé')
+      .replace(/\bde la relation\s+de la relation\b/gi,'de la relation');
+  }
+  return s;
+}
+
 function cr51Meaning(card,scope,en=false){
   let text=String(cr51Field(card,scope,en)||'').replace(/\s+/g,' ').trim();
   if(!text)return en?'The situation is still taking shape.':'La situation est encore en train de se définir.';
   text=text.replace(/^(?:Dans (?:une relation|le travail|le cadre [^,]+)|Sur le plan [^,]+),\s*/i,'');
   text=text.replace(/^(?:In (?:a relationship|the workplace|the professional context|the relational context|the spiritual context)|On (?:a general|an inner|a spiritual) level),\s*/i,'');
 
-  const raw=cr51RawName(card,en);
-  if(raw){
-    const repl=scope==='spirit'?(en?'this':'cela'):cr51Replacement(card,en);
-    const art=en?'(?:the|a|an)?\\s*':'(?:le|la|les|l[’\']|un|une|du|des|de la)?\\s*';
-    try{text=text.replace(new RegExp('\\b'+art+cr51Rx(raw)+'\\b','gi'),repl);}catch(e){}
-  }
+  /* Important : le nom de la carte n'est supprimé que s'il sert d'en-tête au
+     début du texte. Il n'est plus remplacé lorsqu'il fait partie du sens de la
+     phrase. */
+  text=cr51StripLeadingCardName(text,card,en);
 
   if(!en){
-    text=text
-      .replace(/^(?:elle|il)\s+/i,'cela ')
-      .replace(/^cela\s+demande\s+de\b/i,'Cela demande de')
-      .replace(/^cela\s+demande\s+à\b/i,'Cela demande à')
-      .replace(/^cela\s+invite\s+à\b/i,'Cela invite à')
-      .replace(/^cela\s+parle\b/i,'Cela parle')
-      .replace(/^cela\s+indique\b/i,'Cela indique')
-      .replace(/^cela\s+favorise\b/i,'Cela favorise')
-      .replace(/^cela\s+montre\b/i,'Cela montre')
-      .replace(/^choisit\b/i,'vous conduit à choisir')
-      .replace(/^invite\s+à\b/i,'vous invite à')
-      .replace(/^demande\s+de\b/i,'vous demande de')
-      .replace(/^demande\s+à\b/i,'vous demande à')
-      .replace(/^aide\s+à\b/i,'vous aide à')
-      .replace(/^rappelle\b/i,'vous rappelle')
-      .replace(/^montre\b/i,'la situation montre')
-      .replace(/^indique\b/i,'cela indique')
-      .replace(/^parle\b/i,'cela parle')
-      .replace(/^met\b/i,'cela met')
-      .replace(/^favorise\b/i,'cela favorise')
-      .replace(/^ramène\b/i,'cela ramène')
-      .replace(/^force\b/i,'cela oblige');
+    text=cr51NarrativizeFrenchStart(text);
   }else{
     text=text.replace(/^(?:it|this card)\s+/i,'this ');
   }
-  text=text.replace(/^\s*[:;,.—-]+\s*/,'').trim();
+  text=cr51NarrativeCleanup(text,en).replace(/^\s*[:;,.—-]+\s*/,'').trim();
   if(text&&!/[.!?]$/.test(text))text+='.';
-  if(text)text=text.charAt(0).toLocaleUpperCase()+text.slice(1);
+  if(text)text=cr51CapFirst(text);
   return cr51Esc(text);
 }
 function cr51Scope(){
@@ -125,7 +235,7 @@ function storyInterpretation(cards){
     cards.slice(0,5).forEach((c,i)=>addMeaning(c,roles[i]));
   }
 
-  story=story.replace(/\s+/g,' ').replace(/\.\s+([a-zà-ÿ])/g,(m,c)=>'. '+c.toLocaleUpperCase()).trim();
+  story=cr51NarrativeCleanup(story,en).replace(/\.\s+([a-zà-ÿ])/g,(m,c)=>'. '+c.toLocaleUpperCase()).trim();
   return `<div class="story-reading" data-story-engine="${CRISTARIVA_FLUID_STORY_VERSION}"><h3>${en?'The story told by your cards':'L’histoire racontée par vos cartes'}</h3>${question}<p class="story-continuous">${story}</p></div>`;
 }
 function interpretation(cards){return storyInterpretation(cards);}
