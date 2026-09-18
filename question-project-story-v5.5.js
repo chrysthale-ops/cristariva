@@ -90,7 +90,7 @@ function cr57PolishFrenchNarrative(s){
   const boundary='(^|[.!?]\\s+)';
   out=out
     .replace(new RegExp(boundary+'Peut\\s+révéler\\s+','gi'),(m,b)=>b+'Une prise de conscience peut alors faire émerger ')
-    .replace(new RegExp(boundary+'Peut\\s+montrer\\s+la\\s+crainte\\s+d[’\'']être\\s+','gi'),(m,b)=>b+'Une crainte peut également apparaître : celle d’être ')
+    .replace(new RegExp(boundary+"Peut\\s+montrer\\s+la\\s+crainte\\s+d[’']être\\s+",'gi'),(m,b)=>b+'Une crainte peut également apparaître : celle d’être ')
     .replace(new RegExp(boundary+'Peut\\s+montrer\\s+','gi'),(m,b)=>b+'Un autre aspect apparaît alors : ')
     .replace(new RegExp(boundary+'Peut\\s+indiquer\\s+','gi'),(m,b)=>b+'La suite laisse alors entrevoir ')
     .replace(new RegExp(boundary+'Peut\\s+annoncer\\s+','gi'),(m,b)=>b+'La suite peut alors faire apparaître ')
