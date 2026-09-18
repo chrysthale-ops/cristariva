@@ -2,7 +2,7 @@ name: Install Oracle Amour 80 PDF cards
 on:
   push:
     branches: [main]
-    paths: ['.cristariva-assets/amour80-small-ready.txt']
+    paths: ['.cristariva-assets/CRISTARIVA_Oracle_Amour_80_cartes_extraites_du_PDF.zip']
   workflow_dispatch:
 permissions:
   contents: write
@@ -13,24 +13,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Rebuild card archive
+      - name: Extract 80 cards from prepared archive
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          import base64
-          parts=sorted(Path('.cristariva-assets').glob('amour80-small-*.b64'))
-          if len(parts)!=8:
-              raise SystemExit(f'8 fragments attendus, {len(parts)} trouvés')
-          s=''.join(p.read_text(encoding='utf-8').strip() for p in parts)
-          Path('/tmp/amour80.tar.gz').write_bytes(base64.b64decode(s))
-          print('archive', len(s), 'chars')
-          PY
           rm -rf /tmp/amour80
           mkdir -p /tmp/amour80
-          tar -xzf /tmp/amour80.tar.gz -C /tmp/amour80
+          unzip -q .cristariva-assets/CRISTARIVA_Oracle_Amour_80_cartes_extraites_du_PDF.zip -d /tmp/amour80
+          test "$(find /tmp/amour80 -maxdepth 1 -name '*.webp' | wc -l)" -eq 80
           rm -rf cards/amour
           mkdir -p cards/amour
-          cp /tmp/amour80/cards/amour/* cards/amour/
+          cp /tmp/amour80/[0-9][0-9][0-9].webp cards/amour/
           cp /tmp/amour80/cards.json /tmp/cards.json
       - name: Generate corrected Oracle Amour data
         run: |
@@ -44,7 +35,7 @@ jobs:
               group='main' if i<=60 else 'relation' if i<=70 else 'dating'
               definition=r.get('definition','')
               name=r.get('name','')
-              image=f'./cards/amour/{i:03d}.jpg?v=20260918'
+              image=f'./cards/amour/{i:03d}.webp?v=20260918'
               c={
                 'id':i,'name':name,'category':r.get('category',''),'definition':definition,
                 'keywords':r.get('keywords',''),'group':group,'oracle':'amour','image':image,'imageEn':image,
@@ -64,7 +55,7 @@ jobs:
           p=Path('relation-astrology.js')
           s=p.read_text(encoding='utf-8')
           s=re.sub(r"const LOVE_SCRIPTS=\[.*?\];", "const LOVE_SCRIPTS=[\n    './oracle-amour-data.js?v=20260918-pdf80',\n    './oracle-amour-integration.js?v=20260918-pdf80',\n    './oracle-amour-compat.js?v=20260918-pdf80'\n  ];", s, flags=re.S)
-          s=s.replace("./oracle-amour-integration.js?v=4.1-repair","./oracle-amour-integration.js?v=20260918-pdf80-repair")
+          s=re.sub(r"\./oracle-amour-integration\.js\?v=[^'\"]+-repair","./oracle-amour-integration.js?v=20260918-pdf80-repair",s)
           p.write_text(s,encoding='utf-8')
 
           p=Path('validated-card-titles-v3.6.3.js')
@@ -81,14 +72,14 @@ jobs:
           s=p.read_text(encoding='utf-8')
           s=re.sub(r"const CACHE_NAME='[^']+';", "const CACHE_NAME='cristariva-v6-20260918-amour80';", s, count=1)
           base=["'./'","'./index.html'","'./manifest.webmanifest'","'./manifest-en.webmanifest'","'./icon-192.png'","'./icon-512.png'","'./relation-astrology.js'","'./relation-astrology-core-v1.4.js'","'./oracle-amour-data.js'","'./oracle-amour-integration.js'","'./oracle-amour-compat.js'"]
-          imgs=[f"'./cards/amour/{i:03d}.jpg?v=20260918'" for i in range(1,81)]
+          imgs=[f"'./cards/amour/{i:03d}.webp?v=20260918'" for i in range(1,81)]
           shell='const SHELL=[\n '+',\n '.join(base+imgs)+'\n];'
           s=re.sub(r"const SHELL=\[.*?\];",shell,s,flags=re.S)
           p.write_text(s,encoding='utf-8')
           PY
       - name: Validate 80-card integration
         run: |
-          test "$(find cards/amour -maxdepth 1 -name '*.jpg' | wc -l)" -eq 80
+          test "$(find cards/amour -maxdepth 1 -name '*.webp' | wc -l)" -eq 80
           node --check oracle-amour-data.js
           node --check oracle-amour-integration.js
           node --check oracle-amour-compat.js
@@ -106,9 +97,10 @@ jobs:
           grep -q "cristariva-v6-20260918-amour80" service-worker.js
       - name: Clean transfer payload
         run: |
+          rm -f .cristariva-assets/CRISTARIVA_Oracle_Amour_80_cartes_extraites_du_PDF.zip
           rm -f .cristariva-assets/amour80-small-*.b64 .cristariva-assets/amour80-small-ready.txt
           rm -f .cristariva-assets/amour80-part*.b64 .cristariva-assets/amour-cardpack-part*.b64
-          rm -f cards/amour/001.b64 cards/amour/001.webp
+          rm -f cards/amour/001.b64
           rm -f .github/workflows/install-oracle-amour-80.yml
       - name: Commit final integration
         run: |
