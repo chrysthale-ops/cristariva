@@ -4,6 +4,8 @@
 
    Finition narrative 2026-09-18 : évite les répétitions successives d'amorces
    telles que « L’enjeu est alors de… » dans L’histoire racontée par vos cartes.
+   Charge également la synthèse générale fluide v3.7 afin que la synthèse réponde
+   directement à la question sans exposer la mécanique du tirage.
 */
 (function(){
   'use strict';
@@ -30,6 +32,12 @@
   /* Préserver toutes les fonctions astrologiques existantes. */
   loadScript('./relation-astrology-core-v1.4.js?v=1.4','relation-astrology-core').catch(function(e){
     console.error('CRISTARIVA astrologie relationnelle',e);
+  });
+
+  /* La synthèse générale est désormais formulée comme une réponse continue à
+     la question, sans « point de départ », « au cœur du tirage », « issue », etc. */
+  loadScript('./synthesis-fluid-v3.7.js?v=3.7','synthesis-fluid-v3.7',false).catch(function(e){
+    console.error('CRISTARIVA synthèse fluide',e);
   });
 
   const LOVE_SCRIPTS=[
