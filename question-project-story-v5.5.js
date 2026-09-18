@@ -1,7 +1,11 @@
-/* CRISTARIVA — récit centré sur les projets + finition narrative globale v5.8
+/* CRISTARIVA — récit centré sur les projets + finition narrative globale v5.9
    Le récit interprète la situation directement : il ne récite pas les définitions,
-   ne cite pas les noms des cartes et évite les répétitions mécaniques. */
-const CRISTARIVA_PROJECT_STORY_VERSION='5.8';
+   ne cite pas les noms des cartes et évite les répétitions mécaniques.
+
+   v5.9 : la finition globale élimine aussi les phrases elliptiques issues des
+   définitions (« Peut révéler… », « Peut montrer… », « Peut indiquer… »,
+   « Demande… ») afin que chaque proposition soit une vraie phrase narrative. */
+const CRISTARIVA_PROJECT_STORY_VERSION='5.9';
 
 function cr55Question(){return String(state?.question||'').replace(/\s+/g,' ').trim();}
 function cr55Esc(v){try{return typeof cr53Esc==='function'?cr53Esc(v):typeof cr51Esc==='function'?cr51Esc(v):String(v??'');}catch(e){return String(v??'');}}
@@ -81,6 +85,24 @@ function cr55ProjectStory(cards,en=false){
   return unique.map(x=>cr57Cap(x.text)).join('. ')+(unique.length?'.':'');
 }
 
+function cr57PolishFrenchNarrative(s){
+  let out=String(s||'');
+  const boundary='(^|[.!?]\\s+)';
+  out=out
+    .replace(new RegExp(boundary+'Peut\\s+révéler\\s+','gi'),(m,b)=>b+'Une prise de conscience peut alors faire émerger ')
+    .replace(new RegExp(boundary+'Peut\\s+montrer\\s+la\\s+crainte\\s+d[’\'']être\\s+','gi'),(m,b)=>b+'Une crainte peut également apparaître : celle d’être ')
+    .replace(new RegExp(boundary+'Peut\\s+montrer\\s+','gi'),(m,b)=>b+'Un autre aspect apparaît alors : ')
+    .replace(new RegExp(boundary+'Peut\\s+indiquer\\s+','gi'),(m,b)=>b+'La suite laisse alors entrevoir ')
+    .replace(new RegExp(boundary+'Peut\\s+annoncer\\s+','gi'),(m,b)=>b+'La suite peut alors faire apparaître ')
+    .replace(new RegExp(boundary+'Peut\\s+traduire\\s+','gi'),(m,b)=>b+'Cette dynamique peut traduire ')
+    .replace(new RegExp(boundary+'Peut\\s+favoriser\\s+','gi'),(m,b)=>b+'Cette évolution peut favoriser ')
+    .replace(new RegExp(boundary+'Demande\\s+','gi'),(m,b)=>b+'La situation demande ')
+    .replace(new RegExp(boundary+'Cela\\s+peut\\s+indiquer\\s+','gi'),(m,b)=>b+'La suite laisse alors entrevoir ')
+    .replace(new RegExp(boundary+'Cela\\s+peut\\s+montrer\\s+','gi'),(m,b)=>b+'Un autre aspect apparaît alors : ')
+    .replace(new RegExp(boundary+'Cela\\s+peut\\s+révéler\\s+','gi'),(m,b)=>b+'Une prise de conscience peut alors faire émerger ');
+  return out;
+}
+
 function cr57PolishStoryHtml(html,en=false){
   try{
     const tpl=document.createElement('template');
@@ -88,6 +110,7 @@ function cr57PolishStoryHtml(html,en=false){
     const p=tpl.content.querySelector('.story-continuous');
     if(!p)return html;
     let s=p.innerHTML.replace(/\s+/g,' ').replace(/>\s+</g,'><').trim();
+    if(!en)s=cr57PolishFrenchNarrative(s);
     s=s.replace(/(^|\.\s+)([a-zà-ÿ])/g,(m,a,b)=>a+b.toLocaleUpperCase());
     p.innerHTML=s;
     const root=tpl.content.querySelector('.story-reading');
