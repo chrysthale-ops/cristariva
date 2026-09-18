@@ -1,12 +1,13 @@
-/* CRISTARIVA — récit centré sur les projets + finition narrative globale v5.11
+/* CRISTARIVA — récit centré sur les projets + finition narrative globale v5.12
    Le récit interprète la situation directement : il ne récite pas les définitions,
    ne cite pas les noms des cartes et évite les répétitions mécaniques.
 
-   v5.11 : la finition globale élimine aussi les phrases elliptiques issues des
+   v5.12 : la finition globale élimine aussi les phrases elliptiques issues des
    définitions (« Marque… », « Indique… », « Signale… », « Invite… »,
-   « Favorise… », « Ouvre… », « Annonce… », etc.) afin que chaque proposition
-   conserve un sujet explicite et s’intègre dans un récit continu. */
-const CRISTARIVA_PROJECT_STORY_VERSION='5.11';
+   « Favorise… », « Ouvre… », « Annonce… », « Évoque… », etc.) afin que chaque proposition
+   conserve un sujet explicite et s’intègre dans un récit continu. Les occurrences
+   successives de « Évoque… » reçoivent des formulations variées pour éviter l’effet répétitif. */
+const CRISTARIVA_PROJECT_STORY_VERSION='5.12';
 
 function cr55Question(){return String(state?.question||'').replace(/\s+/g,' ').trim();}
 function cr55Esc(v){try{return typeof cr53Esc==='function'?cr53Esc(v):typeof cr51Esc==='function'?cr51Esc(v):String(v??'');}catch(e){return String(v??'');}}
@@ -89,6 +90,8 @@ function cr55ProjectStory(cards,en=false){
 function cr57PolishFrenchNarrative(s){
   let out=String(s||'');
   const boundary='(^|[.!?]\\s+)';
+  let evokeIndex=0;
+  const evokePrefixes=['Le tirage met alors en lumière ','Cette dynamique fait apparaître ','Un autre aspect fait ressortir '];
   out=out
     .replace(new RegExp(boundary+'Peut\\s+révéler\\s+','gi'),(m,b)=>b+'Une prise de conscience peut alors faire émerger ')
     .replace(new RegExp(boundary+"Peut\\s+montrer\\s+la\\s+crainte\\s+d[’']être\\s+",'gi'),(m,b)=>b+'Une crainte peut également apparaître : celle d’être ')
@@ -100,6 +103,7 @@ function cr57PolishFrenchNarrative(s){
     .replace(new RegExp(boundary+'Demande\\s+','gi'),(m,b)=>b+'La situation demande ')
     .replace(new RegExp(boundary+'Relie\\s+','gi'),(m,b)=>b+'Cette dynamique relie ')
     .replace(new RegExp(boundary+'Associe\\s+','gi'),(m,b)=>b+'La situation associe ')
+    .replace(new RegExp(boundary+'Évoque\\s+','gi'),(m,b)=>b+evokePrefixes[(evokeIndex++)%evokePrefixes.length])
     .replace(new RegExp(boundary+'Marque\\s+','gi'),(m,b)=>b+'Cette phase marque ')
     .replace(new RegExp(boundary+'Indique\\s+','gi'),(m,b)=>b+'La situation indique ')
     .replace(new RegExp(boundary+'Signale\\s+','gi'),(m,b)=>b+'Le tirage signale ')
