@@ -1,13 +1,13 @@
-/* CRISTARIVA — récit centré sur les projets + finition narrative globale v5.12
+/* CRISTARIVA — récit centré sur les projets + finition narrative globale v5.13
    Le récit interprète la situation directement : il ne récite pas les définitions,
    ne cite pas les noms des cartes et évite les répétitions mécaniques.
 
-   v5.12 : la finition globale élimine aussi les phrases elliptiques issues des
-   définitions (« Marque… », « Indique… », « Signale… », « Invite… »,
-   « Favorise… », « Ouvre… », « Annonce… », « Évoque… », etc.) afin que chaque proposition
-   conserve un sujet explicite et s’intègre dans un récit continu. Les occurrences
-   successives de « Évoque… » reçoivent des formulations variées pour éviter l’effet répétitif. */
-const CRISTARIVA_PROJECT_STORY_VERSION='5.12';
+   v5.13 : la finition globale traite une famille plus large d’amorces verbales
+   issues des définitions (« Soutient… », « Confirme… », « Exprime… »,
+   « Rappelle… », « Décrit… », « Révèle… », « Met en évidence… », « Parle de… »,
+   « Peut signaler… », « Ne précise pas… », etc.) afin que chaque phrase du récit
+   possède un sujet explicite et s’intègre naturellement à la narration. */
+const CRISTARIVA_PROJECT_STORY_VERSION='5.13';
 
 function cr55Question(){return String(state?.question||'').replace(/\s+/g,' ').trim();}
 function cr55Esc(v){try{return typeof cr53Esc==='function'?cr53Esc(v):typeof cr51Esc==='function'?cr51Esc(v):String(v??'');}catch(e){return String(v??'');}}
@@ -100,9 +100,23 @@ function cr57PolishFrenchNarrative(s){
     .replace(new RegExp(boundary+'Peut\\s+annoncer\\s+','gi'),(m,b)=>b+'La suite peut alors faire apparaître ')
     .replace(new RegExp(boundary+'Peut\\s+traduire\\s+','gi'),(m,b)=>b+'Cette dynamique peut traduire ')
     .replace(new RegExp(boundary+'Peut\\s+favoriser\\s+','gi'),(m,b)=>b+'Cette évolution peut favoriser ')
+    .replace(new RegExp(boundary+'Peut\\s+signaler\\s+','gi'),(m,b)=>b+'Cette intensité peut alors signaler ')
+    .replace(new RegExp(boundary+'Ne\\s+précise\\s+pas\\s+à\\s+elle\\s+seule\\s+','gi'),(m,b)=>b+'Le tirage ne précise pas à lui seul ')
+    .replace(new RegExp(boundary+'Ne\\s+précise\\s+pas\\s+','gi'),(m,b)=>b+'Le tirage ne précise pas ')
+    .replace(new RegExp(boundary+'Met\\s+en\\s+évidence\\s+','gi'),(m,b)=>b+'Le tirage met en évidence ')
+    .replace(new RegExp(boundary+'Parle\\s+de\\s+','gi'),(m,b)=>b+'Cette dynamique parle de ')
     .replace(new RegExp(boundary+'Demande\\s+','gi'),(m,b)=>b+'La situation demande ')
     .replace(new RegExp(boundary+'Relie\\s+','gi'),(m,b)=>b+'Cette dynamique relie ')
     .replace(new RegExp(boundary+'Associe\\s+','gi'),(m,b)=>b+'La situation associe ')
+    .replace(new RegExp(boundary+'Soutient\\s+','gi'),(m,b)=>b+'Cette dynamique soutient ')
+    .replace(new RegExp(boundary+'Confirme\\s+','gi'),(m,b)=>b+'Le tirage confirme ')
+    .replace(new RegExp(boundary+'Exprime\\s+','gi'),(m,b)=>b+'Cette dynamique exprime ')
+    .replace(new RegExp(boundary+'Rappelle\\s+','gi'),(m,b)=>b+'Cette lecture rappelle ')
+    .replace(new RegExp(boundary+'Décrit\\s+','gi'),(m,b)=>b+'Le tirage décrit ')
+    .replace(new RegExp(boundary+'Révèle\\s+','gi'),(m,b)=>b+'La situation révèle ')
+    .replace(new RegExp(boundary+'Montre\\s+','gi'),(m,b)=>b+'La situation montre ')
+    .replace(new RegExp(boundary+'Traduit\\s+','gi'),(m,b)=>b+'Cette dynamique traduit ')
+    .replace(new RegExp(boundary+'Représente\\s+','gi'),(m,b)=>b+'Cette étape correspond à ')
     .replace(new RegExp(boundary+'Évoque\\s+','gi'),(m,b)=>b+evokePrefixes[(evokeIndex++)%evokePrefixes.length])
     .replace(new RegExp(boundary+'Marque\\s+','gi'),(m,b)=>b+'Cette phase marque ')
     .replace(new RegExp(boundary+'Indique\\s+','gi'),(m,b)=>b+'La situation indique ')
