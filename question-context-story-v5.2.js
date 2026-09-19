@@ -1,7 +1,11 @@
-/* CRISTARIVA — ancrage du récit dans la question v5.2
+/* CRISTARIVA — ancrage du récit dans la question v5.2.1
    La question n'est plus seulement affichée au-dessus du récit : elle devient son fil conducteur.
-   Les questions courtes de type « mes blessures » reçoivent une narration réellement contextualisée. */
-const CRISTARIVA_QUESTION_CONTEXT_STORY_VERSION='5.2';
+   Les questions courtes de type « mes blessures » reçoivent une narration réellement contextualisée.
+
+   v5.2.1 : la narration générale supprime les amorces mécaniques du type
+   « Cela… », « La carte… » et les phrases sans sujet comme « Peut réveiller… »
+   avant d'ajouter « Concernant… », afin d'obtenir un récit continu et naturel. */
+const CRISTARIVA_QUESTION_CONTEXT_STORY_VERSION='5.2.1';
 
 function cr52Esc(value){
   try{return typeof cr51Esc==='function'?cr51Esc(value):String(value??'');}catch(e){return String(value??'');}
@@ -23,6 +27,44 @@ function cr52TopicFromQuestion(q=cr52RawQuestion(),en=false){
     .replace(/^ma\b/i,'votre')
     .replace(/^moi\b/i,'vous');
 }
+
+/* Finition réservée au récit général avant l'ajout du contexte de la question.
+   On décrit directement la situation au lieu de commenter la carte elle-même. */
+function cr52PolishGeneralStory(html,en=false){
+  if(en)return html;
+  try{
+    const tpl=document.createElement('template');
+    tpl.innerHTML=String(html||'');
+    const p=tpl.content.querySelector('.story-continuous');
+    if(!p)return html;
+    let s=String(p.innerHTML||'').replace(/\s+/g,' ').trim();
+    const boundary='(^|[.!?;:]\\s+)';
+    s=s
+      .replace(new RegExp(boundary+'Cela\\s+évoque\\s+','gi'),(m,b)=>b+'On perçoit alors ')
+      .replace(new RegExp(boundary+'Cela\\s+aide\\s+à\\s+','gi'),(m,b)=>b+'Cette dynamique aide à ')
+      .replace(new RegExp(boundary+'Cela\\s+met\\s+en\\s+lumière\\s+','gi'),(m,b)=>b+'La situation fait alors apparaître ')
+      .replace(new RegExp(boundary+'Cela\\s+met\\s+en\\s+évidence\\s+','gi'),(m,b)=>b+'La situation fait alors apparaître ')
+      .replace(new RegExp(boundary+'Cela\\s+invite\\s+à\\s+','gi'),(m,b)=>b+'L’enjeu est alors de ')
+      .replace(new RegExp(boundary+'Cela\\s+indique\\s+','gi'),(m,b)=>b+'La suite laisse alors entrevoir ')
+      .replace(new RegExp(boundary+'Cela\\s+montre\\s+','gi'),(m,b)=>b+'La situation fait apparaître ')
+      .replace(new RegExp(boundary+'Cela\\s+signale\\s+','gi'),(m,b)=>b+'Un élément important apparaît alors : ')
+      .replace(new RegExp(boundary+'Cela\\s+favorise\\s+','gi'),(m,b)=>b+'Cette évolution peut favoriser ')
+      .replace(new RegExp(boundary+'Cela\\s+parle\\s+de\\s+','gi'),(m,b)=>b+'Cette évolution fait ressortir ')
+      .replace(new RegExp(boundary+'Cela\\s+','gi'),(m,b)=>b+'La situation ')
+      .replace(new RegExp(boundary+'Peut\\s+réveiller\\s+','gi'),(m,b)=>b+'La situation peut réveiller ')
+      .replace(new RegExp(boundary+'Peut\\s+réactiver\\s+','gi'),(m,b)=>b+'La situation peut réactiver ')
+      .replace(new RegExp(boundary+'Peut\\s+faire\\s+ressurgir\\s+','gi'),(m,b)=>b+'La situation peut faire ressurgir ')
+      .replace(new RegExp(boundary+'(?:La|Cette)\\s+carte\\s+invite\\s+à\\s+','gi'),(m,b)=>b+'L’enjeu est alors de ')
+      .replace(new RegExp(boundary+'(?:La|Cette)\\s+carte\\s+met\\s+en\\s+lumière\\s+','gi'),(m,b)=>b+'La situation fait alors apparaître ')
+      .replace(new RegExp(boundary+'(?:La|Cette)\\s+carte\\s+(?:indique|montre|évoque|souligne|signale)\\s+','gi'),(m,b)=>b+'La situation ')
+      .replace(new RegExp(boundary+'(?:La|Cette)\\s+carte\\s+','gi'),(m,b)=>b+'La situation ');
+    p.innerHTML=s;
+    const root=tpl.content.querySelector('.story-reading');
+    if(root)root.dataset.storyEngine=CRISTARIVA_QUESTION_CONTEXT_STORY_VERSION;
+    return tpl.innerHTML;
+  }catch(e){return html;}
+}
+
 function cr52CardText(card,en=false){
   try{
     const scope=typeof cr51Scope==='function'?cr51Scope():'spirit';
@@ -82,7 +124,7 @@ if(cr52BaseStoryInterpretation){
       const story=cr52WoundStory(cards,en).replace(/\s+/g,' ').trim();
       return `<div class="story-reading" data-story-engine="${CRISTARIVA_QUESTION_CONTEXT_STORY_VERSION}"><h3>${en?'The story told by your cards':'L’histoire racontée par vos cartes'}</h3>${question}<p class="story-continuous">${story}</p></div>`;
     }
-    const html=cr52BaseStoryInterpretation(cards);
+    const html=cr52PolishGeneralStory(cr52BaseStoryInterpretation(cards),en);
     if(!q||en)return html;
     const topic=cr52TopicFromQuestion(q,false);
     if(!topic)return html;
