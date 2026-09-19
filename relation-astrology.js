@@ -10,6 +10,9 @@
    Cohérence astrologique v1.5 : l’analyse croisée de période met en regard les
    transits individuels simultanés sans transformer automatiquement un carré ou
    une opposition individuel en conflit relationnel commun.
+
+   Correction 2026-09-19 : la carte Relation 62 utilise son cartouche corrigé
+   sans chevauchement entre « Nouvelle rencontre » et « Personne nouvelle ».
 */
 (function(){
   'use strict';
@@ -51,6 +54,7 @@
 
   const LOVE_SCRIPTS=[
     './oracle-amour-data.js?v=20260918-pdf80',
+    './oracle-amour-card62-fix.js?v=20260919-card62',
     './oracle-amour-integration.js?v=20260918-pdf80',
     './oracle-amour-compat.js?v=20260918-pdf80'
   ];
