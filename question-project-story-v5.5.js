@@ -1,13 +1,13 @@
-/* CRISTARIVA — récit centré sur les projets + finition narrative globale v5.13
+/* CRISTARIVA — récit centré sur les projets + finition narrative globale v5.14
    Le récit interprète la situation directement : il ne récite pas les définitions,
    ne cite pas les noms des cartes et évite les répétitions mécaniques.
 
-   v5.13 : la finition globale traite une famille plus large d’amorces verbales
-   issues des définitions (« Soutient… », « Confirme… », « Exprime… »,
-   « Rappelle… », « Décrit… », « Révèle… », « Met en évidence… », « Parle de… »,
-   « Peut signaler… », « Ne précise pas… », etc.) afin que chaque phrase du récit
-   possède un sujet explicite et s’intègre naturellement à la narration. */
-const CRISTARIVA_PROJECT_STORY_VERSION='5.13';
+   v5.14 : renforcement de la finition française :
+   - corrige les coordinations fautives du type « douceur, d’attention et de gestes » ;
+   - traite davantage d’amorces verbales isolées (« Valorise… », « Encourage… »,
+     « Renforce… », « Permet… », « Apporte… », etc.) ;
+   - garantit un sujet explicite au début des phrases du récit. */
+const CRISTARIVA_PROJECT_STORY_VERSION='5.14';
 
 function cr55Question(){return String(state?.question||'').replace(/\s+/g,' ').trim();}
 function cr55Esc(v){try{return typeof cr53Esc==='function'?cr53Esc(v):typeof cr51Esc==='function'?cr51Esc(v):String(v??'');}catch(e){return String(v??'');}}
@@ -93,6 +93,7 @@ function cr57PolishFrenchNarrative(s){
   let evokeIndex=0;
   const evokePrefixes=['Le tirage met alors en lumière ','Cette dynamique fait apparaître ','Un autre aspect fait ressortir '];
   out=out
+    .replace(/Cette dimension prend davantage de place\s*:\s*douceur,\s*d[’']attention\s+et\s+de\s+gestes/gi,'La relation accorde davantage de place à la douceur, à l’attention et aux gestes')
     .replace(new RegExp(boundary+'Peut\\s+révéler\\s+','gi'),(m,b)=>b+'Une prise de conscience peut alors faire émerger ')
     .replace(new RegExp(boundary+"Peut\\s+montrer\\s+la\\s+crainte\\s+d[’']être\\s+",'gi'),(m,b)=>b+'Une crainte peut également apparaître : celle d’être ')
     .replace(new RegExp(boundary+'Peut\\s+montrer\\s+','gi'),(m,b)=>b+'Un autre aspect apparaît alors : ')
@@ -123,6 +124,23 @@ function cr57PolishFrenchNarrative(s){
     .replace(new RegExp(boundary+'Signale\\s+','gi'),(m,b)=>b+'Le tirage signale ')
     .replace(new RegExp(boundary+'Invite\\s+','gi'),(m,b)=>b+'Cette évolution invite ')
     .replace(new RegExp(boundary+'Favorise\\s+','gi'),(m,b)=>b+'Cette dynamique favorise ')
+    .replace(new RegExp(boundary+'Valorise\\s+','gi'),(m,b)=>b+'Cette dynamique valorise ')
+    .replace(new RegExp(boundary+'Encourage\\s+','gi'),(m,b)=>b+'Cette évolution encourage ')
+    .replace(new RegExp(boundary+'Renforce\\s+','gi'),(m,b)=>b+'Cette dynamique renforce ')
+    .replace(new RegExp(boundary+'Permet\\s+','gi'),(m,b)=>b+'Cette évolution permet ')
+    .replace(new RegExp(boundary+'Préserve\\s+','gi'),(m,b)=>b+'Cette dynamique préserve ')
+    .replace(new RegExp(boundary+'Protège\\s+','gi'),(m,b)=>b+'Cette dynamique protège ')
+    .replace(new RegExp(boundary+'Oriente\\s+','gi'),(m,b)=>b+'La situation oriente ')
+    .replace(new RegExp(boundary+'Pousse\\s+','gi'),(m,b)=>b+'La situation pousse ')
+    .replace(new RegExp(boundary+'Appelle\\s+','gi'),(m,b)=>b+'La situation appelle ')
+    .replace(new RegExp(boundary+'Dévoile\\s+','gi'),(m,b)=>b+'La situation dévoile ')
+    .replace(new RegExp(boundary+'Présente\\s+','gi'),(m,b)=>b+'La situation présente ')
+    .replace(new RegExp(boundary+'Apporte\\s+','gi'),(m,b)=>b+'La situation apporte ')
+    .replace(new RegExp(boundary+'Crée\\s+','gi'),(m,b)=>b+'La situation crée ')
+    .replace(new RegExp(boundary+'Maintient\\s+','gi'),(m,b)=>b+'La situation maintient ')
+    .replace(new RegExp(boundary+'Accroît\\s+','gi'),(m,b)=>b+'La situation accroît ')
+    .replace(new RegExp(boundary+'Réduit\\s+','gi'),(m,b)=>b+'La situation réduit ')
+    .replace(new RegExp(boundary+'Aide\\s+à\\s+','gi'),(m,b)=>b+'Cette évolution aide à ')
     .replace(new RegExp(boundary+'Ouvre\\s+','gi'),(m,b)=>b+'La suite ouvre ')
     .replace(new RegExp(boundary+'Annonce\\s+','gi'),(m,b)=>b+'La suite annonce ')
     .replace(new RegExp(boundary+'Souligne\\s+','gi'),(m,b)=>b+'L’attention se porte alors sur ')
