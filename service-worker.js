@@ -1,7 +1,7 @@
-/* CRISTARIVA — service worker v6 — Android/Web stable, 19 septembre 2026.
+/* CRISTARIVA — service worker v7 — Android/Web stable, 19 septembre 2026.
    L'Oracle Amour est chargé directement par relation-astrology.js.
-   v6 force la mise à jour visuelle de la carte Relation 62 corrigée. */
-const CACHE_NAME='cristariva-v7-20260919-card62';
+   v7 force la mise à jour visuelle de la carte Relation 62 corrigée avec son illustration d'origine. */
+const CACHE_NAME='cristariva-v8-20260919-card62b';
 const SHELL=[
  './',
  './index.html',
@@ -76,8 +76,7 @@ const SHELL=[
  './cards/amour/059.webp?v=20260918',
  './cards/amour/060.webp?v=20260918',
  './cards/amour/061.webp?v=20260918',
- './cards/amour/062.webp?v=20260918',
- './cards/amour/062-fixed.svg?v=20260919',
+ './cards/amour/062.webp?v=20260919b',
  './cards/amour/063.webp?v=20260918',
  './cards/amour/064.webp?v=20260918',
  './cards/amour/065.webp?v=20260918',
@@ -113,7 +112,7 @@ self.addEventListener('activate',event=>{
     await self.clients.claim();
     const clients=await self.clients.matchAll({type:'window',includeUncontrolled:true});
     for(const client of clients){
-      try{client.postMessage({type:'CRISTARIVA_UPDATED',version:'2026.09.19-card62'});}catch(e){}
+      try{client.postMessage({type:'CRISTARIVA_UPDATED',version:'2026.09.19-card62b'});}catch(e){}
     }
   })());
 });
