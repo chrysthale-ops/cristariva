@@ -4,7 +4,7 @@
   if(!window.AMOUR_DATA) return;
   const card=(window.AMOUR_DATA.relation||[]).find(c=>Number(c.id)===62);
   if(!card) return;
-  const corrected='./cards/amour/062.webp?v=20260919b';
+  const corrected='./cards/amour/062.webp?v=20260919-final';
   card.image=corrected;
   card.imageEn=corrected;
 })();

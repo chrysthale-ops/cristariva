@@ -1,7 +1,7 @@
 /* CRISTARIVA — service worker v7 — Android/Web stable, 19 septembre 2026.
    L'Oracle Amour est chargé directement par relation-astrology.js.
    v7 force la mise à jour visuelle de la carte Relation 62 corrigée avec son illustration d'origine. */
-const CACHE_NAME='cristariva-v8-20260919-card62b';
+const CACHE_NAME='cristariva-v6-20260919-card62-final';
 const SHELL=[
  './',
  './index.html',
