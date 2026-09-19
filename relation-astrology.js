@@ -123,7 +123,7 @@
 
       /* 4. Après un point-virgule, éviter une majuscule artificielle du type
          « ; L’enjeu… ». */
-      s=s.replace(/;\s*L[’']enjeu\s+est\s+/g,'. L’enjeu est ');
+      s=s.replace(/\s*;\s*L[’']enjeu\s+est\s+/g,'. L’enjeu est ');
 
       /* 5. Varier les amorces répétées. */
       let enjeuCount=0;
