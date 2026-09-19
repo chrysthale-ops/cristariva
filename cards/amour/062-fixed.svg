@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1024 1536" width="1024" height="1536">
+  <title>Carte 62 — Personne nouvelle</title>
+  <image href="062.webp?v=20260918" xlink:href="062.webp?v=20260918" x="0" y="0" width="1024" height="1536" preserveAspectRatio="none"/>
+  <!-- Cartouche corrigé : masque entièrement l'ancien cartouche qui se chevauchait. -->
+  <path d="M168 1260 H856 Q884 1260 904 1288 L932 1322 L904 1356 Q884 1424 842 1442 H182 Q140 1424 120 1356 L92 1322 L120 1288 Q140 1260 168 1260 Z" fill="#fffdf7" stroke="#a87922" stroke-width="6"/>
+  <path d="M179 1272 H845 Q870 1272 888 1295 L914 1322 L888 1349 Q870 1408 833 1428 H191 Q154 1408 136 1349 L110 1322 L136 1295 Q154 1272 179 1272 Z" fill="none" stroke="#c49b46" stroke-width="2.5"/>
+  <g fill="#b28a36" font-family="Georgia, 'Times New Roman', serif">
+    <text x="512" y="1321" text-anchor="middle" font-size="28" letter-spacing="6">NOUVELLE RENCONTRE</text>
+    <path d="M226 1342 H798" stroke="#b28a36" stroke-width="2.5"/>
+    <text x="512" y="1402" text-anchor="middle" font-size="51" letter-spacing="3.2" fill="#142a44">PERSONNE NOUVELLE</text>
+    <text x="164" y="1329" text-anchor="middle" font-size="34">✦</text>
+    <text x="860" y="1329" text-anchor="middle" font-size="34">✦</text>
+  </g>
+</svg>
