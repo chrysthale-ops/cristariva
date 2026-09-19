@@ -2,10 +2,10 @@
    Ce fichier remplace l'ancien point d'entrée relation-astrology.js.
    Le code astrologique original est conservé dans relation-astrology-core-v1.4.js.
 
-   Finition narrative 2026-09-18 : évite les répétitions successives d'amorces
-   telles que « L’enjeu est alors de… » dans L’histoire racontée par vos cartes.
-   Charge également la synthèse générale fluide v3.7 afin que la synthèse réponde
-   directement à la question sans exposer la mécanique du tirage.
+   Finition narrative 2026-09-19 : corrige les répétitions d'amorces, les
+   phrases qui commencent abruptement par un verbe après « Concernant… »,
+   les élisions françaises (« de identifier » -> « d’identifier ») et certaines
+   amorces infinitives trop mécaniques dans L’histoire racontée par vos cartes.
 
    Cohérence astrologique v1.5 : l’analyse croisée de période met en regard les
    transits individuels simultanés sans transformer automatiquement un carré ou
@@ -85,9 +85,8 @@
     return window.__CRISTARIVA_LOVE_DIRECT_BOOTSTRAP__;
   }
 
-  /* Finition générale du récit : lorsque plusieurs cartes aboutissent à la
-     même amorce, on conserve la première puis on varie les suivantes afin que
-     le paragraphe reste naturel et réellement narratif. */
+  /* Finition générale du récit. Cette fonction s'exécute en dernier et corrige
+     donc aussi les formulations produites par les surcouches narratives v5.x. */
   function polishRepeatedStoryOpeners(html){
     try{
       if(!html || document.documentElement.lang==='en') return html;
@@ -96,8 +95,39 @@
       const p=tpl.content.querySelector('.story-continuous');
       if(!p) return html;
 
-      let count=0;
-      const variants=[
+      let s=String(p.innerHTML||'').replace(/\s+/g,' ').trim();
+
+      /* 1. Après « Concernant votre… », aucune phrase ne doit démarrer par un
+         verbe sans sujet : « Concernant…, exprime… » devient
+         « Concernant…, la situation exprime… ». */
+      s=s.replace(
+        /(Concernant\s+(?:(?:<b>|<strong>).*?(?:<\/b>|<\/strong>)|[^,]+),\s*)(?=(?:exprime|valorise|encourage|renforce|permet|apporte|ouvre|annonce|souligne|décrit|révèle|montre|traduit|représente|represente|évoque|evoque|marque|indique|signale|invite|favorise|protège|protege|oriente|pousse|appelle|dévoile|devoile|présente|presente|crée|cree|maintient|accroît|accroit|réduit|reduit|aide|peut)\b)/gi,
+        '$1la situation '
+      );
+
+      /* 2. Éviter les amorces infinitives isolées que l'utilisateur perçoit
+         comme des fragments de définition plutôt que comme un récit. */
+      s=s
+        .replace(/(^|[.!?]\s+)Regarder\s+/g,'$1Le fait de regarder ')
+        .replace(/(^|[.!?]\s+)Comprendre\s+/g,'$1Le fait de comprendre ')
+        .replace(/(^|[.!?]\s+)Identifier\s+/g,'$1Le fait d’identifier ')
+        .replace(/(^|[.!?]\s+)Accepter\s+/g,'$1Le fait d’accepter ')
+        .replace(/(^|[.!?]\s+)Observer\s+/g,'$1Le fait d’observer ')
+        .replace(/(^|[.!?]\s+)Écouter\s+/g,'$1Le fait d’écouter ')
+        .replace(/(^|[.!?]\s+)Eviter\s+/g,'$1Le fait d’éviter ')
+        .replace(/(^|[.!?]\s+)Éviter\s+/g,'$1Le fait d’éviter ');
+
+      /* 3. Élisions françaises. Cela corrige notamment « L’enjeu est de
+         identifier » en « L’enjeu est d’identifier ». */
+      s=s.replace(/\bde\s+([aeiouyàâäéèêëîïôöùûüœ][a-zà-ÿœæ-]*)/gi,'d’$1');
+
+      /* 4. Après un point-virgule, éviter une majuscule artificielle du type
+         « ; L’enjeu… ». */
+      s=s.replace(/;\s*L[’']enjeu\s+est\s+/g,'. L’enjeu est ');
+
+      /* 5. Varier les amorces répétées. */
+      let enjeuCount=0;
+      const enjeuVariants=[
         'L’enjeu est alors de ',
         'Il devient ensuite important de ',
         'Il faut également ',
@@ -105,13 +135,25 @@
         'Dans le même mouvement, il importe de ',
         'La suite demande aussi de '
       ];
-
-      p.innerHTML=p.innerHTML.replace(/L[’']enjeu est alors de\s+/gi,function(){
-        const replacement=variants[Math.min(count,variants.length-1)];
-        count+=1;
+      s=s.replace(/L[’']enjeu est alors de\s+/gi,function(){
+        const replacement=enjeuVariants[Math.min(enjeuCount,enjeuVariants.length-1)];
+        enjeuCount+=1;
         return replacement;
       });
 
+      let elementCount=0;
+      const elementVariants=[
+        'Un élément important apparaît alors : ',
+        'Un autre aspect se précise : ',
+        'La situation fait ensuite ressortir : '
+      ];
+      s=s.replace(/Un élément important apparaît alors\s*:\s*/gi,function(){
+        const replacement=elementVariants[Math.min(elementCount,elementVariants.length-1)];
+        elementCount+=1;
+        return replacement;
+      });
+
+      p.innerHTML=s;
       return tpl.innerHTML;
     }catch(e){
       return html;
