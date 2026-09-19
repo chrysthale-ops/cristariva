@@ -19,9 +19,12 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           import base64, hashlib
-          parts=sorted(Path('.cristariva-assets').glob('card62-final-part*.b64'))
-          if len(parts)!=8:
-              raise SystemExit(f'8 fragments attendus, {len(parts)} trouves')
+          root=Path('.cristariva-assets')
+          parts=[root/f'card62-final-part{i:02d}.b64' for i in range(4)]
+          parts += [root/f'card62-final-part04-sub{i:02d}.b64' for i in range(8)]
+          parts += [root/f'card62-final-part{i:02d}.b64' for i in range(5,8)]
+          if not all(p.exists() for p in parts):
+              raise SystemExit('Fragments de la carte 62 manquants')
           txt=''.join(p.read_text(encoding='utf-8').strip() for p in parts)
           raw=base64.b64decode(txt, validate=True)
           expected='ef703268cd8b90bb2a19b173aff5b30106b47918d6ad8170bd3ae2fb9b9b86b5'
@@ -29,11 +32,11 @@ jobs:
           if actual!=expected:
               raise SystemExit(f'SHA256 inattendu: {actual}')
           out=Path('cards/amour/062.webp')
-          out.parent.mkdir(parents=True, exist_ok=True)
+          out.parent.mkdir(parents=True,exist_ok=True)
           out.write_bytes(raw)
           if out.stat().st_size!=42458:
               raise SystemExit(f'Taille inattendue: {out.stat().st_size}')
-          print('Carte 62 corrigee installee:', out, out.stat().st_size, 'octets')
+          print('Carte 62 corrigee installee:',out,out.stat().st_size,'octets')
           PY
       - name: Bust cache for Oracle Amour card 62
         run: |
@@ -43,11 +46,11 @@ jobs:
           p=Path('oracle-amour-card62-fix.js')
           if p.exists():
               s=p.read_text(encoding='utf-8')
-              s=re.sub(r"062\.webp\?v=[^']+", "062.webp?v=20260919-final", s)
+              s=re.sub(r"062\.webp\?v=[^']+","062.webp?v=20260919-final",s)
               p.write_text(s,encoding='utf-8')
           p=Path('service-worker.js')
           s=p.read_text(encoding='utf-8')
-          s=re.sub(r"const CACHE_NAME='[^']+';", "const CACHE_NAME='cristariva-v6-20260919-card62-final';", s, count=1)
+          s=re.sub(r"const CACHE_NAME='[^']+';","const CACHE_NAME='cristariva-v6-20260919-card62-final';",s,count=1)
           p.write_text(s,encoding='utf-8')
           PY
       - name: Clean transfer fragments
