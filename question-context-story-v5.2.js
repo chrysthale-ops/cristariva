@@ -1,11 +1,12 @@
-/* CRISTARIVA — ancrage du récit dans la question v5.2.1
+/* CRISTARIVA — ancrage du récit dans la question v5.2.2
    La question n'est plus seulement affichée au-dessus du récit : elle devient son fil conducteur.
    Les questions courtes de type « mes blessures » reçoivent une narration réellement contextualisée.
 
-   v5.2.1 : la narration générale supprime les amorces mécaniques du type
+   v5.2.2 : la narration générale supprime les amorces mécaniques du type
    « Cela… », « La carte… » et les phrases sans sujet comme « Peut réveiller… »
-   avant d'ajouter « Concernant… », afin d'obtenir un récit continu et naturel. */
-const CRISTARIVA_QUESTION_CONTEXT_STORY_VERSION='5.2.1';
+   avant d'ajouter « Concernant… », et allège « L’enjeu est alors de… »
+   en « L’enjeu est de… » pour éviter un connecteur inutile. */
+const CRISTARIVA_QUESTION_CONTEXT_STORY_VERSION='5.2.2';
 
 function cr52Esc(value){
   try{return typeof cr51Esc==='function'?cr51Esc(value):String(value??'');}catch(e){return String(value??'');}
@@ -44,7 +45,7 @@ function cr52PolishGeneralStory(html,en=false){
       .replace(new RegExp(boundary+'Cela\\s+aide\\s+à\\s+','gi'),(m,b)=>b+'Cette dynamique aide à ')
       .replace(new RegExp(boundary+'Cela\\s+met\\s+en\\s+lumière\\s+','gi'),(m,b)=>b+'La situation fait alors apparaître ')
       .replace(new RegExp(boundary+'Cela\\s+met\\s+en\\s+évidence\\s+','gi'),(m,b)=>b+'La situation fait alors apparaître ')
-      .replace(new RegExp(boundary+'Cela\\s+invite\\s+à\\s+','gi'),(m,b)=>b+'L’enjeu est alors de ')
+      .replace(new RegExp(boundary+'Cela\\s+invite\\s+à\\s+','gi'),(m,b)=>b+'L’enjeu est de ')
       .replace(new RegExp(boundary+'Cela\\s+indique\\s+','gi'),(m,b)=>b+'La suite laisse alors entrevoir ')
       .replace(new RegExp(boundary+'Cela\\s+montre\\s+','gi'),(m,b)=>b+'La situation fait apparaître ')
       .replace(new RegExp(boundary+'Cela\\s+signale\\s+','gi'),(m,b)=>b+'Un élément important apparaît alors : ')
@@ -54,10 +55,11 @@ function cr52PolishGeneralStory(html,en=false){
       .replace(new RegExp(boundary+'Peut\\s+réveiller\\s+','gi'),(m,b)=>b+'La situation peut réveiller ')
       .replace(new RegExp(boundary+'Peut\\s+réactiver\\s+','gi'),(m,b)=>b+'La situation peut réactiver ')
       .replace(new RegExp(boundary+'Peut\\s+faire\\s+ressurgir\\s+','gi'),(m,b)=>b+'La situation peut faire ressurgir ')
-      .replace(new RegExp(boundary+'(?:La|Cette)\\s+carte\\s+invite\\s+à\\s+','gi'),(m,b)=>b+'L’enjeu est alors de ')
+      .replace(new RegExp(boundary+'(?:La|Cette)\\s+carte\\s+invite\\s+à\\s+','gi'),(m,b)=>b+'L’enjeu est de ')
       .replace(new RegExp(boundary+'(?:La|Cette)\\s+carte\\s+met\\s+en\\s+lumière\\s+','gi'),(m,b)=>b+'La situation fait alors apparaître ')
       .replace(new RegExp(boundary+'(?:La|Cette)\\s+carte\\s+(?:indique|montre|évoque|souligne|signale)\\s+','gi'),(m,b)=>b+'La situation ')
-      .replace(new RegExp(boundary+'(?:La|Cette)\\s+carte\\s+','gi'),(m,b)=>b+'La situation ');
+      .replace(new RegExp(boundary+'(?:La|Cette)\\s+carte\\s+','gi'),(m,b)=>b+'La situation ')
+      .replace(/\bL’enjeu est alors de\b/gi,'L’enjeu est de');
     p.innerHTML=s;
     const root=tpl.content.querySelector('.story-reading');
     if(root)root.dataset.storyEngine=CRISTARIVA_QUESTION_CONTEXT_STORY_VERSION;
