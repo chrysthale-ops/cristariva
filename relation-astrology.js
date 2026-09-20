@@ -61,7 +61,7 @@
     return window.__CRISTARIVA_LOVE_DIRECT_BOOTSTRAP__;
   }
 
-  const BARE_VERBS='Parle|Confirme|Décrit|Decrit|Souligne|Signale|Indique|Invite|Évoque|Evoque|Représente|Represente|Montre|Révèle|Revele|Traduit|Marque|Favorise|Exprime|Valorise|Encourage|Renforce|Permet|Apporte|Ouvre|Annonce|Oriente|Protège|Protege|Crée|Cree|Maintient|Aide';
+  const BARE_VERBS='Parle|Confirme|Décrit|Decrit|Souligne|Signale|Indique|Invite|Évoque|Evoque|Représente|Represente|Montre|Révèle|Revele|Traduit|Marque|Favorise|Exprime|Valorise|Encourage|Renforce|Permet|Apporte|Ouvre|Annonce|Oriente|Protège|Protege|Crée|Cree|Maintient|Aide|Place|Positionne|Conduit';
 
   function polishRepeatedStoryOpeners(html){
     try{
@@ -100,7 +100,8 @@
         .replace(/\bde\s+([aeiouyàâäéèêëîïôöùûüœ][a-zà-ÿœæ-]*)/gi,'d’$1')
         .replace(/\s*;\s*L[’']enjeu\s+est\s+/g,'. L’enjeu est ')
         .replace(/\bLe tirage (ne [^.!?]{0,160}), mais elle\b/gi,'Le tirage $1, mais il')
-        .replace(/\bLe tirage ([^.!?]{0,160}), mais elle\b/gi,'Le tirage $1, mais il');
+        .replace(/\bLe tirage ([^.!?]{0,160}), mais elle\b/gi,'Le tirage $1, mais il')
+        .replace(/\bune évolution où\s+place\b/gi,'une évolution qui place');
 
       /* « alors » est devenu une amorce trop visible dans les récits générés.
          On le retire au dernier passage, puis on nettoie la ponctuation. */
@@ -180,6 +181,9 @@
 
   function subjectifyClause(text){
     let s=threeCardClean(text);
+    if(/^Place\b/i.test(s))return s.replace(/^Place\b/i,'La situation place');
+    if(/^Positionne\b/i.test(s))return s.replace(/^Positionne\b/i,'La situation positionne');
+    if(/^Conduit\b/i.test(s))return s.replace(/^Conduit\b/i,'La situation conduit');
     const rx=new RegExp('^('+BARE_VERBS+')\\b','i');
     if(rx.test(s))s=s.replace(rx,function(v){return 'Le tirage '+v.toLocaleLowerCase();});
     return s;
@@ -187,6 +191,8 @@
 
   function threeCardOpening(text){
     let s=subjectifyClause(text)
+      .replace(/^Peu à peu,\s*on voit apparaître\s+/i,'')
+      .replace(/^Peu à peu,\s*/i,'')
       .replace(/^On voit\s+se dessiner\s+/i,'')
       .replace(/^La situation décrit\s+/i,'');
     return 'Au départ, '+threeCardLowerFirst(s);
@@ -213,7 +219,7 @@
     const before=threeCardPolarity(previousCard),after=threeCardPolarity(currentCard);
     const transition=before<0&&after>0?'Pourtant, ':before>0&&after<0?'Cependant, ':'À partir de là, ';
     if(direct)return transition+'l’élan qui se dégage va vers '+threeCardLowerFirst(s);
-    return transition+'l’élan qui se dégage conduit vers une évolution où '+threeCardLowerFirst(subjectifyClause(s));
+    return transition+threeCardLowerFirst(subjectifyClause(s));
   }
 
   function enforceThreeCardArc(html,cards){
