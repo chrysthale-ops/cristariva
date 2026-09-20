@@ -8,6 +8,10 @@
    françaises (« de identifier » -> « d’identifier ») et certaines amorces
    infinitives trop mécaniques dans L’histoire racontée par vos cartes.
 
+   Tirage à 3 cartes 2026-09-20 : impose une progression narrative lisible
+   « avant / maintenant / élan », supprime les répétitions de « alors » et
+   transforme la troisième carte en véritable mouvement de sortie.
+
    Cohérence astrologique v1.5 : l’analyse croisée de période met en regard les
    transits individuels simultanés sans transformer automatiquement un carré ou
    une opposition individuel en conflit relationnel commun.
@@ -172,13 +176,99 @@
     }
   }
 
+  function threeCardPolarity(card){
+    const raw=String(card?.category||'').toLowerCase();
+    if(raw.includes('positive'))return 1;
+    if(raw.includes('négative')||raw.includes('negative'))return -1;
+    return 0;
+  }
+
+  function threeCardClause(card){
+    try{
+      const scope=typeof cr51Scope==='function'?cr51Scope():'relation';
+      if(typeof cr51Meaning==='function')return String(cr51Meaning(card,scope,false)||'').trim();
+    }catch(e){}
+    try{
+      const d=String(state?.domain||'').toLowerCase();
+      const raw=d.includes('profession')?card?.reading_professionnel:d.includes('relation')?card?.reading_relationnel:card?.reading_spirituel;
+      const value=String(raw||card?.meaning||card?.definition||'').trim();
+      return typeof cr51Esc==='function'?cr51Esc(value):value;
+    }catch(e){return '';}
+  }
+
+  function threeCardClean(text){
+    return String(text||'')
+      .replace(/\balors\b/gi,'')
+      .replace(/\s+/g,' ')
+      .replace(/\s+([,.;:!?])/g,'$1')
+      .trim();
+  }
+
+  function threeCardLowerFirst(text){
+    const s=String(text||'').trim();
+    return s?s.charAt(0).toLocaleLowerCase()+s.slice(1):s;
+  }
+
+  function threeCardOpening(text){
+    let s=threeCardClean(text)
+      .replace(/^On voit\s+se dessiner\s+/i,'')
+      .replace(/^Le tirage décrit\s+/i,'')
+      .replace(/^La situation décrit\s+/i,'');
+    return 'Au départ, '+threeCardLowerFirst(s);
+  }
+
+  function threeCardPresent(text){
+    let s=threeCardClean(text)
+      .replace(/^Peu à peu,\s*/i,'')
+      .replace(/^Dans cette dynamique,\s*/i,'');
+    return 'Aujourd’hui, '+threeCardLowerFirst(s);
+  }
+
+  function threeCardMomentum(text,previousCard,currentCard){
+    let s=threeCardClean(text),direct=false;
+    const starters=[
+      /^On voit\s+se dessiner\s+/i,
+      /^La suite peut\s+faire apparaître\s+/i,
+      /^Peu à peu,\s*on voit apparaître\s+/i,
+      /^Une nouvelle possibilité peut\s+s’ouvrir autour de\s+/i
+    ];
+    for(const rx of starters){
+      if(rx.test(s)){s=s.replace(rx,'');direct=true;break;}
+    }
+    const before=threeCardPolarity(previousCard),after=threeCardPolarity(currentCard);
+    const transition=before<0&&after>0?'Pourtant, ':before>0&&after<0?'Cependant, ':'À partir de là, ';
+    if(direct)return transition+'l’élan qui se dégage va vers '+threeCardLowerFirst(s);
+    return transition+'l’élan qui se dégage conduit vers une évolution où '+threeCardLowerFirst(s);
+  }
+
+  function enforceThreeCardArc(html,cards){
+    try{
+      if(!html || document.documentElement.lang==='en' || !Array.isArray(cards) || cards.length!==3)return html;
+      const tpl=document.createElement('template');
+      tpl.innerHTML=String(html);
+      const p=tpl.content.querySelector('.story-continuous');
+      if(!p)return html;
+      const first=threeCardClause(cards[0]);
+      const present=threeCardClause(cards[1]);
+      const momentum=threeCardClause(cards[2]);
+      if(!first||!present||!momentum)return html;
+      p.innerHTML=[
+        threeCardOpening(first),
+        threeCardPresent(present),
+        threeCardMomentum(momentum,cards[1],cards[2])
+      ].join(' ');
+      return tpl.innerHTML;
+    }catch(e){return html;}
+  }
+
   /* relation-astrology.js est chargé après les moteurs narratifs : cette
      surcouche agit donc sur tous les récits, quel que soit le domaine choisi. */
   try{
     if(typeof storyInterpretation==='function'){
       const baseStoryInterpretation=storyInterpretation;
       storyInterpretation=function(cards){
-        return polishRepeatedStoryOpeners(baseStoryInterpretation(cards));
+        const polished=polishRepeatedStoryOpeners(baseStoryInterpretation(cards));
+        return enforceThreeCardArc(polished,cards);
       };
       interpretation=function(cards){return storyInterpretation(cards);};
 
