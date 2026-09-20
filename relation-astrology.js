@@ -2,10 +2,11 @@
    Ce fichier remplace l'ancien point d'entrée relation-astrology.js.
    Le code astrologique original est conservé dans relation-astrology-core-v1.4.js.
 
-   Finition narrative 2026-09-19 : corrige les répétitions d'amorces, les
-   phrases qui commencent abruptement par un verbe après « Concernant… »,
-   les élisions françaises (« de identifier » -> « d’identifier ») et certaines
-   amorces infinitives trop mécaniques dans L’histoire racontée par vos cartes.
+   Finition narrative 2026-09-20 : corrige les répétitions d'amorces, les
+   phrases qui commencent abruptement par un verbe après « Concernant… » ou
+   après une phrase précédente (« Interroge… », « Confronte… »), les élisions
+   françaises (« de identifier » -> « d’identifier ») et certaines amorces
+   infinitives trop mécaniques dans L’histoire racontée par vos cartes.
 
    Cohérence astrologique v1.5 : l’analyse croisée de période met en regard les
    transits individuels simultanés sans transformer automatiquement un carré ou
@@ -101,11 +102,18 @@
          verbe sans sujet : « Concernant…, exprime… » devient
          « Concernant…, la situation exprime… ». */
       s=s.replace(
-        /(Concernant\s+(?:(?:<b>|<strong>).*?(?:<\/b>|<\/strong>)|[^,]+),\s*)(?=(?:exprime|valorise|encourage|renforce|permet|apporte|ouvre|annonce|souligne|décrit|révèle|montre|traduit|représente|represente|évoque|evoque|marque|indique|signale|invite|favorise|protège|protege|oriente|pousse|appelle|dévoile|devoile|présente|presente|crée|cree|maintient|accroît|accroit|réduit|reduit|aide|peut)\b)/gi,
+        /(Concernant\s+(?:(?:<b>|<strong>).*?(?:<\/b>|<\/strong>)|[^,]+),\s*)(?=(?:exprime|valorise|encourage|renforce|permet|apporte|ouvre|annonce|souligne|décrit|révèle|montre|traduit|représente|represente|évoque|evoque|marque|indique|signale|invite|favorise|protège|protege|oriente|pousse|appelle|dévoile|devoile|présente|presente|crée|cree|maintient|accroît|accroit|réduit|reduit|aide|interroge|confronte|peut)\b)/gi,
         '$1la situation '
       );
 
-      /* 2. Éviter les amorces infinitives isolées que l'utilisateur perçoit
+      /* 2. Toute nouvelle phrase doit avoir un sujet explicite. Les deux
+         formes ci-dessous étaient encore produites lorsque le nom d'une carte
+         servant de sujet avait été retiré par une couche narrative antérieure. */
+      s=s
+        .replace(/(^|[.!?]\s+)Interroge\s+/g,'$1Cette situation amène à interroger ')
+        .replace(/(^|[.!?]\s+)Confronte\s+à\s+/g,'$1La situation confronte à ');
+
+      /* 3. Éviter les amorces infinitives isolées que l'utilisateur perçoit
          comme des fragments de définition plutôt que comme un récit. */
       s=s
         .replace(/(^|[.!?]\s+)Regarder\s+/g,'$1Le fait de regarder ')
@@ -117,15 +125,15 @@
         .replace(/(^|[.!?]\s+)Eviter\s+/g,'$1Le fait d’éviter ')
         .replace(/(^|[.!?]\s+)Éviter\s+/g,'$1Le fait d’éviter ');
 
-      /* 3. Élisions françaises. Cela corrige notamment « L’enjeu est de
+      /* 4. Élisions françaises. Cela corrige notamment « L’enjeu est de
          identifier » en « L’enjeu est d’identifier ». */
       s=s.replace(/\bde\s+([aeiouyàâäéèêëîïôöùûüœ][a-zà-ÿœæ-]*)/gi,'d’$1');
 
-      /* 4. Après un point-virgule, éviter une majuscule artificielle du type
+      /* 5. Après un point-virgule, éviter une majuscule artificielle du type
          « ; L’enjeu… ». */
       s=s.replace(/\s*;\s*L[’']enjeu\s+est\s+/g,'. L’enjeu est ');
 
-      /* 5. Varier les amorces répétées. */
+      /* 6. Varier les amorces répétées. */
       let enjeuCount=0;
       const enjeuVariants=[
         'L’enjeu est alors de ',
