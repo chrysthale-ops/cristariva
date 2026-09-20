@@ -1,153 +1,122 @@
-/* CRISTARIVA — récit centré sur les projets + finition narrative globale v5.14
-   Le récit interprète la situation directement : il ne récite pas les définitions,
-   ne cite pas les noms des cartes et évite les répétitions mécaniques.
-
-   v5.14 : renforcement de la finition française :
-   - corrige les coordinations fautives du type « douceur, d’attention et de gestes » ;
-   - traite davantage d’amorces verbales isolées (« Valorise… », « Encourage… »,
-     « Renforce… », « Permet… », « Apporte… », etc.) ;
-   - garantit un sujet explicite au début des phrases du récit. */
-const CRISTARIVA_PROJECT_STORY_VERSION='5.14';
+/* CRISTARIVA — finition narrative globale v5.15
+   Corrige les amorces sans sujet et allège les répétitions mécaniques.
+   Le sens et l'ordre des cartes sont conservés. */
+const CRISTARIVA_PROJECT_STORY_VERSION='5.15';
 
 function cr55Question(){return String(state?.question||'').replace(/\s+/g,' ').trim();}
 function cr55Esc(v){try{return typeof cr53Esc==='function'?cr53Esc(v):typeof cr51Esc==='function'?cr51Esc(v):String(v??'');}catch(e){return String(v??'');}}
 function cr55IsProjectQuestion(q=cr55Question()){
   try{if(typeof cr51Scope==='function'&&cr51Scope()==='work')return true;}catch(e){}
-  const s=String(q||'').toLowerCase();
-  return /\b(projet\w*|objectif\w*|réalisation\w*|realisation\w*|entreprise|activité\s+professionnelle|activite\s+professionnelle|lancement|candidature|carrière|carriere|idée\w*|idee\w*|concept\w*|invention\w*|initiative\w*|création\w*|creation\w*)\b/i.test(s);
+  return /\b(projet\w*|objectif\w*|réalisation\w*|realisation\w*|entreprise|activité\s+professionnelle|activite\s+professionnelle|lancement|candidature|carrière|carriere|idée\w*|idee\w*|concept\w*|invention\w*|initiative\w*|création\w*|creation\w*)\b/i.test(String(q||''));
 }
 function cr55Hay(card,en=false){
   if(typeof cr53Hay==='function')return cr53Hay(card,en);
-  const name=en?(card?.en?.name||card?.name||''):(card?.name||'');
-  const loc=en?(card?.en||{}):(card||{});
-  const text=loc.reading_professionnel||loc.meaning||loc.definition||'';
-  return (String(name)+' '+String(text)).toLowerCase();
+  const l=en?(card?.en||{}):(card||{});
+  return String((en?(card?.en?.name||card?.name):card?.name)||'')+' '+String(l.reading_professionnel||l.meaning||l.definition||'');
 }
 function cr57Cap(s){s=String(s||'').trim();return s?s.charAt(0).toLocaleUpperCase()+s.slice(1):'';}
 
 function cr55ProjectClause(card,role,en=false){
-  const hay=cr55Hay(card,en);
+  const h=cr55Hay(card,en).toLowerCase();
   if(en){
-    if(/complex|dependenc|several actors|several constraints|multiple factors/.test(hay))return role==='outcome'
-      ?'the idea can move forward, but its success depends on putting several constraints, people or dependencies in the right order rather than trying to solve everything at once'
-      :'several constraints or dependencies overlap, so the project becomes clearer when the issues are separated and handled in a logical order';
-    if(/providence|protect|support|ally|help|guidance/.test(hay))return 'useful support or a protective circumstance can redirect the project away from a poor option and make the next step safer';
-    if(/refus|reject|denied|refuse|not accepted|closed door/.test(hay))return role==='origin'
-      ?'an initial limit or negative response may have forced you to rethink how the idea is presented, validated or brought to life'
-      :'a limit or negative response does not end the idea, but it does require an adjustment to the route, proposal or conditions';
-    if(/indefin|uncertain|unclear|ambigu/.test(hay))return 'part of the outcome remains open, so the next concrete decision matters more than trying to fix the result too early';
-    if(/patience|wait|delay|matur|validation|learning|timing/.test(hay))return role==='origin'
-      ?'the idea has needed time to mature, and that slower pace has helped separate what is solid from what was still premature'
-      :'progress depends more on respecting the right timing than on forcing a result before the conditions are ready';
-    if(/eclos|éclos|emerg|blossom|begin.*produce|birth|new start/.test(hay))return 'something that had been preparing in the background is beginning to take shape, with the first concrete signs that the idea can really develop';
-    if(/mutation|transform|structur|new role|sector|organisation|model/.test(hay))return role==='outcome'
-      ?'the next phase involves a deeper change in structure, method or positioning rather than a simple acceleration'
-      :'the project is entering a deeper reorganisation that changes the way it needs to be structured';
-    if(/peace|calm|stabil|clarif/.test(hay))return 'a calmer and more stable framework makes it easier to sort priorities and decide without scattering your effort';
-    if(/passion|motivation|creative|creativity|enthusiasm|engagement/.test(hay))return role==='outcome'
-      ?'creative drive can restore momentum if it is channelled into clear priorities and concrete action'
-      :'motivation is a real resource, provided enthusiasm is organised rather than scattered';
-    if(/success|recognition|progress|opening|opportunity/.test(hay))return 'a real opening is appearing and can become useful if it is translated into a concrete next step';
-    if(/choice|decision|direction/.test(hay))return 'a clear decision is needed to determine which idea deserves priority and which direction should actually be pursued';
-    return role==='origin'?'the idea is emerging from a phase that has already shaped its current priorities':role==='outcome'?'a clearer and more concrete direction can now turn the idea into real movement':'the situation is changing and redefining the conditions needed for progress';
+    if(/block|delay|refus|reject|impasse|fear|pressure|constraint/.test(h))return 'a concrete obstacle still needs to be identified and handled before the project can move forward naturally';
+    if(/support|protect|providence|help|ally|opportun|success|progress/.test(h))return 'a useful opening or support can help the project move from intention to a more concrete stage';
+    if(/choice|decision|direction|path/.test(h))return 'a clearer choice is needed so that effort is concentrated on the direction that matters most';
+    if(/transform|change|renew|birth|eclos|emerg/.test(h))return 'the project is changing form and beginning to reveal a more workable way forward';
+    if(/patience|timing|matur|wait/.test(h))return 'progress depends on respecting the right timing rather than forcing a result before the conditions are ready';
+    return role==='outcome'?'the next step becomes clearer when the idea is translated into a concrete and coherent action':'the situation is redefining the conditions needed for the project to advance';
   }
-
-  if(/complex|dépendance|dependance|plusieurs\s+(?:acteurs|facteurs|contraintes)|contraintes.*ordre logique/.test(hay))return role==='outcome'
-    ?'l’idée peut avancer, mais sa concrétisation demande d’ordonner les contraintes, les interlocuteurs et les dépendances au lieu de vouloir tout résoudre en même temps'
-    :'plusieurs paramètres se croisent ; le projet devient plus lisible lorsque les problèmes sont séparés et traités dans un ordre logique';
-  if(/providence|protection|soutien|allié|allie|aide|guidance/.test(hay))return 'un soutien utile ou une circonstance protectrice peuvent vous détourner d’une mauvaise option et sécuriser davantage la prochaine étape';
-  if(/refus|rejet|refusé|refuse|non retenu|non accept|porte fermée/.test(hay))return role==='origin'
-    ?'une première limite ou une réponse défavorable a pu vous obliger à repenser la manière de présenter, faire valider ou concrétiser votre idée'
-    :'une limite ou une réponse défavorable ne condamne pas l’idée, mais impose d’ajuster la voie choisie, la proposition ou les conditions';
-  if(/indéfini|indefini|incert|ambigu/.test(hay))return 'une part du résultat reste ouverte ; la prochaine décision concrète compte donc davantage qu’une conclusion fixée trop tôt';
-  if(/patience|attente|délai|delai|matur|validation|apprentissage|timing/.test(hay))return role==='origin'
-    ?'l’idée a eu besoin de temps pour mûrir ; cette lenteur a permis de distinguer ce qui pouvait réellement tenir de ce qui était encore prématuré'
-    :'la progression dépend davantage du bon moment et de la maturation des conditions que d’une accélération forcée';
-  if(/éclosion|eclosion|éclos|eclos|émerg|emerg|commence enfin|signes concrets|naissance|nouveau départ/.test(hay))return 'ce qui se préparait jusque-là en arrière-plan commence à prendre forme et montre les premiers signes concrets d’un développement possible';
-  if(/mutation|transformation structurelle|nouveau rôle|nouveau role|secteur|organisation|modèle|modele/.test(hay))return role==='outcome'
-    ?'la suite passe par une transformation plus profonde du cadre, de la méthode ou du positionnement plutôt que par une simple accélération'
-    :'le projet entre dans une réorganisation plus profonde qui modifie sa structure et sa manière de fonctionner';
-  if(/paix|calme|stabil|clarif/.test(hay))return 'un cadre plus apaisé et plus stable permet de remettre les priorités dans l’ordre et de décider sans disperser vos efforts';
-  if(/passion|motivation|créativ|creativ|enthousias|engagement/.test(hay))return role==='outcome'
-    ?'la créativité et l’envie de vous investir peuvent redonner un véritable élan si elles sont canalisées vers des priorités claires et des actions concrètes'
-    :'la motivation devient une ressource importante, à condition d’organiser l’enthousiasme au lieu de le disperser';
-  if(/succès|succes|reconnaissance|progress|ouverture|opportun/.test(hay))return 'une ouverture réelle apparaît et peut devenir utile si elle est rapidement traduite en étape concrète';
-  if(/choix|décision|decision|direction/.test(hay))return 'un choix clair devient nécessaire pour déterminer quelle idée mérite la priorité et quelle direction doit être réellement poursuivie';
-  return role==='origin'?'l’idée sort d’une phase qui a déjà façonné ses priorités actuelles':role==='outcome'?'une orientation plus claire et plus concrète peut désormais transformer l’idée en mouvement réel':'la situation évolue et redéfinit les conditions nécessaires pour avancer';
+  if(/bloc|retard|refus|rejet|impasse|peur|pression|contrainte/.test(h))return 'un obstacle concret doit encore être identifié et traité avant que le projet puisse avancer naturellement';
+  if(/soutien|protection|providence|aide|allié|allie|opportun|succès|succes|progress/.test(h))return 'une ouverture ou un soutien utile peut aider le projet à passer de l’intention à une étape plus concrète';
+  if(/choix|décision|decision|direction|cap|orientation/.test(h))return 'un choix plus clair devient nécessaire afin de concentrer les efforts sur la direction réellement prioritaire';
+  if(/transformation|mutation|changement|renouveau|naissance|éclos|eclos|émerg|emerg/.test(h))return 'le projet change de forme et commence à révéler une manière plus concrète d’avancer';
+  if(/patience|attente|délai|delai|matur|timing/.test(h))return 'la progression dépend davantage du bon moment que d’une accélération forcée avant que les conditions soient prêtes';
+  return role==='outcome'?'la prochaine étape devient plus claire lorsque l’idée se transforme en action concrète et cohérente':'la situation redéfinit progressivement les conditions nécessaires pour faire avancer le projet';
 }
-
 function cr55ProjectStory(cards,en=false){
   const roles=cards.length===1?['outcome']:cards.length===3?['origin','evolution','outcome']:['origin','obstacle','resource','evolution','outcome'];
-  const clauses=cards.slice(0,roles.length).map((c,i)=>cr55ProjectClause(c,roles[i],en)).filter(Boolean);
-  const unique=[];
-  for(const clause of clauses){
-    const key=String(clause).toLowerCase().replace(/[^a-zà-ÿ0-9]+/g,' ').trim();
-    if(key&&!unique.some(x=>x.key===key))unique.push({key,text:clause});
+  const out=[];
+  for(let i=0;i<Math.min(cards.length,roles.length);i++){
+    const t=cr55ProjectClause(cards[i],roles[i],en),k=t.toLowerCase().replace(/[^a-zà-ÿ0-9]+/g,' ').trim();
+    if(k&&!out.some(x=>x.k===k))out.push({k,t:cr57Cap(t)});
   }
-  return unique.map(x=>cr57Cap(x.text)).join('. ')+(unique.length?'.':'');
+  return out.map(x=>x.t).join('. ')+(out.length?'.':'');
 }
 
 function cr57PolishFrenchNarrative(s){
-  let out=String(s||'');
-  const boundary='(^|[.!?]\\s+)';
-  let evokeIndex=0;
-  const evokePrefixes=['Le tirage met alors en lumière ','Cette dynamique fait apparaître ','Un autre aspect fait ressortir '];
-  out=out
-    .replace(/Cette dimension prend davantage de place\s*:\s*douceur,\s*d[’']attention\s+et\s+de\s+gestes/gi,'La relation accorde davantage de place à la douceur, à l’attention et aux gestes')
-    .replace(new RegExp(boundary+'Peut\\s+révéler\\s+','gi'),(m,b)=>b+'Une prise de conscience peut alors faire émerger ')
-    .replace(new RegExp(boundary+"Peut\\s+montrer\\s+la\\s+crainte\\s+d[’']être\\s+",'gi'),(m,b)=>b+'Une crainte peut également apparaître : celle d’être ')
-    .replace(new RegExp(boundary+'Peut\\s+montrer\\s+','gi'),(m,b)=>b+'Un autre aspect apparaît alors : ')
-    .replace(new RegExp(boundary+'Peut\\s+indiquer\\s+','gi'),(m,b)=>b+'La suite laisse alors entrevoir ')
-    .replace(new RegExp(boundary+'Peut\\s+annoncer\\s+','gi'),(m,b)=>b+'La suite peut alors faire apparaître ')
-    .replace(new RegExp(boundary+'Peut\\s+traduire\\s+','gi'),(m,b)=>b+'Cette dynamique peut traduire ')
-    .replace(new RegExp(boundary+'Peut\\s+favoriser\\s+','gi'),(m,b)=>b+'Cette évolution peut favoriser ')
-    .replace(new RegExp(boundary+'Peut\\s+signaler\\s+','gi'),(m,b)=>b+'Cette intensité peut alors signaler ')
-    .replace(new RegExp(boundary+'Ne\\s+précise\\s+pas\\s+à\\s+elle\\s+seule\\s+','gi'),(m,b)=>b+'Le tirage ne précise pas à lui seul ')
-    .replace(new RegExp(boundary+'Ne\\s+précise\\s+pas\\s+','gi'),(m,b)=>b+'Le tirage ne précise pas ')
-    .replace(new RegExp(boundary+'Met\\s+en\\s+évidence\\s+','gi'),(m,b)=>b+'Le tirage met en évidence ')
-    .replace(new RegExp(boundary+'Parle\\s+de\\s+','gi'),(m,b)=>b+'Cette dynamique parle de ')
-    .replace(new RegExp(boundary+'Demande\\s+','gi'),(m,b)=>b+'La situation demande ')
-    .replace(new RegExp(boundary+'Relie\\s+','gi'),(m,b)=>b+'Cette dynamique relie ')
-    .replace(new RegExp(boundary+'Associe\\s+','gi'),(m,b)=>b+'La situation associe ')
-    .replace(new RegExp(boundary+'Soutient\\s+','gi'),(m,b)=>b+'Cette dynamique soutient ')
-    .replace(new RegExp(boundary+'Confirme\\s+','gi'),(m,b)=>b+'Le tirage confirme ')
-    .replace(new RegExp(boundary+'Exprime\\s+','gi'),(m,b)=>b+'Cette dynamique exprime ')
-    .replace(new RegExp(boundary+'Rappelle\\s+','gi'),(m,b)=>b+'Cette lecture rappelle ')
-    .replace(new RegExp(boundary+'Décrit\\s+','gi'),(m,b)=>b+'Le tirage décrit ')
-    .replace(new RegExp(boundary+'Révèle\\s+','gi'),(m,b)=>b+'La situation révèle ')
-    .replace(new RegExp(boundary+'Montre\\s+','gi'),(m,b)=>b+'La situation montre ')
-    .replace(new RegExp(boundary+'Traduit\\s+','gi'),(m,b)=>b+'Cette dynamique traduit ')
-    .replace(new RegExp(boundary+'Représente\\s+','gi'),(m,b)=>b+'Cette étape correspond à ')
-    .replace(new RegExp(boundary+'Évoque\\s+','gi'),(m,b)=>b+evokePrefixes[(evokeIndex++)%evokePrefixes.length])
-    .replace(new RegExp(boundary+'Marque\\s+','gi'),(m,b)=>b+'Cette phase marque ')
-    .replace(new RegExp(boundary+'Indique\\s+','gi'),(m,b)=>b+'La situation indique ')
-    .replace(new RegExp(boundary+'Signale\\s+','gi'),(m,b)=>b+'Le tirage signale ')
-    .replace(new RegExp(boundary+'Invite\\s+','gi'),(m,b)=>b+'Cette évolution invite ')
-    .replace(new RegExp(boundary+'Favorise\\s+','gi'),(m,b)=>b+'Cette dynamique favorise ')
-    .replace(new RegExp(boundary+'Valorise\\s+','gi'),(m,b)=>b+'Cette dynamique valorise ')
-    .replace(new RegExp(boundary+'Encourage\\s+','gi'),(m,b)=>b+'Cette évolution encourage ')
-    .replace(new RegExp(boundary+'Renforce\\s+','gi'),(m,b)=>b+'Cette dynamique renforce ')
-    .replace(new RegExp(boundary+'Permet\\s+','gi'),(m,b)=>b+'Cette évolution permet ')
-    .replace(new RegExp(boundary+'Préserve\\s+','gi'),(m,b)=>b+'Cette dynamique préserve ')
-    .replace(new RegExp(boundary+'Protège\\s+','gi'),(m,b)=>b+'Cette dynamique protège ')
-    .replace(new RegExp(boundary+'Oriente\\s+','gi'),(m,b)=>b+'La situation oriente ')
-    .replace(new RegExp(boundary+'Pousse\\s+','gi'),(m,b)=>b+'La situation pousse ')
-    .replace(new RegExp(boundary+'Appelle\\s+','gi'),(m,b)=>b+'La situation appelle ')
-    .replace(new RegExp(boundary+'Dévoile\\s+','gi'),(m,b)=>b+'La situation dévoile ')
-    .replace(new RegExp(boundary+'Présente\\s+','gi'),(m,b)=>b+'La situation présente ')
-    .replace(new RegExp(boundary+'Apporte\\s+','gi'),(m,b)=>b+'La situation apporte ')
-    .replace(new RegExp(boundary+'Crée\\s+','gi'),(m,b)=>b+'La situation crée ')
-    .replace(new RegExp(boundary+'Maintient\\s+','gi'),(m,b)=>b+'La situation maintient ')
-    .replace(new RegExp(boundary+'Accroît\\s+','gi'),(m,b)=>b+'La situation accroît ')
-    .replace(new RegExp(boundary+'Réduit\\s+','gi'),(m,b)=>b+'La situation réduit ')
-    .replace(new RegExp(boundary+'Aide\\s+à\\s+','gi'),(m,b)=>b+'Cette évolution aide à ')
-    .replace(new RegExp(boundary+'Ouvre\\s+','gi'),(m,b)=>b+'La suite ouvre ')
-    .replace(new RegExp(boundary+'Annonce\\s+','gi'),(m,b)=>b+'La suite annonce ')
-    .replace(new RegExp(boundary+'Souligne\\s+','gi'),(m,b)=>b+'L’attention se porte alors sur ')
-    .replace(new RegExp(boundary+'Cela\\s+peut\\s+indiquer\\s+','gi'),(m,b)=>b+'La suite laisse alors entrevoir ')
-    .replace(new RegExp(boundary+'Cela\\s+peut\\s+montrer\\s+','gi'),(m,b)=>b+'Un autre aspect apparaît alors : ')
-    .replace(new RegExp(boundary+'Cela\\s+peut\\s+révéler\\s+','gi'),(m,b)=>b+'Une prise de conscience peut alors faire émerger ');
-  return out;
+  let out=String(s||''),describeIndex=0;
+  const b='(^|[.!?]\\s+)';
+  const r=(p,repl)=>{out=out.replace(new RegExp(b+p,'gi'),(m,x)=>x+repl);};
+
+  out=out.replace(/Cette dimension prend davantage de place\s*:\s*d[’']attention/gi,'Cette dimension accorde davantage de place à l’attention')
+    .replace(/Cette dimension prend davantage de place\s*:\s*douceur,\s*d[’']attention\s+et\s+de\s+gestes/gi,'La relation accorde davantage de place à la douceur, à l’attention et aux gestes');
+
+  r('Fait\\s+apparaître\\s+','Un nouvel élément apparaît : ');
+  r('Fait\\s+ressortir\\s+','Un autre aspect ressort alors : ');
+  r('Peut\\s+révéler\\s+','Une prise de conscience peut alors faire émerger ');
+  r("Peut\\s+montrer\\s+la\\s+crainte\\s+d[’']être\\s+",'Une crainte peut également apparaître : celle d’être ');
+  r('Peut\\s+montrer\\s+','Un autre aspect apparaît alors : ');
+  r('Peut\\s+indiquer\\s+','La suite laisse alors entrevoir ');
+  r('Peut\\s+annoncer\\s+','La suite peut alors faire apparaître ');
+  r('Peut\\s+traduire\\s+','Cela peut traduire ');
+  r('Peut\\s+favoriser\\s+','Cette évolution peut favoriser ');
+  r('Peut\\s+signaler\\s+','Cette intensité peut alors signaler ');
+  r('Met\\s+en\\s+évidence\\s+','Un point important se dégage : ');
+  r('Parle\\s+de\\s+','La lecture met l’accent sur ');
+  r('Demande\\s+','La situation demande ');
+  r('Relie\\s+','Cette étape relie ');
+  r('Associe\\s+','La situation associe ');
+  r('Soutient\\s+','Cette évolution soutient ');
+  r('Confirme\\s+','La suite confirme ');
+  r('Exprime\\s+','Cette étape exprime ');
+  r('Rappelle\\s+','Cette lecture rappelle ');
+  r('Décrit\\s+','La situation décrit ');
+  r('Révèle\\s+','La situation révèle ');
+  r('Montre\\s+','La situation montre ');
+  r('Traduit\\s+','Cette étape traduit ');
+  r('Représente\\s+','Cette étape correspond à ');
+  r('Évoque\\s+','Un autre élément se dégage autour de ');
+  r('Marque\\s+','Cette phase marque ');
+  r('Indique\\s+','La situation indique ');
+  r('Signale\\s+','Un signal apparaît : ');
+  r('Invite\\s+','Cette évolution invite ');
+  r('Favorise\\s+','Cette évolution favorise ');
+  r('Valorise\\s+','La lecture valorise ');
+  r('Encourage\\s+','La suite encourage ');
+  r('Renforce\\s+','Cela renforce ');
+  r('Permet\\s+','Cette évolution permet ');
+  r('Préserve\\s+','Cela préserve ');
+  r('Protège\\s+','Cela protège ');
+  r('Oriente\\s+','La situation oriente ');
+  r('Pousse\\s+','La situation pousse ');
+  r('Appelle\\s+','La situation appelle ');
+  r('Dévoile\\s+','La situation dévoile ');
+  r('Présente\\s+','La situation présente ');
+  r('Apporte\\s+','La suite apporte ');
+  r('Crée\\s+','Cette évolution crée ');
+  r('Maintient\\s+','La situation maintient ');
+  r('Accroît\\s+','Cela accroît ');
+  r('Réduit\\s+','Cela réduit ');
+  r('Aide\\s+à\\s+','Cette évolution aide à ');
+  r('Ouvre\\s+','La suite ouvre ');
+  r('Annonce\\s+','La suite annonce ');
+  r('Souligne\\s+','L’attention se porte alors sur ');
+
+  const desc=['La situation met en lumière ','La suite révèle ','À ce stade, on distingue '];
+  out=out.replace(/Le tirage décrit\s+/gi,()=>desc[(describeIndex++)%desc.length])
+    .replace(/Le tirage parle moins de\s+/gi,'Il est ici moins question de ')
+    .replace(/Le tirage parle surtout de\s+/gi,'La lecture met surtout l’accent sur ')
+    .replace(/Le tirage parle de\s+/gi,'La lecture met l’accent sur ')
+    .replace(/On voit alors se dessiner\s+/gi,'La suite laisse alors apparaître ')
+    .replace(/On voit se dessiner\s+/gi,'La suite laisse apparaître ')
+    .replace(/Cette dynamique fait apparaître\s+/gi,'Un autre élément apparaît : ')
+    .replace(/Cette dynamique traduit\s+/gi,'Cela traduit ')
+    .replace(/Cette dynamique valorise\s+/gi,'La lecture valorise ')
+    .replace(/Cette dynamique favorise\s+/gi,'Cette évolution favorise ')
+    .replace(/\s+([,.])/g,'$1')
+    .replace(/\s*([;:!?])\s*/g,' $1 ')
+    .replace(/\s{2,}/g,' ');
+  return out.trim();
 }
 
 function cr57PolishStoryHtml(html,en=false){
@@ -158,7 +127,7 @@ function cr57PolishStoryHtml(html,en=false){
     if(!p)return html;
     let s=p.innerHTML.replace(/\s+/g,' ').replace(/>\s+</g,'><').trim();
     if(!en)s=cr57PolishFrenchNarrative(s);
-    s=s.replace(/(^|\.\s+)([a-zà-ÿ])/g,(m,a,b)=>a+b.toLocaleUpperCase());
+    s=s.replace(/(^|\.\s+)([a-zà-ÿ])/g,(m,a,c)=>a+c.toLocaleUpperCase());
     p.innerHTML=s;
     const root=tpl.content.querySelector('.story-reading');
     if(root)root.dataset.storyEngine=CRISTARIVA_PROJECT_STORY_VERSION;
@@ -171,14 +140,11 @@ if(cr55BaseStoryInterpretation){
   storyInterpretation=function(cards){
     if(!Array.isArray(cards)||!cards.length)return '';
     const q=cr55Question(),en=state?.lang==='en';
-    let html='';
+    let html;
     if(cr55IsProjectQuestion(q)){
       const question=`<p class="reading-question">${en?'Your question':'Votre question'} : « ${cr55Esc(q)} »</p>`;
-      const story=cr55ProjectStory(cards,en).replace(/\s+/g,' ').trim();
-      html=`<div class="story-reading" data-story-engine="${CRISTARIVA_PROJECT_STORY_VERSION}"><h3>${en?'The story told by your cards':'L’histoire racontée par vos cartes'}</h3>${question}<p class="story-continuous">${story}</p></div>`;
-    }else{
-      html=cr55BaseStoryInterpretation(cards);
-    }
+      html=`<div class="story-reading" data-story-engine="${CRISTARIVA_PROJECT_STORY_VERSION}"><h3>${en?'The story told by your cards':'L’histoire racontée par vos cartes'}</h3>${question}<p class="story-continuous">${cr55ProjectStory(cards,en)}</p></div>`;
+    }else html=cr55BaseStoryInterpretation(cards);
     return cr57PolishStoryHtml(html,en);
   };
   interpretation=function(cards){return storyInterpretation(cards);};
@@ -187,8 +153,7 @@ if(cr55BaseStoryInterpretation){
 (function cr55Refresh(){
   try{
     if(state?.draw?.length){
-      const candidates=['reading','interpretation','readingResult','story','result'];
-      for(const id of candidates){
+      for(const id of ['reading','interpretation','readingResult','story','result']){
         const el=document.getElementById(id);
         if(el&&/L’histoire racontée par vos cartes|The story told by your cards/.test(el.textContent||'')){el.innerHTML=storyInterpretation(state.draw);break;}
       }
