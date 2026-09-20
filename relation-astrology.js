@@ -98,22 +98,26 @@
 
       let s=String(p.innerHTML||'').replace(/\s+/g,' ').trim();
 
-      /* 1. Après « Concernant votre… », aucune phrase ne doit démarrer par un
-         verbe sans sujet : « Concernant…, exprime… » devient
+      /* 1. Cas particuliers où le verbe réclame un complément grammatical
+         explicite lorsque le nom de la carte a été retiré du récit. */
+      s=s
+        .replace(/(Concernant\s+(?:(?:<b>|<strong>).*?(?:<\/b>|<\/strong>)|[^,]+),\s*)Interroge\s+/gi,'$1la situation vous amène à interroger ')
+        .replace(/(Concernant\s+(?:(?:<b>|<strong>).*?(?:<\/b>|<\/strong>)|[^,]+),\s*)Confronte\s+à\s+/gi,'$1la situation vous confronte à ');
+
+      /* 2. Après « Concernant votre… », aucune autre phrase ne doit démarrer
+         par un verbe sans sujet : « Concernant…, exprime… » devient
          « Concernant…, la situation exprime… ». */
       s=s.replace(
-        /(Concernant\s+(?:(?:<b>|<strong>).*?(?:<\/b>|<\/strong>)|[^,]+),\s*)(?=(?:exprime|valorise|encourage|renforce|permet|apporte|ouvre|annonce|souligne|décrit|révèle|montre|traduit|représente|represente|évoque|evoque|marque|indique|signale|invite|favorise|protège|protege|oriente|pousse|appelle|dévoile|devoile|présente|presente|crée|cree|maintient|accroît|accroit|réduit|reduit|aide|interroge|confronte|peut)\b)/gi,
+        /(Concernant\s+(?:(?:<b>|<strong>).*?(?:<\/b>|<\/strong>)|[^,]+),\s*)(?=(?:exprime|valorise|encourage|renforce|permet|apporte|ouvre|annonce|souligne|décrit|révèle|montre|traduit|représente|represente|évoque|evoque|marque|indique|signale|invite|favorise|protège|protege|oriente|pousse|appelle|dévoile|devoile|présente|presente|crée|cree|maintient|accroît|accroit|réduit|reduit|aide|peut)\b)/gi,
         '$1la situation '
       );
 
-      /* 2. Toute nouvelle phrase doit avoir un sujet explicite. Les deux
-         formes ci-dessous étaient encore produites lorsque le nom d'une carte
-         servant de sujet avait été retiré par une couche narrative antérieure. */
+      /* 3. Toute nouvelle phrase doit avoir un sujet explicite. */
       s=s
-        .replace(/(^|[.!?]\s+)Interroge\s+/g,'$1Cette situation amène à interroger ')
-        .replace(/(^|[.!?]\s+)Confronte\s+à\s+/g,'$1La situation confronte à ');
+        .replace(/(^|[.!?]\s+)Interroge\s+/g,'$1Cette situation vous amène à interroger ')
+        .replace(/(^|[.!?]\s+)Confronte\s+à\s+/g,'$1La situation vous confronte à ');
 
-      /* 3. Éviter les amorces infinitives isolées que l'utilisateur perçoit
+      /* 4. Éviter les amorces infinitives isolées que l'utilisateur perçoit
          comme des fragments de définition plutôt que comme un récit. */
       s=s
         .replace(/(^|[.!?]\s+)Regarder\s+/g,'$1Le fait de regarder ')
@@ -125,15 +129,15 @@
         .replace(/(^|[.!?]\s+)Eviter\s+/g,'$1Le fait d’éviter ')
         .replace(/(^|[.!?]\s+)Éviter\s+/g,'$1Le fait d’éviter ');
 
-      /* 4. Élisions françaises. Cela corrige notamment « L’enjeu est de
+      /* 5. Élisions françaises. Cela corrige notamment « L’enjeu est de
          identifier » en « L’enjeu est d’identifier ». */
       s=s.replace(/\bde\s+([aeiouyàâäéèêëîïôöùûüœ][a-zà-ÿœæ-]*)/gi,'d’$1');
 
-      /* 5. Après un point-virgule, éviter une majuscule artificielle du type
+      /* 6. Après un point-virgule, éviter une majuscule artificielle du type
          « ; L’enjeu… ». */
       s=s.replace(/\s*;\s*L[’']enjeu\s+est\s+/g,'. L’enjeu est ');
 
-      /* 6. Varier les amorces répétées. */
+      /* 7. Varier les amorces répétées. */
       let enjeuCount=0;
       const enjeuVariants=[
         'L’enjeu est alors de ',
