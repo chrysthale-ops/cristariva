@@ -1,5 +1,5 @@
-/* CRISTARIVA — lecture intégrée et synthèse générale v3.5 */
-const CRISTARIVA_INTEGRATED_PERIOD_VERSION='3.5';
+/* CRISTARIVA — lecture intégrée et synthèse générale v3.6 */
+const CRISTARIVA_INTEGRATED_PERIOD_VERSION='3.6';
 
 function cr33CardLabel(card,en=cr3En()){
   if(!card)return '';
@@ -84,14 +84,19 @@ function cr33ExpectedDevelopment(intent,en=cr3En()){
 }
 function cr33OverallTone(period,intent,en=cr3En()){
   const hits=period?.hits||[],supports=hits.filter(h=>h.tone==='support').length,challenges=hits.filter(h=>h.tone==='challenge').length;
-  if(en){
-    if(supports>challenges)return 'The period contains genuine openings that can make the situation easier to move forward.';
-    if(challenges>supports+1)return 'The period looks more selective and uneven: progress is possible, but depends more on timing, clarity and circumstances.';
-    return 'The period alternates between openings and moments of adjustment, so the situation is more likely to develop in stages than all at once.';
+  // Ne pas ajouter de phrase générique quand les indications sont équilibrées.
+  // Le texte doit alors aller directement vers le ou les moments astrologiques réellement significatifs.
+  if(supports>=2&&supports>=challenges+2){
+    return en
+      ?'Several supportive aspects reinforce the possibility of movement during this period.'
+      :'Plusieurs aspects favorables se renforcent au cours de cette période.';
   }
-  if(supports>challenges)return 'La période comporte de véritables ouvertures susceptibles de faciliter une évolution de la situation.';
-  if(challenges>supports+1)return 'La période paraît plus sélective et irrégulière : une évolution reste possible, mais dépend davantage du bon moment, de la clarté de la situation et des circonstances.';
-  return 'La période alterne ouvertures et moments d’ajustement : la situation paraît donc davantage susceptible d’évoluer par étapes que d’un seul mouvement.';
+  if(challenges>=2&&challenges>=supports+2){
+    return en
+      ?'Several demanding aspects make timing and circumstances especially important during this period.'
+      :'Plusieurs aspects plus exigeants rendent le choix du moment et les circonstances particulièrement importants.';
+  }
+  return '';
 }
 function cr33IntegratedPeriodNarrative(a,en=cr3En()){
   if(!state.date)return `<div class="cr3-empty">${en?'Draw a Timing card to define the period covered by this reading.':'Tirez une carte Datation afin de définir la période couverte par cette lecture.'}</div>`;
