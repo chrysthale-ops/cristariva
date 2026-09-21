@@ -1,8 +1,8 @@
-/* CRISTARIVA — finition narrative globale v5.19
+/* CRISTARIVA — finition narrative globale v5.20
    Corrige les amorces sans sujet et supprime les répétitions mécaniques.
    Le sens et l'ordre des cartes sont conservés.
-   v5.19 : diversifie « La suite » / « La situation » avec des raccords naturels. */
-const CRISTARIVA_PROJECT_STORY_VERSION='5.19';
+   v5.20 : toutes les phrases commencent par un sujet grammatical explicite. */
+const CRISTARIVA_PROJECT_STORY_VERSION='5.20';
 
 function cr55Question(){return String(state?.question||'').replace(/\s+/g,' ').trim();}
 function cr55Esc(v){try{return typeof cr53Esc==='function'?cr53Esc(v):typeof cr51Esc==='function'?cr51Esc(v):String(v??'');}catch(e){return String(v??'');}}
@@ -62,7 +62,7 @@ function cr57VarySituationSubjects(text){
   r("La situation\\s+ne\\s+parle\\s+pas\\s+forcément\\s+d[’']un\\s+blocage\\s*:\\s*la\\s+situation\\s+indique\\s+plutôt\\s+qu[’']il\\s+faut\\s+",'Il n’est pas forcément question d’un blocage : il s’agit plutôt de ');
   r("La situation\\s+indique\\s+plutôt\\s+qu[’']il\\s+faut\\s+",'Il s’agit plutôt de ');
   r('La situation\\s+ne\\s+parle\\s+pas\\s+forcément\\s+de\\s+','Il n’est pas forcément question de ');
-  r("La suite\\s+annonce\\s+l[’']ouverture\\s+d[’']",'Puis s’ouvre ');
+  r("La suite\\s+annonce\\s+l[’']ouverture\\s+d[’']",'L’évolution annonce l’ouverture d’');
   r('La suite\\s+fait\\s+apparaître\\s+un\\s+lien\\s+particulièrement\\s+significatif','Ce lien apparaît alors comme particulièrement significatif');
   r('La situation\\s+signale\\s+une\\s+rencontre\\s+susceptible\\s+de\\s+','Une rencontre se dessine, susceptible de ');
   r('La situation\\s+invite\\s+à\\s+','Il faut alors ');
@@ -74,7 +74,7 @@ function cr57VarySituationSubjects(text){
   r('La situation\\s+est\\s+un\\s+indicateur\\s+fort\\s*:\\s*','Un indicateur fort se dégage : ');
   r('La situation\\s+se\\s+vérifie\\s+','Ce constat se vérifie ');
   r("La situation\\s+montre\\s+qu[’']",'On voit alors qu’');
-  r('La situation\\s+décrit\\s+une\\s+période\\s+où\\s+','S’ouvre alors une période où ');
+  r('La situation\\s+décrit\\s+une\\s+période\\s+où\\s+','Une période s’installe, durant laquelle ');
   r('La situation\\s+évoque\\s+','On perçoit aussi ');
   r("La situation\\s+parle\\s+d[’']",'Il est ici question d’');
   r('La situation\\s+parle\\s+de\\s+','Il est ici question de ');
@@ -83,7 +83,7 @@ function cr57VarySituationSubjects(text){
   r('La situation\\s+montre\\s+','On voit alors ');
   r('La situation\\s+indique\\s+','Un autre élément apparaît : ');
   r('La situation\\s+révèle\\s+','Un aspect important apparaît : ');
-  r('La situation\\s+décrit\\s+','Se dessine alors ');
+  r('La situation\\s+décrit\\s+','Cette étape met en lumière ');
   r('La situation\\s+associe\\s+','Cette dynamique associe ');
   r('La situation\\s+oriente\\s+vers\\s+','Le mouvement s’oriente vers ');
   r('La situation\\s+oriente\\s+','Cette évolution oriente ');
@@ -93,19 +93,19 @@ function cr57VarySituationSubjects(text){
   r('La situation\\s+présente\\s+','Un nouvel élément apparaît : ');
   r('La situation\\s+maintient\\s+','Ce mouvement maintient ');
 
-  r('La suite\\s+fait\\s+apparaître\\s+','À ce stade apparaît ');
+  r('La suite\\s+fait\\s+apparaître\\s+','Un nouvel élément apparaît : ');
   let announceIndex=0;
   out=out.replace(new RegExp(b+'La suite\\s+annonce\\s+','gi'),(m,x)=>{
-    const choices=['Puis se dessine ','Un nouveau tournant apparaît : ','Plus loin se profile '];
+    const choices=['Le mouvement fait apparaître ','Un nouveau tournant annonce ','L’évolution laisse entrevoir '];
     let value=choices[(announceIndex++)%choices.length];
     if(/[;:]\\s+$/.test(x))value=cr57LowerFirst(value);
     return x+value;
   });
   r('La suite\\s+laisse\\s+entrevoir\\s+','On entrevoit alors ');
-  r('La suite\\s+laisse\\s+apparaître\\s+','Peu à peu se dessine ');
+  r('La suite\\s+laisse\\s+apparaître\\s+','La progression laisse peu à peu apparaître ');
   r('La suite\\s+révèle\\s+','Un nouvel aspect se révèle : ');
   r('La suite\\s+confirme\\s+','Ce qui suit confirme ');
-  r('La suite\\s+ouvre\\s+','S’ouvre alors ');
+  r('La suite\\s+ouvre\\s+','L’évolution ouvre ');
   r('La suite\\s+indique\\s+','Le mouvement devient plus lisible : ');
   r('La suite\\s+dévoile\\s+','Un autre aspect se dévoile : ');
 
@@ -155,7 +155,7 @@ function cr57PolishFrenchNarrative(s){
   r('Confirme\\s+','Ce qui suit confirme ');
   r('Exprime\\s+','Cette étape exprime ');
   r('Rappelle\\s+','Cette lecture rappelle ');
-  r('Décrit\\s+','Se dessine alors ');
+  r('Décrit\\s+','Cette étape met en lumière ');
   r('Révèle\\s+','Un aspect important apparaît : ');
   r('Montre\\s+','On voit alors ');
   r('Traduit\\s+','Cette étape traduit ');
@@ -183,8 +183,8 @@ function cr57PolishFrenchNarrative(s){
   r('Accroît\\s+','Cela accroît ');
   r('Réduit\\s+','Cela réduit ');
   r('Aide\\s+à\\s+','Cette évolution aide à ');
-  r('Ouvre\\s+','S’ouvre alors ');
-  r('Annonce\\s+','Puis se dessine ');
+  r('Ouvre\\s+','Cette évolution ouvre ');
+  r('Annonce\\s+','Cette évolution annonce ');
   r('Souligne\\s+','L’attention se porte alors sur ');
 
   const desc=['Un point important apparaît : ','La lecture met ensuite en lumière ','À ce stade, on distingue '];
@@ -192,8 +192,8 @@ function cr57PolishFrenchNarrative(s){
     .replace(/Le tirage parle moins de\s+/gi,'Il est ici moins question de ')
     .replace(/Le tirage parle surtout de\s+/gi,'La lecture met surtout l’accent sur ')
     .replace(/Le tirage parle de\s+/gi,'La lecture met l’accent sur ')
-    .replace(/On voit alors se dessiner\s+/gi,'Peu à peu se dessine ')
-    .replace(/On voit se dessiner\s+/gi,'Peu à peu se dessine ')
+    .replace(/On voit alors se dessiner\s+/gi,'La situation laisse peu à peu apparaître ')
+    .replace(/On voit se dessiner\s+/gi,'La situation laisse peu à peu apparaître ')
     .replace(/Cette dynamique fait apparaître\s+/gi,'Un autre élément apparaît : ')
     .replace(/Cette dynamique traduit\s+/gi,'Cela traduit ')
     .replace(/Cette dynamique valorise\s+/gi,'La lecture valorise ')

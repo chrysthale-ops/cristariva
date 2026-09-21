@@ -37,7 +37,8 @@ function story(cards,domain='Relations',question='Une question ouverte ?',lang='
 }
 function prose(fragment){return fragment.querySelector('.story-continuous').textContent;}
 const bare=/(?:^|[.!?;:]\s+|(?:Au départ|Aujourd’hui|À partir de là|Pourtant|Cependant|Puis|Enfin),\s+)(?:(?:ne\s+|n[’'])\s*)?(?:alerte|avertit|peut|doit|fait|place|positionne|conduit|représente|symbolise|exprime|valorise|encourage|invite|demande|conseille|apprend|enseigne|relie|renvoie|situe|accompagne|interroge|confronte|indique|montre|révèle|signale|annonce|ouvre|signifie|décrit|rappelle|souligne|favorise|parle|confirme|traduit)\s/iu;
-function complete(text,label){assert.doesNotMatch(text,bare,label);assert.doesNotMatch(text,/évolution où place|va vers (?:peut|place)|de identifier|de accepter/iu,label);}
+const inverted=/(?:^|[.!?;:]\s+)(?:(?:Puis|Enfin|Ensuite|Peu à peu|À ce stade|Plus loin),?\s+)?(?:s[’']ouvre|se dessine|se profile|apparaît)\s/iu;
+function complete(text,label){assert.doesNotMatch(text,bare,label);assert.doesNotMatch(text,inverted,label);assert.doesNotMatch(text,/évolution où place|va vers (?:peut|place)|de identifier|de accepter|la situation s[’']ouvre un cycle/iu,label);}
 
 test('the reported three-card reading keeps complete clauses and their order',()=>{
   const cards=[84,76,56].map(id=>data.main.find(c=>c.id===id));
@@ -48,7 +49,7 @@ test('the reported three-card reading keeps complete clauses and their order',()
   assert.match(text,/À partir de là, la situation peut indiquer reprise du lien/);
   assert.ok(text.indexOf('consentement')<text.indexOf('nouveau départ'));
   assert.ok(text.indexOf('nouveau départ')<text.indexOf('reprise du lien'));
-  assert.equal(result.querySelector('.story-reading').dataset.storyEngine,'5.16');
+  assert.equal(result.querySelector('.story-reading').dataset.storyEngine,'5.20');
   complete(text);
 });
 
@@ -63,6 +64,19 @@ test('the three-card arc never strips a subject, predicate, or subordinate claus
   assert.match(text,/Aujourd’hui, la situation indique qu’une décision reste possible\./);
   assert.match(text,/À partir de là, la suite ouvre une possibilité qui reste fragile\./);
   complete(text);
+});
+
+test('the reported love reading starts every sentence with an explicit subject',()=>{
+  const cards=[1,30,29,56,20].map(id=>love.main.find(c=>c.id===id));
+  const result=story(cards,'Sentimental','Meilleur créneau pour avancer dans le domaine sentimental');
+  const text=prose(result);
+  complete(text);
+  assert.match(text,/L’évolution annonce l’ouverture d’un nouveau lien/);
+  assert.match(text,/Le mouvement fait apparaître une période de difficulté/);
+  assert.match(text,/Cette dynamique signale une situation organisée autour de trois pôles/);
+  assert.match(text,/Cette étape met en lumière une proximité profonde/);
+  assert.match(text,/L’évolution ouvre un cycle sentimental neuf/);
+  assert.equal(result.querySelector('.story-reading').dataset.storyEngine,'5.20');
 });
 
 test('the correction covers every card at every position in 1-, 3- and 5-card readings',t=>{
@@ -103,6 +117,9 @@ test('sentence completion handles punctuation, prefixes and negation without cha
   assert.equal(w.cr51NarrativizeFrenchStart('La confiance s’installe. Une personne peut hésiter.'),'La confiance s’installe. Une personne peut hésiter.');
   assert.equal(w.cr51NarrativizeFrenchStart('La période couvre 1.5 mois.'),'La période couvre 1.5 mois.');
   assert.equal(w.cr51NarrativizeFrenchStart('Confronte à une décision.'),'La situation vous confronte à une décision.');
+  assert.equal(w.cr51NarrativizeFrenchStart('Puis s’ouvre un cycle sentimental neuf.'),'Cette évolution ouvre un cycle sentimental neuf.');
+  assert.equal(w.cr51NarrativizeFrenchStart('Se dessine une proximité profonde.'),'La situation fait apparaître une proximité profonde.');
+  assert.equal(w.cr51NarrativizeFrenchStart('À ce stade apparaît une difficulté.'),'La situation fait apparaître une difficulté.');
 });
 
 test('card names inside words and existing subjects are preserved',()=>{
@@ -152,7 +169,7 @@ test('actual draw buttons use the final correction for both oracles and all form
     w.document.querySelector('#drawBtn').click();
     assert.equal(state.draw.length,n);
     const el=w.document.querySelector('#reading .story-reading');
-    assert.equal(el.dataset.storyEngine,'5.16');
+    assert.equal(el.dataset.storyEngine,'5.20');
     complete(el.querySelector('.story-continuous').textContent);
     if(domain==='Sentimental')assert.ok(state.draw.every(c=>c.oracle==='amour'));
     w.document.querySelector('#relationBtn').click();assert.ok(state.relation);
@@ -164,11 +181,12 @@ test('actual draw buttons use the final correction for both oracles and all form
 test('the PWA update references exist and request the fixed scripts',()=>{
   const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
   const sw=fs.readFileSync(path.join(root,'service-worker.js'),'utf8');
-  assert.match(html,/service-worker\.js\?v=20260921-narrative-516/);
-  assert.match(sw,/cristariva-v9-20260921-narrative-516/);
-  for(const script of ['story-fluid-v5.1.js','question-context-story-v5.2.js','question-project-story-v5.5.js','relation-astrology.js']){
-    assert.ok(html.includes(`${script}?v=5.16`));assert.ok(sw.includes(`'./${script}'`));
+  assert.match(html,/service-worker\.js\?v=20260921-narrative-520/);
+  assert.match(sw,/cristariva-v11-20260921-narrative-520/);
+  for(const script of ['story-fluid-v5.1.js','question-project-story-v5.5.js','relation-astrology.js']){
+    assert.ok(html.includes(`${script}?v=5.20`));assert.ok(sw.includes(`'./${script}'`));
   }
+  assert.ok(sw.includes(`'./question-context-story-v5.2.js'`));
   const shell=sw.match(/const SHELL=([\s\S]*?);/)[1];
   for(const [,url] of shell.matchAll(/'([^']+)'/g))assert.ok(fs.existsSync(path.join(root,url.split('?')[0])),url);
 });

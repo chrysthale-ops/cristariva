@@ -1,11 +1,11 @@
-/* CRISTARIVA — récit fluide global v5.16
+/* CRISTARIVA — récit fluide global v5.20
    Même exigence de narration dans les trois domaines :
    interpréter la situation sans commenter les cartes, les positions ou les étapes du tirage.
 
-   v5.16 : conserve les propositions complètes et ajoute un sujet aux amorces
-   définitionnelles, y compris après un connecteur ou une ponctuation interne.
+   v5.20 : conserve les propositions complètes, ajoute un sujet aux amorces
+   définitionnelles et répare les anciennes inversions sans sujet initial.
 */
-const CRISTARIVA_FLUID_STORY_VERSION='5.16';
+const CRISTARIVA_FLUID_STORY_VERSION='5.20';
 
 function cr51Esc(value){
   try{return typeof readingEscape==='function'?readingEscape(String(value??'')):String(value??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -59,6 +59,18 @@ function cr51StripLeadingCardName(text,card,en=false){
 function cr51NarrativizeFrenchSentence(sentence){
   let s=String(sentence||'').trim();
   if(!s)return s;
+
+  /* Les anciennes passes stylistiques pouvaient produire « Puis s’ouvre… »,
+     « Se dessine… » ou « À ce stade apparaît… ». Un préfixe verbal ne doit
+     jamais être pris pour un sujet : on reconstruit une proposition complète. */
+  const inverted=s.match(/^(?:(?:Puis|Enfin|Ensuite|Peu à peu|À ce stade|Plus loin),?\s+)?(s[’']ouvre|se dessine|se profile|apparaît)\s+(?:alors\s+)?(.+)$/i);
+  if(inverted){
+    const rest=cr51LowerFirst(inverted[2]);
+    if(/^s[’']ouvre$/i.test(inverted[1]))return cr51CapFirst('cette évolution ouvre '+rest);
+    if(/^se profile$/i.test(inverted[1]))return cr51CapFirst('l’évolution laisse entrevoir '+rest);
+    return cr51CapFirst('la situation fait apparaître '+rest);
+  }
+
   // Le connecteur n'est pas le sujet : la proposition qui le suit reste complète.
   const lead=s.match(/^((?:(?:Au départ|Aujourd[’']hui|À partir de là|Cependant|Pourtant|Puis|Enfin|Ensuite|Peu à peu|Dans cette dynamique|À ce stade|En parallèle|Dans (?:une relation|le travail|le cadre [^,]+)|Sur le plan [^,]+),\s*|,\s*))(.+)$/i);
   if(lead)return lead[1]+cr51LowerFirst(cr51NarrativizeFrenchSentence(lead[2]));

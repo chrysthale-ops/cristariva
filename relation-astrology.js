@@ -1,4 +1,4 @@
-/* CRISTARIVA — chargeur Android/Web + finition narrative finale, 21 septembre 2026.
+/* CRISTARIVA — chargeur Android/Web + finition narrative finale v5.20, 21 septembre 2026.
    - charge l’astrologie relationnelle et la cohérence de période ;
    - charge l’Oracle Amour ;
    - corrige en dernier ressort les phrases sans sujet dans le récit ;
@@ -83,7 +83,7 @@
         }
       }
       const root=tpl.content.querySelector('.story-reading');
-      if(root)root.dataset.storyEngine='5.16';
+      if(root)root.dataset.storyEngine='5.20';
       return tpl.innerHTML;
     }catch(e){return html;}
   }
@@ -153,7 +153,7 @@
   function installStoryPolish(){
     try{
       if(typeof window.storyInterpretation!=='function')return false;
-      if(window.storyInterpretation.__cristarivaFinalPolish20260921)return true;
+      if(window.storyInterpretation.__cristarivaFinalPolish520)return true;
       const base=window.storyInterpretation;
       installedBase=base;
       const wrapped=function(cards){
@@ -163,7 +163,7 @@
            on repasse donc la finition après lui pour éviter « Parle… » etc. */
         return polishRepeatedStoryOpeners(html);
       };
-      wrapped.__cristarivaFinalPolish20260921=true;
+      wrapped.__cristarivaFinalPolish520=true;
       window.storyInterpretation=wrapped;
       window.interpretation=function(cards){return window.storyInterpretation(cards);};
       if(typeof state!=='undefined'&&Array.isArray(state.draw)&&state.draw.length){
