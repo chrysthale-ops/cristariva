@@ -1,7 +1,7 @@
-/* CRISTARIVA — service worker v8 — Android/Web stable, 20 septembre 2026.
-   Force la mise à jour de l’analyse croisée de période v1.6 et conserve
+/* CRISTARIVA — service worker v9 — Android/Web stable, 21 septembre 2026.
+   Force la mise à jour grammaticale des récits v5.16 et conserve
    l’Oracle Amour ainsi que la correction visuelle de la carte Relation 62. */
-const CACHE_NAME='cristariva-v8-20260920-cross-period-v16';
+const CACHE_NAME='cristariva-v9-20260921-narrative-516';
 const SHELL=[
  './',
  './index.html',
@@ -10,6 +10,9 @@ const SHELL=[
  './icon-192.png',
  './icon-512.png',
  './relation-astrology.js',
+ './story-fluid-v5.1.js',
+ './question-context-story-v5.2.js',
+ './question-project-story-v5.5.js',
  './relation-astrology-core-v1.4.js',
  './relation-period-consistency-v1.5.js',
  './oracle-amour-data.js',
@@ -113,7 +116,7 @@ self.addEventListener('activate',event=>{
     await self.clients.claim();
     const clients=await self.clients.matchAll({type:'window',includeUncontrolled:true});
     for(const client of clients){
-      try{client.postMessage({type:'CRISTARIVA_UPDATED',version:'2026.09.20-cross-period-v16'});}catch(e){}
+      try{client.postMessage({type:'CRISTARIVA_UPDATED',version:'2026.09.21-narrative-516'});}catch(e){}
     }
   })());
 });

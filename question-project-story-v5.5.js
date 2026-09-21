@@ -125,10 +125,17 @@ function cr57PolishStoryHtml(html,en=false){
     tpl.innerHTML=String(html||'');
     const p=tpl.content.querySelector('.story-continuous');
     if(!p)return html;
-    let s=p.innerHTML.replace(/\s+/g,' ').replace(/>\s+</g,'><').trim();
-    if(!en)s=cr57PolishFrenchNarrative(s);
-    s=s.replace(/(^|\.\s+)([a-zà-ÿ])/g,(m,a,c)=>a+c.toLocaleUpperCase());
-    p.innerHTML=s;
+    const walker=document.createTreeWalker(p,NodeFilter.SHOW_TEXT);
+    while(walker.nextNode()){
+      const node=walker.currentNode;
+      if(node.parentElement.closest('b,strong,a,code'))continue;
+      const match=node.textContent.match(/^(\s*)([\s\S]*?)(\s*)$/);
+      let s=match[2];
+      if(!s)continue;
+      if(!en)s=cr57PolishFrenchNarrative(s);
+      s=s.replace(/(^|\.\s+)([a-zà-ÿ])/g,(m,a,c)=>a+c.toLocaleUpperCase());
+      node.textContent=match[1]+s+match[3];
+    }
     const root=tpl.content.querySelector('.story-reading');
     if(root)root.dataset.storyEngine=CRISTARIVA_PROJECT_STORY_VERSION;
     return tpl.innerHTML;

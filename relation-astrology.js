@@ -1,4 +1,4 @@
-/* CRISTARIVA — chargeur Android/Web + finition narrative finale, 20 septembre 2026.
+/* CRISTARIVA — chargeur Android/Web + finition narrative finale, 21 septembre 2026.
    - charge l’astrologie relationnelle et la cohérence de période ;
    - charge l’Oracle Amour ;
    - corrige en dernier ressort les phrases sans sujet dans le récit ;
@@ -61,87 +61,29 @@
     return window.__CRISTARIVA_LOVE_DIRECT_BOOTSTRAP__;
   }
 
-  const BARE_VERBS='Parle|Confirme|Décrit|Decrit|Souligne|Signale|Indique|Invite|Évoque|Evoque|Représente|Represente|Montre|Révèle|Revele|Traduit|Marque|Favorise|Exprime|Valorise|Encourage|Renforce|Permet|Apporte|Ouvre|Annonce|Oriente|Protège|Protege|Crée|Cree|Maintient|Aide|Place|Positionne|Conduit';
-
   function polishRepeatedStoryOpeners(html){
     try{
-      if(!html||document.documentElement.lang==='en')return html;
+      if(!html||state.lang==='en')return html;
       const tpl=document.createElement('template');
       tpl.innerHTML=String(html);
-      const p=tpl.content.querySelector('.story-continuous');
-      if(!p)return html;
-      let s=String(p.innerHTML||'').replace(/\s+/g,' ').trim();
-
-      s=s
-        .replace(/(Concernant\s+(?:(?:<b>|<strong>).*?(?:<\/b>|<\/strong>)|[^,]+),\s*)Interroge\s+/gi,'$1la situation vous amène à interroger ')
-        .replace(/(Concernant\s+(?:(?:<b>|<strong>).*?(?:<\/b>|<\/strong>)|[^,]+),\s*)Confronte\s+à\s+/gi,'$1la situation vous confronte à ')
-        .replace(
-          /(Concernant\s+(?:(?:<b>|<strong>).*?(?:<\/b>|<\/strong>)|[^,]+),\s*)(?=(?:exprime|valorise|encourage|renforce|permet|apporte|ouvre|annonce|souligne|décrit|révèle|montre|traduit|représente|represente|évoque|evoque|marque|indique|signale|invite|favorise|protège|protege|oriente|pousse|appelle|dévoile|devoile|présente|presente|crée|cree|maintient|accroît|accroit|réduit|reduit|aide|peut|parle|confirme)\b)/gi,
-          '$1la situation '
-        );
-
-      s=s
-        .replace(/(^|[.!?]\s+)Interroge\s+/g,'$1Cette situation vous amène à interroger ')
-        .replace(/(^|[.!?]\s+)Confronte\s+à\s+/g,'$1La situation vous confronte à ')
-        .replace(new RegExp('(^|[.!?]\\s+)('+BARE_VERBS+')\\b','g'),function(_,sep,verb){
-          return sep+'Le tirage '+verb.toLocaleLowerCase();
-        });
-
-      s=s
-        .replace(/(^|[.!?]\s+)Regarder\s+/g,'$1Le fait de regarder ')
-        .replace(/(^|[.!?]\s+)Comprendre\s+/g,'$1Le fait de comprendre ')
-        .replace(/(^|[.!?]\s+)Identifier\s+/g,'$1Le fait d’identifier ')
-        .replace(/(^|[.!?]\s+)Accepter\s+/g,'$1Le fait d’accepter ')
-        .replace(/(^|[.!?]\s+)Observer\s+/g,'$1Le fait d’observer ')
-        .replace(/(^|[.!?]\s+)Écouter\s+/g,'$1Le fait d’écouter ')
-        .replace(/(^|[.!?]\s+)(?:Eviter|Éviter)\s+/g,'$1Le fait d’éviter ');
-
-      s=s
-        .replace(/\bde\s+([aeiouyàâäéèêëîïôöùûüœ][a-zà-ÿœæ-]*)/gi,'d’$1')
-        .replace(/\s*;\s*L[’']enjeu\s+est\s+/g,'. L’enjeu est ')
-        .replace(/\bLe tirage (ne [^.!?]{0,160}), mais elle\b/gi,'Le tirage $1, mais il')
-        .replace(/\bLe tirage ([^.!?]{0,160}), mais elle\b/gi,'Le tirage $1, mais il')
-        .replace(/\bune évolution où\s+place\b/gi,'une évolution qui place');
-
-      /* « alors » est devenu une amorce trop visible dans les récits générés.
-         On le retire au dernier passage, puis on nettoie la ponctuation. */
-      s=s.replace(/\balors\b\s*/gi,'');
-
-      let enjeuCount=0;
-      const enjeuVariants=[
-        'L’enjeu consiste à ',
-        'Il devient ensuite important de ',
-        'Il faut également ',
-        'Un autre point consiste à ',
-        'Dans le même mouvement, il importe de ',
-        'La suite demande aussi de '
-      ];
-      s=s.replace(/L[’']enjeu est\s+de\s+/gi,function(){
-        const replacement=enjeuVariants[Math.min(enjeuCount,enjeuVariants.length-1)];
-        enjeuCount+=1;
-        return replacement;
-      });
-
-      let elementCount=0;
-      const elementVariants=[
-        'Un élément important apparaît : ',
-        'Un autre aspect se précise : ',
-        'La situation fait ensuite ressortir : '
-      ];
-      s=s.replace(/Un élément important apparaît\s*:\s*/gi,function(){
-        const replacement=elementVariants[Math.min(elementCount,elementVariants.length-1)];
-        elementCount+=1;
-        return replacement;
-      });
-
-      s=s
-        .replace(/\s+([,.;:!?])/g,'$1')
-        .replace(/,\s*,/g,', ')
-        .replace(/\.\s*\./g,'.')
-        .replace(/\s{2,}/g,' ')
-        .trim();
-
-      p.innerHTML=s;
+      for(const p of tpl.content.querySelectorAll('.story-continuous')){
+        const walker=document.createTreeWalker(p,NodeFilter.SHOW_TEXT);
+        while(walker.nextNode()){
+          const node=walker.currentNode;
+          // Le sujet de la question est une citation de l'utilisateur.
+          if(node.parentElement.closest('b,strong,a,code'))continue;
+          const match=node.textContent.match(/^(\s*)([\s\S]*?)(\s*)$/);
+          let s=match[2];
+          if(!s)continue;
+          s=s.replace(/\balors\b(?!\s+que\b)\s*/gi,'')
+            .replace(/\bune évolution où\s+place\b/gi,'une évolution qui place');
+          if(typeof cr51NarrativizeFrenchStart==='function')s=cr51NarrativizeFrenchStart(s);
+          s=s.replace(/\s+([,.])/g,'$1').replace(/,\s*,/g,', ').replace(/\s{2,}/g,' ');
+          node.textContent=match[1]+s+match[3];
+        }
+      }
+      const root=tpl.content.querySelector('.story-reading');
+      if(root)root.dataset.storyEngine='5.16';
       return tpl.innerHTML;
     }catch(e){return html;}
   }
@@ -168,7 +110,7 @@
 
   function threeCardClean(text){
     return String(text||'')
-      .replace(/\balors\b/gi,'')
+      .replace(/\balors\b(?!\s+que\b)/gi,'')
       .replace(/\s+/g,' ')
       .replace(/\s+([,.;:!?])/g,'$1')
       .trim();
@@ -179,52 +121,23 @@
     return s?s.charAt(0).toLocaleLowerCase()+s.slice(1):s;
   }
 
-  function subjectifyClause(text){
-    let s=threeCardClean(text);
-    if(/^Place\b/i.test(s))return s.replace(/^Place\b/i,'La situation place');
-    if(/^Positionne\b/i.test(s))return s.replace(/^Positionne\b/i,'La situation positionne');
-    if(/^Conduit\b/i.test(s))return s.replace(/^Conduit\b/i,'La situation conduit');
-    const rx=new RegExp('^('+BARE_VERBS+')\\b','i');
-    if(rx.test(s))s=s.replace(rx,function(v){return 'Le tirage '+v.toLocaleLowerCase();});
-    return s;
-  }
-
   function threeCardOpening(text){
-    let s=subjectifyClause(text)
-      .replace(/^Peu à peu,\s*on voit apparaître\s+/i,'')
-      .replace(/^Peu à peu,\s*/i,'')
-      .replace(/^On voit\s+se dessiner\s+/i,'')
-      .replace(/^La situation décrit\s+/i,'');
-    return 'Au départ, '+threeCardLowerFirst(s);
+    return 'Au départ, '+threeCardLowerFirst(threeCardClean(text));
   }
 
   function threeCardPresent(text){
-    let s=subjectifyClause(text)
-      .replace(/^Peu à peu,\s*/i,'')
-      .replace(/^Dans cette dynamique,\s*/i,'');
-    return 'Aujourd’hui, '+threeCardLowerFirst(s);
+    return 'Aujourd’hui, '+threeCardLowerFirst(threeCardClean(text));
   }
 
   function threeCardMomentum(text,previousCard,currentCard){
-    let s=threeCardClean(text),direct=false;
-    const starters=[
-      /^On voit\s+se dessiner\s+/i,
-      /^La suite peut\s+faire apparaître\s+/i,
-      /^Peu à peu,\s*on voit apparaître\s+/i,
-      /^Une nouvelle possibilité peut\s+s’ouvrir autour de\s+/i,
-      /^(?:Le tirage|La situation|Cette carte)\s+(?:signale|décrit|confirme|représente|montre|révèle|indique|évoque)\s+/i,
-      /^(?:Signale|Décrit|Confirme|Représente|Montre|Révèle|Indique|Évoque)\s+/i
-    ];
-    for(const rx of starters){if(rx.test(s)){s=s.replace(rx,'');direct=true;break;}}
     const before=threeCardPolarity(previousCard),after=threeCardPolarity(currentCard);
     const transition=before<0&&after>0?'Pourtant, ':before>0&&after<0?'Cependant, ':'À partir de là, ';
-    if(direct)return transition+'l’élan qui se dégage va vers '+threeCardLowerFirst(s);
-    return transition+threeCardLowerFirst(subjectifyClause(s));
+    return transition+threeCardLowerFirst(threeCardClean(text));
   }
 
   function enforceThreeCardArc(html,cards){
     try{
-      if(!html||document.documentElement.lang==='en'||!Array.isArray(cards)||cards.length!==3)return html;
+      if(!html||state.lang==='en'||!Array.isArray(cards)||cards.length!==3)return html;
       const tpl=document.createElement('template');
       tpl.innerHTML=String(html);
       const p=tpl.content.querySelector('.story-continuous');
@@ -240,21 +153,20 @@
   function installStoryPolish(){
     try{
       if(typeof window.storyInterpretation!=='function')return false;
-      if(window.storyInterpretation.__cristarivaFinalPolish20260920)return true;
+      if(window.storyInterpretation.__cristarivaFinalPolish20260921)return true;
       const base=window.storyInterpretation;
       installedBase=base;
       const wrapped=function(cards){
         let html=base.apply(this,arguments);
-        html=polishRepeatedStoryOpeners(html);
         html=enforceThreeCardArc(html,cards);
         /* IMPORTANT : l’arc à trois cartes repart des définitions brutes ;
            on repasse donc la finition après lui pour éviter « Parle… » etc. */
         return polishRepeatedStoryOpeners(html);
       };
-      wrapped.__cristarivaFinalPolish20260920=true;
+      wrapped.__cristarivaFinalPolish20260921=true;
       window.storyInterpretation=wrapped;
       window.interpretation=function(cards){return window.storyInterpretation(cards);};
-      if(window.state&&Array.isArray(state.draw)&&state.draw.length){
+      if(typeof state!=='undefined'&&Array.isArray(state.draw)&&state.draw.length){
         const target=document.getElementById('reading');
         if(target&&/L’histoire racontée par vos cartes|The story told by your cards/.test(target.textContent||'')){
           target.innerHTML=window.storyInterpretation(state.draw);

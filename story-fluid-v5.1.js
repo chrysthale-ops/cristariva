@@ -1,15 +1,11 @@
-/* CRISTARIVA — récit fluide global v5.4
+/* CRISTARIVA — récit fluide global v5.16
    Même exigence de narration dans les trois domaines :
    interpréter la situation sans commenter les cartes, les positions ou les étapes du tirage.
 
-   v5.4 :
-   - ne remplace plus le nom d'une carte à l'intérieur de sa propre définition ;
-   - évite les concaténations du type « simplece » et les répétitions telles que
-     « du passé du passé » ;
-   - transforme les amorces définitionnelles (Représente, Signale, Annonce,
-     Indique, Invite, Ouvre, etc.) en formulations narratives.
+   v5.16 : conserve les propositions complètes et ajoute un sujet aux amorces
+   définitionnelles, y compris après un connecteur ou une ponctuation interne.
 */
-const CRISTARIVA_FLUID_STORY_VERSION='5.4';
+const CRISTARIVA_FLUID_STORY_VERSION='5.16';
 
 function cr51Esc(value){
   try{return typeof readingEscape==='function'?readingEscape(String(value??'')):String(value??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -36,117 +32,61 @@ function cr51Replacement(card,en=false){
   return {past:'ce qui revient du passé',tension:'cette tension',bond:'le lien',insight:'cette prise de conscience',movement:'le mouvement',change:'la transformation en cours',ground:'un repère intérieur plus stable',ambiguity:'l’incertitude',opening:'l’ouverture',neutral:'cet élément'}[f]||'cet élément';
 }
 
-/* Retire uniquement un titre de carte placé au début de la lecture.
-   On ne remplace surtout plus le nom de la carte à l'intérieur du texte :
-   « le simple retour du passé » doit rester intact. */
-function cr51StripLeadingCardName(text,card,en=false){
-  const raw=cr51RawName(card,en).trim();
-  if(!raw)return text;
-  const article=en?'(?:the|a|an)\\s+':"(?:(?:le|la|les|un|une)\\s+|l[’'])";
-  try{
-    return String(text||'').replace(
-      new RegExp('^\\s*(?:'+article+')?'+cr51Rx(raw)+'\\s*(?:[:;,.—–-]+\\s*)?','i'),
-      ''
-    ).trim();
-  }catch(e){return text;}
-}
+/* Une seule règle grammaticale sert aux définitions et au récit final.
+   La liste décrit les prédicats réellement employés par les deux oracles.
+   Un sujet existant et ses compléments restent toujours ensemble. */
+const CR51_FRENCH_VERBS='accompagne|accroît|accroit|aide|alerte|amène|amene|annonce|apporte|apprend|associe|attire|avertit|capte|choisit|concerne|conduit|confirme|confronte|conseille|convient|correspond|crée|cree|décrit|decrit|demande|désigne|designe|dévoile|devoile|dit|doit|donne|encourage|enseigne|est|évoque|evoque|exprime|fait|favorise|force|freine|illustre|incite|indique|interroge|invite|maintient|marque|met|montre|nécessite|necessite|oblige|offre|oriente|ouvre|parle|permet|peut|place|positionne|pousse|préserve|preserve|présente|presente|privilégie|privilegie|protège|protege|ramène|ramene|rappelle|réduit|reduit|relie|renforce|renvoie|représente|represente|révèle|revele|signale|signifie|situe|souligne|soutient|suggère|suggere|suppose|symbolise|traduit|transforme|valorise';
+const CR51_FRENCH_PREDICATE=new RegExp('^(?:(?:ne\\s+|n[’\'])(?:se\\s+|s[’\'])?|(?:se\\s+|s[’\']))?(?:'+CR51_FRENCH_VERBS+')(?=\\s|$)','i');
 
 function cr51LowerFirst(s){s=String(s||'').trim();return s?s.charAt(0).toLocaleLowerCase()+s.slice(1):'';}
 function cr51CapFirst(s){s=String(s||'').trim();return s?s.charAt(0).toLocaleUpperCase()+s.slice(1):'';}
 
-/* Les définitions de l'oracle utilisent parfois une forme dictionnaire :
-   « Représente… », « Signale… », « Invite à… ». Dans le récit, ces amorces
-   sont transformées afin que le texte raconte une évolution au lieu de réciter
-   la fiche de la carte. */
+function cr51StripLeadingCardName(text,card,en=false){
+  const raw=cr51RawName(card,en).trim(),source=String(text||'').trim();
+  if(!raw)return source;
+  const article=en?'(?:(?:the|a|an)\\s+)?':"(?:(?:le|la|les|un|une)\\s+|l[’'])?";
+  // Un titre autonome doit être suivi d'un séparateur, jamais d'un morceau de mot.
+  const heading=new RegExp('^'+article+cr51Rx(raw)+'\\s*(?::\\s*|[—–]\\s+)','i');
+  if(heading.test(source))return source.replace(heading,'').trim();
+  const named=new RegExp('^'+cr51Rx(raw)+'\\s+','i');
+  if(named.test(source)){
+    const rest=source.replace(named,'');
+    if(!en&&CR51_FRENCH_PREDICATE.test(rest))return rest;
+  }
+  return source;
+}
+
 function cr51NarrativizeFrenchSentence(sentence){
   let s=String(sentence||'').trim();
   if(!s)return s;
+  // Le connecteur n'est pas le sujet : la proposition qui le suit reste complète.
+  const lead=s.match(/^((?:(?:Au départ|Aujourd[’']hui|À partir de là|Cependant|Pourtant|Puis|Enfin|Ensuite|Peu à peu|Dans cette dynamique|À ce stade|En parallèle|Dans (?:une relation|le travail|le cadre [^,]+)|Sur le plan [^,]+),\s*|,\s*))(.+)$/i);
+  if(lead)return lead[1]+cr51LowerFirst(cr51NarrativizeFrenchSentence(lead[2]));
 
-  s=s.replace(/^(?:cette|la)\s+carte\s+/i,'').replace(/^elle\s+/i,'cela ');
-
-  let m;
-  if(/^cela\s+parle\s+de\s+continuité,\s+de\s+sécurité\s+et\s+de\s+fondations\s+durables$/i.test(s))
-    return 'La continuité, la sécurité et les fondations durables prennent davantage d’importance';
-  if(/^cela\s+parle\s+de\s+moments\s+agréables\s+partagés,\s+de\s+rire,\s+de\s+séduction\s+et\s+d[’']une\s+relation\s+qui\s+nourrit\s+aussi\s+le\s+bien-être\s+immédiat$/i.test(s))
-    return 'Des moments agréables partagés, du rire et de la séduction peuvent alors redonner au lien davantage de légèreté et de bien-être immédiat';
-  if((m=s.match(/^(?:représente|represente|symbolise)\s+(.+)$/i)))
-    return 'On voit alors se dessiner '+cr51LowerFirst(m[1]);
-  if((m=s.match(/^signale\s+la\s+réapparition\s+(.+)$/i)))
-    return 'Une réapparition devient alors possible : celle '+cr51LowerFirst(m[1]);
-  if((m=s.match(/^signale\s+(.+)$/i)))
-    return 'Un élément important apparaît alors : '+cr51LowerFirst(m[1]);
-  if((m=s.match(/^annonce\s+(.+)$/i)))
-    return 'La suite peut alors faire apparaître '+cr51LowerFirst(m[1]);
-  if((m=s.match(/^indique\s+(.+)$/i)))
-    return 'Peu à peu, on voit apparaître '+cr51LowerFirst(m[1]);
-  if((m=s.match(/^montre\s+(.+)$/i)))
-    return 'La situation fait apparaître '+cr51LowerFirst(m[1]);
-  if((m=s.match(/^souligne\s+(.+)$/i)))
-    return 'L’attention se porte alors sur '+cr51LowerFirst(m[1]);
-  if((m=s.match(/^invite\s+à\s+(.+)$/i)))
-    return 'L’enjeu est alors de '+cr51LowerFirst(m[1]);
-  if((m=s.match(/^ouvre\s+un\s+(.+)$/i)))
-    return 'Un '+cr51LowerFirst(m[1])+' peut alors s’ouvrir';
-  if((m=s.match(/^ouvre\s+une\s+(.+)$/i)))
-    return 'Une '+cr51LowerFirst(m[1])+' peut alors s’ouvrir';
-  if((m=s.match(/^ouvre\s+(.+)$/i)))
-    return 'Une nouvelle possibilité peut alors s’ouvrir autour de '+cr51LowerFirst(m[1]);
-
-  if((m=s.match(/^cela\s+(?:représente|represente|symbolise)\s+(.+)$/i)))
-    return 'On voit alors se dessiner '+cr51LowerFirst(m[1]);
-  if((m=s.match(/^cela\s+signale\s+la\s+réapparition\s+(.+)$/i)))
-    return 'Une réapparition devient alors possible : celle '+cr51LowerFirst(m[1]);
-  if((m=s.match(/^cela\s+signale\s+(.+)$/i)))
-    return 'Un élément important apparaît alors : '+cr51LowerFirst(m[1]);
-  if((m=s.match(/^cela\s+annonce\s+(.+)$/i)))
-    return 'La suite peut alors faire apparaître '+cr51LowerFirst(m[1]);
-  if((m=s.match(/^cela\s+indique\s+(.+)$/i)))
-    return 'Peu à peu, on voit apparaître '+cr51LowerFirst(m[1]);
-  if((m=s.match(/^cela\s+montre\s+(.+)$/i)))
-    return 'La situation fait apparaître '+cr51LowerFirst(m[1]);
-  if((m=s.match(/^cela\s+invite\s+à\s+(.+)$/i)))
-    return 'L’enjeu est alors de '+cr51LowerFirst(m[1]);
-  if((m=s.match(/^cela\s+parle\s+de\s+(.+)$/i)))
-    return 'Cette dimension prend davantage de place : '+m[1]
-      .replace(/^de\s+/i,'')
-      .replace(/,\s*de\s+/gi,', ')
-      .replace(/\s+et\s+de\s+/gi,' et ');
-  if((m=s.match(/^cela\s+favorise\s+(.+)$/i)))
-    return 'Cette évolution peut favoriser '+cr51LowerFirst(m[1]);
-  if((m=s.match(/^cela\s+rappelle\s+(?:que\s+|qu[’'])(.+)$/i)))
-    return 'Dans cette dynamique, '+cr51LowerFirst(m[1]);
-  if((m=s.match(/^cela\s+donne\s+une\s+forme\s+(.+?)\s+au\s+lien$/i)))
-    return 'Le lien prend alors une forme '+cr51LowerFirst(m[1]);
-
-  s=s
-    .replace(/^cela\s+demande\s+de\b/i,'Cela demande de')
-    .replace(/^cela\s+demande\s+à\b/i,'Cela demande à')
-    .replace(/^choisit\b/i,'vous conduit à choisir')
-    .replace(/^demande\s+de\b/i,'Cela demande de')
-    .replace(/^demande\s+à\b/i,'Cela demande à')
-    .replace(/^aide\s+à\b/i,'Cela aide à')
-    .replace(/^rappelle\s+que\s+/i,'Dans cette dynamique, ')
-    .replace(/^rappelle\b/i,'Cela rappelle')
-    .replace(/^parle\s+de\s+/i,'Cette dimension prend davantage de place : ')
-    .replace(/^met\b/i,'Cela met')
-    .replace(/^favorise\s+/i,'Cette évolution peut favoriser ')
-    .replace(/^ramène\b/i,'Cela ramène')
-    .replace(/^force\b/i,'Cela oblige');
-  return s;
+  // On remplace le sujet de la fiche, jamais le verbe ni son complément.
+  const withoutCardSubject=s.replace(/^(?:(?:cette|la)\s+carte|elle|cela)\s+/i,'');
+  if(CR51_FRENCH_PREDICATE.test(withoutCardSubject)){
+    s=cr51LowerFirst(withoutCardSubject);
+    if(/^(?:confronte|apprend|enseigne)\s+à\s+/i.test(s))s='vous '+s;
+    const subject=/^(?:annonce|apporte|ouvre)\s/.test(s)?'La suite ':
+      /^(?:exprime|favorise|valorise|encourage|renforce|protège|préserve)\s/.test(s)?'Cette dynamique ':'La situation ';
+    s=subject+s;
+  }else if(withoutCardSubject!==s)s='La situation '+withoutCardSubject;
+  return cr51CapFirst(s)
+    .replace(/\bde\s+([aeiouyàâäéèêëîïôöùûüœ])/gi,'d’$1');
 }
 
 function cr51NarrativizeFrenchStart(text){
   const source=String(text||'').trim();
-  if(!source)return source;
-  const parts=source.match(/[^.!?]+(?:[.!?]+|$)/g)||[source];
-  return parts.map(part=>{
-    const trimmed=part.trim();
-    const pm=trimmed.match(/([.!?]+)$/);
-    const punct=pm?pm[1]:'';
-    const body=punct?trimmed.slice(0,-punct.length).trim():trimmed;
-    const rewritten=cr51NarrativizeFrenchSentence(body).replace(/[.!?]+$/,'').trim();
-    return rewritten+(punct||'.');
-  }).join(' ').trim();
+  // Les points-virgules et deux-points peuvent aussi introduire une proposition.
+  // On conserve la ponctuation et les nombres décimaux.
+  const parts=source.split(/([.!?;:]+(?:\s+|$))/);
+  return parts.map((part,i)=>{
+    if(i%2)return /^[;:!?]/.test(part)?' '+part:part;
+    const rewritten=cr51NarrativizeFrenchSentence(part);
+    const continuation=i>0&&/^[;:]/.test(parts[i-1]);
+    return continuation&&/^[a-zà-ÿ]/.test(part.trim())?cr51LowerFirst(rewritten):rewritten;
+  }).join('').trim();
 }
 
 function cr51NarrativeCleanup(text,en=false){

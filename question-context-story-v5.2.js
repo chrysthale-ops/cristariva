@@ -57,7 +57,6 @@ function cr52PolishGeneralStory(html,en=false){
       .replace(new RegExp(boundary+'Peut\\s+faire\\s+ressurgir\\s+','gi'),(m,b)=>b+'La situation peut faire ressurgir ')
       .replace(new RegExp(boundary+'(?:La|Cette)\\s+carte\\s+invite\\s+à\\s+','gi'),(m,b)=>b+'L’enjeu est de ')
       .replace(new RegExp(boundary+'(?:La|Cette)\\s+carte\\s+met\\s+en\\s+lumière\\s+','gi'),(m,b)=>b+'La situation fait alors apparaître ')
-      .replace(new RegExp(boundary+'(?:La|Cette)\\s+carte\\s+(?:indique|montre|évoque|souligne|signale)\\s+','gi'),(m,b)=>b+'La situation ')
       .replace(new RegExp(boundary+'(?:La|Cette)\\s+carte\\s+','gi'),(m,b)=>b+'La situation ')
       .replace(/\bL’enjeu est alors de\b/gi,'L’enjeu est de');
     p.innerHTML=s;
@@ -99,10 +98,10 @@ function cr52WoundClause(card,role,en=false){
   if(/abandon|rejet|perte|rupture|séparation/.test(hay))return 'une blessure liée à l’absence, au rejet ou à la perte continue d’influencer votre manière de vivre la sécurité et la proximité';
   if(/guérison|guerison|paix|libération|liberation/.test(hay))return 'un processus de réparation devient possible dès lors que la blessure n’est plus seulement évitée, mais comprise, apaisée et progressivement libérée';
   if(/transformation|renouveau|naissance|ouverture/.test(hay))return 'la blessure entre dans une phase où elle peut changer de sens et cesser d’organiser le présent exactement comme auparavant';
-  const clean=raw
-    .replace(/^(Dans le cadre spirituel ou général|Sur le plan intérieur|Sur le plan général|Dans le cadre général ou spirituel|Dans le cadre spirituel),?\s*/i,'')
-    .replace(new RegExp('^'+String(card?.name||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\s*','i'),'');
-  return clean?`une autre facette de ces blessures apparaît : ${clean.charAt(0).toLowerCase()+clean.slice(1).replace(/[.]$/,'')}`:'une autre facette de ces blessures devient visible';
+  let clean=raw.replace(/^(Dans le cadre spirituel ou général|Sur le plan intérieur|Sur le plan général|Dans le cadre général ou spirituel|Dans le cadre spirituel),?\s*/i,'');
+  if(typeof cr51StripLeadingCardName==='function')clean=cr51StripLeadingCardName(clean,card,false);
+  if(typeof cr51NarrativizeFrenchStart==='function')clean=cr51NarrativizeFrenchStart(clean);
+  return clean?`une autre facette de ces blessures apparaît : ${cr52Esc(clean.charAt(0).toLowerCase()+clean.slice(1).replace(/[.]$/,''))}`:'une autre facette de ces blessures devient visible';
 }
 function cr52WoundStory(cards,en=false){
   const clauses=cards.map((c,i)=>cr52WoundClause(c,i===0?'origin':i===cards.length-1?'outcome':'evolution',en));
