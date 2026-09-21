@@ -1,7 +1,7 @@
-/* CRISTARIVA — service worker v9 — Android/Web stable, 21 septembre 2026.
-   Force la mise à jour grammaticale des récits v5.16 et conserve
+/* CRISTARIVA — service worker v10 — Android/Web stable, 21 septembre 2026.
+   Force la mise à jour grammaticale des récits v5.19 et conserve
    l’Oracle Amour ainsi que la correction visuelle de la carte Relation 62. */
-const CACHE_NAME='cristariva-v9-20260921-narrative-516';
+const CACHE_NAME='cristariva-v10-20260921-narrative-519';
 const SHELL=[
  './',
  './index.html',
@@ -116,7 +116,10 @@ self.addEventListener('activate',event=>{
     await self.clients.claim();
     const clients=await self.clients.matchAll({type:'window',includeUncontrolled:true});
     for(const client of clients){
-      try{client.postMessage({type:'CRISTARIVA_UPDATED',version:'2026.09.21-narrative-516'});}catch(e){}
+      try{
+        client.postMessage({type:'CRISTARIVA_UPDATED',version:'2026.09.21-narrative-519'});
+        if(client.url)await client.navigate(client.url);
+      }catch(e){}
     }
   })());
 });
