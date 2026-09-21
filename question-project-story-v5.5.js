@@ -1,7 +1,8 @@
-/* CRISTARIVA — finition narrative globale v5.15
+/* CRISTARIVA — finition narrative globale v5.17
    Corrige les amorces sans sujet et allège les répétitions mécaniques.
-   Le sens et l'ordre des cartes sont conservés. */
-const CRISTARIVA_PROJECT_STORY_VERSION='5.15';
+   Le sens et l'ordre des cartes sont conservés.
+   v5.17 : supprime les répétitions systématiques de « La situation » dans le récit final. */
+const CRISTARIVA_PROJECT_STORY_VERSION='5.17';
 
 function cr55Question(){return String(state?.question||'').replace(/\s+/g,' ').trim();}
 function cr55Esc(v){try{return typeof cr53Esc==='function'?cr53Esc(v):typeof cr51Esc==='function'?cr51Esc(v):String(v??'');}catch(e){return String(v??'');}}
@@ -41,6 +42,45 @@ function cr55ProjectStory(cards,en=false){
     if(k&&!out.some(x=>x.k===k))out.push({k,t:cr57Cap(t)});
   }
   return out.map(x=>x.t).join('. ')+(out.length?'.':'');
+}
+
+/* Reformule les amorces mécaniques qui ont déjà reçu « La situation » dans les
+   couches narratives précédentes. Les substitutions sont verbales et non
+   aléatoires : elles conservent donc le sens tout en créant un récit naturel. */
+function cr57VarySituationSubjects(text){
+  let out=String(text||'');
+  const b='(^|[.!?;:]\\s+)';
+  const r=(p,repl)=>{out=out.replace(new RegExp(b+p,'gi'),(m,x)=>x+repl);};
+
+  /* Cas composés d'abord, afin de garder une phrase cohérente. */
+  r("La situation\\s+ne\\s+parle\\s+pas\\s+forcément\\s+d[’']un\\s+blocage\\s*:\\s*la\\s+situation\\s+indique\\s+plutôt\\s+qu[’']il\\s+faut\\s+",'Il n’est pas forcément question d’un blocage : il s’agit plutôt de ');
+  r("La situation\\s+indique\\s+plutôt\\s+qu[’']il\\s+faut\\s+",'Il s’agit plutôt de ');
+  r('La situation\\s+ne\\s+parle\\s+pas\\s+forcément\\s+de\\s+','Il n’est pas forcément question de ');
+
+  /* Formulations très fréquentes dans les définitions relationnelles. */
+  r('La situation\\s+désigne\\s+','On reconnaît ici ');
+  r('La situation\\s+est\\s+un\\s+indicateur\\s+fort\\s*:\\s*','Un indicateur fort se dégage : ');
+  r('La situation\\s+se\\s+vérifie\\s+','Ce constat se vérifie ');
+  r("La situation\\s+montre\\s+qu[’']",'On voit alors qu’');
+  r('La situation\\s+décrit\\s+une\\s+période\\s+où\\s+','S’ouvre alors une période où ');
+  r('La situation\\s+peut\\s+annoncer\\s+','Cela peut annoncer ');
+  r('La situation\\s+peut\\s+indiquer\\s+','La suite peut laisser entrevoir ');
+
+  /* Filet de sécurité pour les autres verbes du moteur. */
+  r('La situation\\s+montre\\s+','On voit alors ');
+  r('La situation\\s+indique\\s+','La suite indique ');
+  r('La situation\\s+révèle\\s+','Un nouvel élément apparaît : ');
+  r('La situation\\s+décrit\\s+','La suite fait apparaître ');
+  r('La situation\\s+associe\\s+','Cette dynamique associe ');
+  r('La situation\\s+oriente\\s+','La suite oriente ');
+  r('La situation\\s+pousse\\s+','Cette dynamique pousse ');
+  r('La situation\\s+appelle\\s+','L’évolution appelle ');
+  r('La situation\\s+dévoile\\s+','La suite dévoile ');
+  r('La situation\\s+présente\\s+','Un nouvel élément apparaît : ');
+  r('La situation\\s+maintient\\s+','Ce mouvement maintient ');
+  r("La situation\\s+demande\\s+(?:de\\s+|d[’'])",'L’enjeu est alors de ');
+
+  return out;
 }
 
 function cr57PolishFrenchNarrative(s){
@@ -116,6 +156,8 @@ function cr57PolishFrenchNarrative(s){
     .replace(/\s+([,.])/g,'$1')
     .replace(/\s*([;:!?])\s*/g,' $1 ')
     .replace(/\s{2,}/g,' ');
+
+  out=cr57VarySituationSubjects(out);
   return out.trim();
 }
 
