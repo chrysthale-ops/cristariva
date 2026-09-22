@@ -1,0 +1,37 @@
+name: Préparer le paquet CRISTARIVA
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/package-current-site.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Construire le ZIP du site
+        shell: bash
+        run: |
+          set -euo pipefail
+          zip -qr /tmp/cristariva-site.zip . \
+            -x '.git/*' '.github/*' '.tarot-card-fix/*' '.cristariva-assets/*' '.cristariva-tarot-assets/*'
+          ls -lh /tmp/cristariva-site.zip
+
+      - name: Conserver le paquet comme artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cristariva-site-current
+          path: /tmp/cristariva-site.zip
+          if-no-files-found: error
+          retention-days: 1
