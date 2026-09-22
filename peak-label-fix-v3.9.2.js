@@ -207,3 +207,127 @@
   if(out&&state?.astro&&typeof formatAstroResult==='function')out.innerHTML=formatAstroResult();
   if(typeof renderSynthesis==='function')renderSynthesis();
 })();
+
+/* CRISTARIVA — fusion des pics voisins au message redondant v4.4 */
+const CRISTARIVA_ADJACENT_TRANSIT_MERGE_VERSION='4.4';
+(function(){
+  if(typeof cr37WindowsText!=='function'||typeof cr37RelevantWindows!=='function'||typeof cr38PeakSentence!=='function')return;
+  const previousWindowsText=cr37WindowsText;
+
+  function daysBetween(a,b){
+    const da=new Date(a),db=new Date(b);
+    if(!Number.isFinite(da.getTime())||!Number.isFinite(db.getTime()))return Infinity;
+    return Math.abs(db-da)/86400000;
+  }
+
+  function targetFocus(hit,en=false){
+    const fr={
+      Soleil:'le positionnement personnel, la confiance et la manière de rayonner',
+      Lune:'la sensibilité, les réactions émotionnelles et le besoin de sécurité',
+      Mercure:'les échanges, la communication et les décisions',
+      'Vénus':'les sentiments, l’attirance et la manière de créer du lien',
+      Mars:'le désir, l’initiative et le passage à l’action'
+    };
+    const eng={
+      Soleil:'personal direction, confidence and self-expression',
+      Lune:'emotional sensitivity, reactions and the need for security',
+      Mercure:'communication, exchanges and decisions',
+      'Vénus':'feelings, attraction and the way bonds are formed',
+      Mars:'desire, initiative and action'
+    };
+    return (en?eng:fr)[hit?.na]||(en?'the natal point involved':'le point natal concerné');
+  }
+
+  function venusSupportDetail(hit,continuation,en=false){
+    if(hit?.tr!=='Vénus'||hit?.tone!=='support')return '';
+    const fr={
+      Mercure:continuation?'prolonge cet élan en facilitant les échanges, l’expression des sentiments et la recherche d’accord':'facilite les échanges, l’expression des sentiments et la recherche d’accord',
+      Soleil:continuation?'prolonge cet élan en renforçant l’attraction, la chaleur relationnelle et l’envie de rapprochement':'renforce l’attraction, la chaleur relationnelle et l’envie de rapprochement',
+      Lune:continuation?'prolonge cet élan en adoucissant le climat émotionnel et en favorisant la proximité affective':'adoucit le climat émotionnel et favorise la proximité affective',
+      'Vénus':continuation?'prolonge cet élan en accentuant la réceptivité affective, l’attirance et le besoin d’harmonie':'accentue la réceptivité affective, l’attirance et le besoin d’harmonie',
+      Mars:continuation?'prolonge cet élan en rapprochant attirance, désir et envie d’agir':'rapproche attirance, désir et envie d’agir'
+    };
+    const eng={
+      Mercure:continuation?'extends this momentum by easing communication, emotional expression and the search for agreement':'eases communication, emotional expression and the search for agreement',
+      Soleil:continuation?'extends this momentum by strengthening attraction, warmth and the wish to grow closer':'strengthens attraction, warmth and the wish to grow closer',
+      Lune:continuation?'extends this momentum by softening the emotional climate and encouraging closeness':'softens the emotional climate and encourages closeness',
+      'Vénus':continuation?'extends this momentum by increasing emotional receptivity, attraction and the need for harmony':'increases emotional receptivity, attraction and the need for harmony',
+      Mars:continuation?'extends this momentum by bringing attraction, desire and initiative closer together':'brings attraction, desire and initiative closer together'
+    };
+    return (en?eng:fr)[hit?.na]||'';
+  }
+
+  function detailedEffect(hit,continuation,en=false){
+    const venus=venusSupportDetail(hit,continuation,en);
+    if(venus)return venus;
+    const impact=typeof cr37ImpactText==='function'?cr37ImpactText(hit,cr33Intent(),en):'';
+    const focus=targetFocus(hit,en);
+    if(en){
+      if(continuation)return `continues the same movement, with greater emphasis on ${focus}`;
+      return impact?`${impact}, especially through ${focus}`:`places particular emphasis on ${focus}`;
+    }
+    if(continuation)return `prolonge la même dynamique en mettant davantage l’accent sur ${focus}`;
+    return impact?`${impact}, avec un effet plus direct sur ${focus}`:`met particulièrement l’accent sur ${focus}`;
+  }
+
+  function groupIntro(group,en=false){
+    const first=group[0],last=group[group.length-1];
+    const from=cr3Date(first.bestDate,en),to=cr3Date(last.bestDate,en);
+    if(en){
+      if(first.tone==='support')return `A single supportive sequence develops between ${from} and ${to}.`;
+      if(first.tone==='challenge')return `A single more demanding sequence is concentrated between ${from} and ${to}.`;
+      return `A single strong activation sequence develops between ${from} and ${to}.`;
+    }
+    if(first.tone==='support')return `Une même dynamique favorable se dessine entre le ${from} et le ${to}.`;
+    if(first.tone==='challenge')return `Une même phase plus exigeante se concentre entre le ${from} et le ${to}.`;
+    return `Une même phase d’activation marquée se dessine entre le ${from} et le ${to}.`;
+  }
+
+  function groupText(group,en=false){
+    const parts=[groupIntro(group,en)];
+    group.forEach((hit,index)=>{
+      const date=cr3Date(hit.bestDate,en);
+      const aspect=cr37AspectLabel(hit,en);
+      let lead='';
+      if(en)lead=index===0?`On ${date}`:(daysBetween(group[index-1].bestDate,hit.bestDate)<=1.25?'The following day':`On ${date}`);
+      else lead=index===0?`Le ${date}`:(daysBetween(group[index-1].bestDate,hit.bestDate)<=1.25?'Dès le lendemain':`Le ${date}`);
+      parts.push(`${lead}, ${aspect} ${detailedEffect(hit,index>0,en)}.`);
+    });
+    return parts.join(' ');
+  }
+
+  cr37WindowsText=function(a,en=false){
+    if(!a||!state?.date)return previousWindowsText(a,en);
+    let relevant=[];
+    try{
+      const intent=cr33Intent(),theme=cr3DominantTheme(state.draw||[],en),window=cr3TimingWindow(state.date,cr3ReadingMoment(),en);
+      relevant=(cr37RelevantWindows(a,theme,window,intent)||[]).slice().sort((x,y)=>new Date(x.bestDate)-new Date(y.bestDate));
+    }catch(e){return previousWindowsText(a,en);}
+    if(relevant.length<2)return previousWindowsText(a,en);
+
+    const blocks=[];
+    let momentIndex=0;
+    for(let i=0;i<relevant.length;){
+      const group=[relevant[i]];
+      let j=i+1;
+      while(j<relevant.length){
+        const prev=group[group.length-1],next=relevant[j];
+        const close=daysBetween(prev.bestDate,next.bestDate)<=2.25;
+        if(!close||next.tr!==group[0].tr||next.tone!==group[0].tone)break;
+        group.push(next);j++;
+      }
+      if(group.length>1){
+        blocks.push(groupText(group,en));
+        momentIndex++;
+        i=j;
+      }else{
+        blocks.push(cr38PeakSentence(relevant[i],momentIndex,en));
+        momentIndex++;
+        i++;
+      }
+    }
+    return blocks.join(' ');
+  };
+
+  if(typeof cr362Timing==='function')cr362Timing=function(a,en=false){return cr37WindowsText(a,en);};
+})();
