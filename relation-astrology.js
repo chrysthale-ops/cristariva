@@ -172,8 +172,8 @@
   async function ensureTarot(){
     if(window.__CRISTARIVA_TAROT_READY__)return true;
     try{
-      await loadScript('./tarot-divinatoire-data.js?v=20260922','tarot-divinatoire-data',false);
-      await loadScript('./tarot-divinatoire-integration.js?v=20260922','tarot-divinatoire-integration',false);
+      await loadScript('./tarot-divinatoire-data.js?v=20260922-tarot32','tarot-divinatoire-data',false);
+      await loadScript('./tarot-divinatoire-integration.js?v=20260922-tarot32','tarot-divinatoire-integration',false);
       return !!window.__CRISTARIVA_TAROT_READY__;
     }catch(e){console.error('CRISTARIVA Tarot divinatoire',e);return false;}
   }

@@ -1,8 +1,44 @@
-/* CRISTARIVA — service worker v12 — Android/Web stable, 22 septembre 2026.
+/* CRISTARIVA — service worker v13 — Android/Web stable, 22 septembre 2026.
    Force la mise à jour grammaticale des récits v5.20 et conserve
    l’Oracle Amour ainsi que la correction visuelle de la carte Relation 62. */
-const CACHE_NAME='cristariva-v12-20260922-tarot-images';
+const CACHE_NAME='cristariva-v13-20260922-tarot32';
 const SHELL=[
+ "./tarot-divinatoire-data.js?v=20260922-tarot32",
+ "./tarot-divinatoire-integration.js?v=20260922-tarot32",
+ "./tarot-title-image-hotfix.js?v=20260922-tarot32",
+ "./cards/tarot/major-001.webp?v=20260922-tarot32",
+ "./cards/tarot/major-002.webp?v=20260922-tarot32",
+ "./cards/tarot/major-003.webp?v=20260922-tarot32",
+ "./cards/tarot/major-004.webp?v=20260922-tarot32",
+ "./cards/tarot/major-005.webp?v=20260922-tarot32",
+ "./cards/tarot/major-006.webp?v=20260922-tarot32",
+ "./cards/tarot/major-007.webp?v=20260922-tarot32",
+ "./cards/tarot/major-008.webp?v=20260922-tarot32",
+ "./cards/tarot/major-009.webp?v=20260922-tarot32",
+ "./cards/tarot/major-010.webp?v=20260922-tarot32",
+ "./cards/tarot/major-011.webp?v=20260922-tarot32",
+ "./cards/tarot/major-012.webp?v=20260922-tarot32",
+ "./cards/tarot/major-013.webp?v=20260922-tarot32",
+ "./cards/tarot/major-014.webp?v=20260922-tarot32",
+ "./cards/tarot/major-015.webp?v=20260922-tarot32",
+ "./cards/tarot/major-016.webp?v=20260922-tarot32",
+ "./cards/tarot/major-017.webp?v=20260922-tarot32",
+ "./cards/tarot/major-018.webp?v=20260922-tarot32",
+ "./cards/tarot/major-019.webp?v=20260922-tarot32",
+ "./cards/tarot/major-020.webp?v=20260922-tarot32",
+ "./cards/tarot/major-021.webp?v=20260922-tarot32",
+ "./cards/tarot/major-022.webp?v=20260922-tarot32",
+ "./cards/tarot/001.webp?v=20260922-tarot32",
+ "./cards/tarot/002.webp?v=20260922-tarot32",
+ "./cards/tarot/003.webp?v=20260922-tarot32",
+ "./cards/tarot/004.webp?v=20260922-tarot32",
+ "./cards/tarot/005.webp?v=20260922-tarot32",
+ "./cards/tarot/006.webp?v=20260922-tarot32",
+ "./cards/tarot/007.webp?v=20260922-tarot32",
+ "./cards/tarot/008.webp?v=20260922-tarot32",
+ "./cards/tarot/009.webp?v=20260922-tarot32",
+ "./cards/tarot/010.webp?v=20260922-tarot32",
+
  './',
  './index.html',
  './manifest.webmanifest',
@@ -117,7 +153,7 @@ self.addEventListener('activate',event=>{
     const clients=await self.clients.matchAll({type:'window',includeUncontrolled:true});
     for(const client of clients){
       try{
-        client.postMessage({type:'CRISTARIVA_UPDATED',version:'2026.09.22-tarot-images'});
+        client.postMessage({type:'CRISTARIVA_UPDATED',version:'2026.09.22-tarot32'});
         if(client.url)await client.navigate(client.url);
       }catch(e){}
     }

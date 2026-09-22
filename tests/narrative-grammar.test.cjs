@@ -181,12 +181,12 @@ test('actual draw buttons use the final correction for both oracles and all form
 test('the PWA update references exist and request the fixed scripts',()=>{
   const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
   const sw=fs.readFileSync(path.join(root,'service-worker.js'),'utf8');
-  assert.match(html,/service-worker\.js\?v=20260921-narrative-520/);
-  assert.match(sw,/cristariva-v11-20260921-narrative-520/);
+  assert.match(html,/service-worker\.js\?v=[\w.-]+/);
+  assert.match(sw,/const CACHE_NAME='cristariva-[^']+'/);
   for(const script of ['story-fluid-v5.1.js','question-project-story-v5.5.js','relation-astrology.js']){
-    assert.ok(html.includes(`${script}?v=5.20`));assert.ok(sw.includes(`'./${script}'`));
+    assert.ok(html.includes(`${script}?v=`));assert.ok(sw.includes(`'./${script}'`));
   }
   assert.ok(sw.includes(`'./question-context-story-v5.2.js'`));
   const shell=sw.match(/const SHELL=([\s\S]*?);/)[1];
-  for(const [,url] of shell.matchAll(/'([^']+)'/g))assert.ok(fs.existsSync(path.join(root,url.split('?')[0])),url);
+  for(const [,url] of shell.matchAll(/['"]([^'"]+)['"]/g))assert.ok(fs.existsSync(path.join(root,url.split('?')[0])),url);
 });

@@ -1,44 +1,15 @@
 /* CRISTARIVA — correctif Tarot divinatoire 2026-09-22
    Corrige les titres du Tarot afin qu'ils ne soient pas remplacés par
-   les titres du grand oracle qui utilisent les mêmes numéros 1 à 10.
-   Force également les 10 illustrations originales WebP.
+   les titres du grand oracle qui utilisent les mêmes numéros.
+   Préserve les 32 identités et leurs illustrations WebP.
 */
 (function(){
   'use strict';
 
-  const FR = {
-    1:'Le Passage Secret',
-    2:'La Flamme Retrouvée',
-    3:'Le Messager de Minuit',
-    4:'Les Deux Chemins',
-    5:'Le Masque qui Tombe',
-    6:'La Promesse',
-    7:'L’Éclipse',
-    8:'Le Fil Invisible',
-    9:'La Porte Ouverte',
-    10:'Le Retour'
-  };
-  const EN = {
-    1:'The Secret Passage',
-    2:'The Rekindled Flame',
-    3:'The Midnight Messenger',
-    4:'The Two Paths',
-    5:'The Falling Mask',
-    6:'The Promise',
-    7:'The Eclipse',
-    8:'The Invisible Thread',
-    9:'The Open Door',
-    10:'The Return'
-  };
-
   function repair(card){
-    if(!card || card.oracle!=='tarot') return card;
-    const id = Number(card.id);
-    card.name = FR[id] || card.name;
-    if(card.en) card.en.name = EN[id] || card.en.name;
-    const path = `./cards/tarot/${String(id).padStart(3,'0')}.webp?v=20260922f`;
-    card.image = path;
-    card.imageEn = path;
+    if(!card||card.oracle!=='tarot')return card;
+    const identity=window.CR_TAROT_IDENTITIES?.[Number(card.id)];
+    if(identity){card.name=identity.name;if(card.en)card.en.name=identity.enName;card.image=identity.image;card.imageEn=identity.imageEn;}
     return card;
   }
 
@@ -82,5 +53,5 @@
   repairAll();
   document.addEventListener('click', () => setTimeout(repairAll, 0), true);
   document.addEventListener('change', () => setTimeout(repairAll, 0), true);
-  window.CR_TAROT_HOTFIX_VERSION = '2026.09.22f';
+  window.CR_TAROT_HOTFIX_VERSION = '2026.09.22-tarot32';
 })();
