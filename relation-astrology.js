@@ -70,7 +70,6 @@
         const walker=document.createTreeWalker(p,NodeFilter.SHOW_TEXT);
         while(walker.nextNode()){
           const node=walker.currentNode;
-          // Le sujet de la question est une citation de l'utilisateur.
           if(node.parentElement.closest('b,strong,a,code'))continue;
           const match=node.textContent.match(/^(\s*)([\s\S]*?)(\s*)$/);
           let s=match[2];
@@ -121,14 +120,8 @@
     return s?s.charAt(0).toLocaleLowerCase()+s.slice(1):s;
   }
 
-  function threeCardOpening(text){
-    return 'Au départ, '+threeCardLowerFirst(threeCardClean(text));
-  }
-
-  function threeCardPresent(text){
-    return 'Aujourd’hui, '+threeCardLowerFirst(threeCardClean(text));
-  }
-
+  function threeCardOpening(text){return 'Au départ, '+threeCardLowerFirst(threeCardClean(text));}
+  function threeCardPresent(text){return 'Aujourd’hui, '+threeCardLowerFirst(threeCardClean(text));}
   function threeCardMomentum(text,previousCard,currentCard){
     const before=threeCardPolarity(previousCard),after=threeCardPolarity(currentCard);
     const transition=before<0&&after>0?'Pourtant, ':before>0&&after<0?'Cependant, ':'À partir de là, ';
@@ -159,8 +152,6 @@
       const wrapped=function(cards){
         let html=base.apply(this,arguments);
         html=enforceThreeCardArc(html,cards);
-        /* IMPORTANT : l’arc à trois cartes repart des définitions brutes ;
-           on repasse donc la finition après lui pour éviter « Parle… » etc. */
         return polishRepeatedStoryOpeners(html);
       };
       wrapped.__cristarivaFinalPolish520=true;
@@ -178,11 +169,19 @@
 
   installStoryPolish();
 
+  async function ensureTarot(){
+    if(window.__CRISTARIVA_TAROT_READY__)return true;
+    try{
+      await loadScript('./tarot-divinatoire-data.js?v=20260922','tarot-divinatoire-data',false);
+      await loadScript('./tarot-divinatoire-integration.js?v=20260922','tarot-divinatoire-integration',false);
+      return !!window.__CRISTARIVA_TAROT_READY__;
+    }catch(e){console.error('CRISTARIVA Tarot divinatoire',e);return false;}
+  }
+
   async function boot(){
     await ensureOracleAmour();
-    /* Certains scripts de l’Oracle Amour peuvent redéfinir l’interprétation.
-       On réinstalle donc la finition après leur chargement. */
     if(typeof window.storyInterpretation==='function'&&window.storyInterpretation!==installedBase){installStoryPolish();}
+    await ensureTarot();
     setTimeout(installStoryPolish,50);
     setTimeout(installStoryPolish,250);
   }
