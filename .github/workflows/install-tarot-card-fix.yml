@@ -24,26 +24,74 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo "Tailles des blocs 009 :"
-          wc -c .tarot-card-fix/009.part0 .tarot-card-fix/009.part1a .tarot-card-fix/009.part1b .tarot-card-fix/009.part2
-          echo "Tailles des blocs 010 :"
-          wc -c .tarot-card-fix/010.part0 .tarot-card-fix/010.part1 .tarot-card-fix/010.part2
           python3 - <<'PY'
           from pathlib import Path
-          import base64, hashlib, re
-          def build(parts, out, expected):
-              s=''.join(Path(p).read_text() for p in parts)
-              print(out, 'base64 length=', len(s), 'mod4=', len(s)%4)
-              bad=[(i,repr(ch)) for i,ch in enumerate(s) if ch not in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=']
-              print(out, 'invalid chars=', bad[:20], 'count=', len(bad))
+          import base64, hashlib
+
+          alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+          expected_blocks=[
+            'a51b487bd9fab4ce738bbe136c3b6298e58aed8a87b9b2f9cbea7b08273b1d96',
+            'a3155f2118c8bfb6b1e9703226a675d72eb6ff9273c5690eee2a836c4f01c4cb',
+            '0e907596236b57962870e1702fd5bf3809b572c863f846463d75403e21eadab0',
+            '67f6ecc4d6cc4abafdfe7a72e0ae95daad998b3f7643392dcf249e307d9f677d',
+            'd1b5a57f1cd3140d9224c8c304d23c849a2c250eba6db21a4e3d79249b3bbcc3',
+            '7c7ea7ac022af64db80a41f0427d8342e2657058a13f3942874ef013981193bf',
+            '20ad4b28af9cab64c8a26f58fc820f0d1d8507de72fbd36b9b294a5a249418db',
+            'fb96894628c0b487172ec802f97ef77779cc3396263b515df478f3e466e6202e',
+            '5d7c5d77ee5925d9b19b04e2a610d6336360c354f7459bc1ffbbac10070ab4d6',
+          ]
+          target_part_sha='ca35d4f11c97ef10670d3831b5142c05bb5829c650d19aadad305a1badc20907'
+
+          a=Path('.tarot-card-fix/009.part1a').read_text()
+          if hashlib.sha256(a.encode()).hexdigest()!=target_part_sha:
+              if len(a)!=8999:
+                  raise SystemExit(f'009.part1a longueur inattendue: {len(a)}')
+              block=None
+              for k,h in enumerate(expected_blocks):
+                  if hashlib.sha256(a[k*1000:(k+1)*1000].encode()).hexdigest()!=h:
+                      block=k
+                      break
+              if block is None:
+                  raise SystemExit('Impossible de localiser le caractère manquant')
+              start=block*1000
+              short=a[start:start+999]
+              found=None
+              for pos in range(1000):
+                  for ch in alphabet:
+                      cand=short[:pos]+ch+short[pos:]
+                      if hashlib.sha256(cand.encode()).hexdigest()==expected_blocks[block]:
+                          found=(pos,ch,cand)
+                          break
+                  if found:
+                      break
+              if not found:
+                  raise SystemExit('Caractère manquant non retrouvé')
+              pos,ch,cand=found
+              a=a[:start]+cand+a[start+999:]
+              if len(a)!=9000 or hashlib.sha256(a.encode()).hexdigest()!=target_part_sha:
+                  raise SystemExit('Réparation 009.part1a non validée')
+              print(f'009.part1a réparé: bloc={block}, position={pos}, caractère={ch}')
+
+          def build(strings, out, expected):
+              s=''.join(strings)
               data=base64.b64decode(s, validate=True)
               got=hashlib.sha256(data).hexdigest()
-              print(out, 'bytes=', len(data), 'sha256=', got)
-              if got != expected:
+              print(out, 'base64=',len(s),'bytes=',len(data),'sha256=',got)
+              if got!=expected:
                   raise SystemExit(f'{out}: SHA incorrect')
               Path(out).write_bytes(data)
-          build(['.tarot-card-fix/009.part0','.tarot-card-fix/009.part1a','.tarot-card-fix/009.part1b','.tarot-card-fix/009.part2'], 'cards/tarot/009.webp', '94d1c99bf57848f00d34dc1f4fcbe5d8bd038c2819b6677ccac133cd661b211a')
-          build(['.tarot-card-fix/010.part0','.tarot-card-fix/010.part1','.tarot-card-fix/010.part2'], 'cards/tarot/010.webp', 'b139163af199e1d120a0e7b7639cba8e88e9b1fd0eab5aa9d098b8901201d1ca')
+
+          build([
+              Path('.tarot-card-fix/009.part0').read_text(), a,
+              Path('.tarot-card-fix/009.part1b').read_text(),
+              Path('.tarot-card-fix/009.part2').read_text()
+          ], 'cards/tarot/009.webp', '94d1c99bf57848f00d34dc1f4fcbe5d8bd038c2819b6677ccac133cd661b211a')
+
+          build([
+              Path('.tarot-card-fix/010.part0').read_text(),
+              Path('.tarot-card-fix/010.part1').read_text(),
+              Path('.tarot-card-fix/010.part2').read_text()
+          ], 'cards/tarot/010.webp', 'b139163af199e1d120a0e7b7639cba8e88e9b1fd0eab5aa9d098b8901201d1ca')
           PY
 
       - name: Forcer le renouvellement des caches Tarot
