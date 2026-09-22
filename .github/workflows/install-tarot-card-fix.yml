@@ -24,7 +24,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cat .tarot-card-fix/009.part0 .tarot-card-fix/009.part1 .tarot-card-fix/009.part2 | base64 -d > cards/tarot/009.webp
+          cat .tarot-card-fix/009.part0 .tarot-card-fix/009.part1a .tarot-card-fix/009.part1b .tarot-card-fix/009.part2 | base64 -d > cards/tarot/009.webp
           cat .tarot-card-fix/010.part0 .tarot-card-fix/010.part1 .tarot-card-fix/010.part2 | base64 -d > cards/tarot/010.webp
           echo "94d1c99bf57848f00d34dc1f4fcbe5d8bd038c2819b6677ccac133cd661b211a  cards/tarot/009.webp" | sha256sum -c -
           echo "b139163af199e1d120a0e7b7639cba8e88e9b1fd0eab5aa9d098b8901201d1ca  cards/tarot/010.webp" | sha256sum -c -
