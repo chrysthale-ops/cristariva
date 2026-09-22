@@ -24,10 +24,27 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cat .tarot-card-fix/009.part0 .tarot-card-fix/009.part1a .tarot-card-fix/009.part1b .tarot-card-fix/009.part2 | base64 -d > cards/tarot/009.webp
-          cat .tarot-card-fix/010.part0 .tarot-card-fix/010.part1 .tarot-card-fix/010.part2 | base64 -d > cards/tarot/010.webp
-          echo "94d1c99bf57848f00d34dc1f4fcbe5d8bd038c2819b6677ccac133cd661b211a  cards/tarot/009.webp" | sha256sum -c -
-          echo "b139163af199e1d120a0e7b7639cba8e88e9b1fd0eab5aa9d098b8901201d1ca  cards/tarot/010.webp" | sha256sum -c -
+          echo "Tailles des blocs 009 :"
+          wc -c .tarot-card-fix/009.part0 .tarot-card-fix/009.part1a .tarot-card-fix/009.part1b .tarot-card-fix/009.part2
+          echo "Tailles des blocs 010 :"
+          wc -c .tarot-card-fix/010.part0 .tarot-card-fix/010.part1 .tarot-card-fix/010.part2
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64, hashlib, re
+          def build(parts, out, expected):
+              s=''.join(Path(p).read_text() for p in parts)
+              print(out, 'base64 length=', len(s), 'mod4=', len(s)%4)
+              bad=[(i,repr(ch)) for i,ch in enumerate(s) if ch not in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=']
+              print(out, 'invalid chars=', bad[:20], 'count=', len(bad))
+              data=base64.b64decode(s, validate=True)
+              got=hashlib.sha256(data).hexdigest()
+              print(out, 'bytes=', len(data), 'sha256=', got)
+              if got != expected:
+                  raise SystemExit(f'{out}: SHA incorrect')
+              Path(out).write_bytes(data)
+          build(['.tarot-card-fix/009.part0','.tarot-card-fix/009.part1a','.tarot-card-fix/009.part1b','.tarot-card-fix/009.part2'], 'cards/tarot/009.webp', '94d1c99bf57848f00d34dc1f4fcbe5d8bd038c2819b6677ccac133cd661b211a')
+          build(['.tarot-card-fix/010.part0','.tarot-card-fix/010.part1','.tarot-card-fix/010.part2'], 'cards/tarot/010.webp', 'b139163af199e1d120a0e7b7639cba8e88e9b1fd0eab5aa9d098b8901201d1ca')
+          PY
 
       - name: Forcer le renouvellement des caches Tarot
         shell: bash
