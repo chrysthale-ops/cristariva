@@ -36,7 +36,7 @@
     const id = Number(card.id);
     card.name = FR[id] || card.name;
     if(card.en) card.en.name = EN[id] || card.en.name;
-    const path = `./cards/tarot/${String(id).padStart(3,'0')}.webp?v=20260922e`;
+    const path = `./cards/tarot/${String(id).padStart(3,'0')}.webp?v=20260922f`;
     card.image = path;
     card.imageEn = path;
     return card;
@@ -82,5 +82,5 @@
   repairAll();
   document.addEventListener('click', () => setTimeout(repairAll, 0), true);
   document.addEventListener('change', () => setTimeout(repairAll, 0), true);
-  window.CR_TAROT_HOTFIX_VERSION = '2026.09.22e';
+  window.CR_TAROT_HOTFIX_VERSION = '2026.09.22f';
 })();
