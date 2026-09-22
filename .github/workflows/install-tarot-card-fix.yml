@@ -1,0 +1,51 @@
+name: Installer les cartes Tarot corrigées
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/install-tarot-card-fix.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Reconstruire les illustrations corrigées
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .tarot-card-fix/009.part0 .tarot-card-fix/009.part1 .tarot-card-fix/009.part2 | base64 -d > cards/tarot/009.webp
+          cat .tarot-card-fix/010.part0 .tarot-card-fix/010.part1 .tarot-card-fix/010.part2 | base64 -d > cards/tarot/010.webp
+          echo "94d1c99bf57848f00d34dc1f4fcbe5d8bd038c2819b6677ccac133cd661b211a  cards/tarot/009.webp" | sha256sum -c -
+          echo "b139163af199e1d120a0e7b7639cba8e88e9b1fd0eab5aa9d098b8901201d1ca  cards/tarot/010.webp" | sha256sum -c -
+
+      - name: Forcer le renouvellement des caches Tarot
+        shell: bash
+        run: |
+          set -euo pipefail
+          sed -i 's/20260922e/20260922f/g; s/2026\.09\.22e/2026.09.22f/g' tarot-title-image-hotfix.js
+          sed -i "s/service worker v11/service worker v12/; s/21 septembre 2026/22 septembre 2026/; s/cristariva-v11-20260921-narrative-520/cristariva-v12-20260922-tarot-images/; s/2026.09.21-narrative-520/2026.09.22-tarot-images/" service-worker.js
+
+      - name: Publier les cartes corrigées
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add cards/tarot/009.webp cards/tarot/010.webp tarot-title-image-hotfix.js service-worker.js
+          if git diff --cached --quiet; then
+            echo "Aucun changement à publier."
+            exit 0
+          fi
+          git commit -m "Corriger Le Retour et La Porte Ouverte"
+          git push origin HEAD:main
