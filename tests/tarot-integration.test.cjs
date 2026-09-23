@@ -39,6 +39,11 @@ function domain(value) {
   select.value = value;
   select.dispatchEvent(new w.Event('change', {bubbles:true}));
 }
+function oracle(value) {
+  const select = w.document.querySelector('#oracleChoice');
+  select.value = value;
+  select.dispatchEvent(new w.Event('change', {bubbles:true}));
+}
 
 test('the live loader exposes all 32 cards with preserved original identities', () => {
   assert.deepEqual(Array.from(cards, c => c.id), Array.from({length:32}, (_,i) => i+1));
@@ -77,7 +82,7 @@ test('Tarot titles survive the grand oracle title pass and language changes', ()
 });
 
 test('one, three and five card draws use Tarot cards and keep complementary readings', () => {
-  domain('Tarot divinatoire');
+  domain('Professionnelle / Projet'); oracle('tarot');
   w.document.querySelector('#question').value = 'Quelle évolution pour mon projet ?';
   for (const count of [1,3,5]) {
     state.format = String(count);
@@ -113,14 +118,19 @@ test('every catalogue card opens its matching bilingual definition and picture',
   }
 });
 
-test('switching back to other decks keeps their cards and clears complementary draws', () => {
+test('domain filters the sentimental oracle and switching decks clears previous draws', () => {
   state.lang = 'fr'; w.applyLanguage();
   for (const value of ['Sentimental','Relations','Professionnelle / Projet','Général / spirituel']) {
-    domain(value);
+    domain(value); oracle(value==='Sentimental'?'amour':'cristariva');
     assert.equal(state.relation, null); assert.equal(state.date, null);
     w.document.querySelector('#drawBtn').click();
     assert.ok(state.draw.every(c => c.oracle !== 'tarot'));
     if (value === 'Sentimental') assert.ok(state.draw.every(c => c.oracle === 'amour'));
+    else assert.equal(w.document.querySelector('#oracleChoice option[value="amour"]').disabled,true);
   }
+  oracle('tarot');w.document.querySelector('#drawBtn').click();
+  assert.ok(state.draw.every(c=>c.oracle==='tarot'));
+  domain('Sentimental');assert.equal(state.draw.length,0);
+  assert.equal(w.document.querySelector('#oracleChoice option[value="amour"]').disabled,false);
   assert.deepEqual(errors, []);
 });

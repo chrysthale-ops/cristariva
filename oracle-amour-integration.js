@@ -3,7 +3,7 @@
   'use strict';
   if(typeof AMOUR_DATA==='undefined') return;
   const LOVE_DOMAIN='Sentimental';
-  const isLove=()=>state && state.domain===LOVE_DOMAIN;
+  const isLove=()=>state && state.oracle==='amour' && state.domain===LOVE_DOMAIN;
   const activeDeck=()=>isLove()?AMOUR_DATA:DATA;
 
   /* Ajout du domaine Sentimental sans modifier les autres domaines. */
@@ -34,6 +34,7 @@
     const dr=document.querySelector('#dateResult'); if(dr)dr.innerHTML='';
     updateOracleContext();
   });
+  document.querySelector('#oracleChoice')?.addEventListener('change',updateOracleContext);
 
   /* Les lectures du nouvel oracle utilisent leur définition sentimentale propre. */
   if(typeof domainReading==='function'){

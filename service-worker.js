@@ -1,7 +1,7 @@
 /* CRISTARIVA — service worker v16 — Android/Web stable, 23 septembre 2026.
    Force la mise à jour des récits afin de supprimer les amorces répétitives
    tout en conservant le Tarot divinatoire, l’Oracle Amour et les corrections Relation. */
-const CACHE_NAME='cristariva-v16-20260923-story-openers';
+const CACHE_NAME='cristariva-v17-20260923-oracle-selection';
 const SHELL=[
  "./tarot-divinatoire-data.js?v=20260922-tarot32",
  "./tarot-divinatoire-integration.js?v=20260922-tarot32",
@@ -41,6 +41,7 @@ const SHELL=[
 
  './',
  './index.html',
+ './oracle-selection.js?v=20260923',
  './manifest.webmanifest',
  './manifest-en.webmanifest',
  './icon-192.png',

@@ -14,10 +14,10 @@ function fixTarotCard(card){
 (window.TAROT_DATA.main||[]).forEach(fixTarotCard);(window.TAROT_DATA.all||[]).forEach(fixTarotCard);
 try{if(typeof window.cr363Title==='function'){const previousCr363Title=window.cr363Title;window.cr363Title=function(card){if(card?.oracle==='tarot'){fixTarotCard(card);return state?.lang==='en'?(card.en?.name||card.name):card.name;}return previousCr363Title(card);};}if(typeof window.cardName==='function'){const previousCardName=window.cardName;window.cardName=function(card){if(card?.oracle==='tarot'){fixTarotCard(card);return state?.lang==='en'?(card.en?.name||card.name):card.name;}return previousCardName(card);};}}catch(e){}
 const domainSelect=document.querySelector('#domain');
-const isTarot=()=>typeof state==='object'&&state&&state.domain===TAROT_DOMAIN;
+const isTarot=()=>typeof state==='object'&&state&&state.oracle==='tarot';
 const esc=value=>typeof readingEscape==='function'?readingEscape(value):String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 try{if(typeof DOMAIN_EN==='object')DOMAIN_EN[TAROT_DOMAIN]='Divinatory Tarot';}catch(e){}
-function ensureDomainOption(){if(!domainSelect)return;let o=[...domainSelect.options].find(x=>x.value===TAROT_DOMAIN);if(!o){o=document.createElement('option');o.value=TAROT_DOMAIN;domainSelect.appendChild(o)}o.textContent=state?.lang==='en'?'Divinatory Tarot':TAROT_DOMAIN}
+function ensureDomainOption(){}
 function ensureContext(){if(!domainSelect)return null;let c=document.querySelector('#tarotContext');if(!c){c=document.createElement('p');c.id='tarotContext';c.className='muted';c.style.marginTop='8px';c.setAttribute('aria-live','polite');domainSelect.closest('div')?.appendChild(c)}return c}
 function updateContext(){ensureDomainOption();const c=ensureContext();if(!c)return;c.hidden=!isTarot();c.innerHTML=state?.lang==='en'?'<b>Active deck: CRISTARIVA Divinatory Tarot</b><br>32 cards: 22 Major Arcana and 10 original CRISTARIVA cards · Relationship, timing, astrology and final synthesis remain available.':'<b>Jeu actif : Tarot divinatoire CRISTARIVA</b><br>32 cartes : 22 arcanes majeurs et 10 cartes originales CRISTARIVA · Relation, datation, astrologie et synthèse finale restent disponibles.'}
 function clearComplementaryCards(){state.relation=null;state.date=null;const r=document.querySelector('#relationResult'),d=document.querySelector('#dateResult');if(r)r.innerHTML='';if(d)d.innerHTML=''}
@@ -25,6 +25,7 @@ ensureDomainOption();ensureContext();updateContext();
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',()=>{ensureDomainOption();updateContext();renderTarotCatalog()},{once:true})}
 let previousDomain=state?.domain||domainSelect?.value||'Relations';
 domainSelect?.addEventListener('change',()=>{const next=domainSelect.value;const switched=previousDomain===TAROT_DOMAIN||next===TAROT_DOMAIN;state.domain=next;if(switched&&previousDomain!==next)clearComplementaryCards();previousDomain=next;updateContext()});
+document.querySelector('#oracleChoice')?.addEventListener('change',updateContext);
 function localizedTarotReading(card,en=false){fixTarotCard(card);const local=en?(card?.en||{}):(card||{});let scope='spirit';try{if(typeof cr51Scope==='function')scope=cr51Scope()}catch(e){}if(scope==='work')return local.reading_professionnel||local.meaning||local.definition||'';if(scope==='relation')return local.reading_relationnel||local.meaning||local.definition||'';return local.reading_spirituel||local.reading_tarot||local.meaning||local.definition||''}
 if(typeof domainReading==='function'){const old=domainReading;domainReading=function(card){if(card?.oracle==='tarot'){fixTarotCard(card);return card.reading_tarot||card.meaning||card.definition||'';}return old(card)}}
 if(typeof preciseReading==='function'){const old=preciseReading;preciseReading=function(card,focus,en){if(card?.oracle==='tarot')return localizedTarotReading(card,Boolean(en));return old(card,focus,en)}}
