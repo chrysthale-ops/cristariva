@@ -1,8 +1,8 @@
-/* CRISTARIVA — service worker v20 — récit Oracle Amour v6.0.
+/* CRISTARIVA — service worker v21 — récits Oracle Amour v6.0 + Tarot v6.1.
    Force le chargement des moteurs actuels sur PC et Android et évite qu'une
    ancienne version du récit reste active dans le cache de la PWA. */
-const CACHE_NAME='cristariva-v20-20260923-love-story6';
-const APP_VERSION='2026.09.23-love-story-v6.0';
+const CACHE_NAME='cristariva-v21-20260923-tarot-story61';
+const APP_VERSION='2026.09.23-tarot-story-v6.1';
 const SHELL=[
   './',
   './index.html',
@@ -14,7 +14,7 @@ const SHELL=[
   './question-context-story-v5.2.js?v=5.2.2',
   './question-intent-story-v5.3.js?v=5.6',
   './question-project-story-v5.5.js?v=5.20',
-  './oracle-selection.js?v=20260923-love-story6',
+  './oracle-selection.js?v=20260923-tarot-story61',
   './oracle-amour-data.js?v=20260923-love-story6',
   './oracle-amour-card62-fix.js?v=20260923-love-story6',
   './oracle-amour-integration.js?v=20260923-love-story6',
@@ -89,8 +89,7 @@ self.addEventListener('fetch',event=>{
     return;
   }
 
-  /* Les moteurs, données et manifests passent toujours par le réseau d'abord.
-     Cela empêche une ancienne concaténation des définitions de survivre. */
+  /* Les moteurs, données et manifests passent toujours par le réseau d'abord. */
   if(/\.(?:js|html|json|webmanifest)$/.test(url.pathname)){
     event.respondWith(networkFirst(request));
     return;
