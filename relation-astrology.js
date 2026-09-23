@@ -1,6 +1,7 @@
-/* CRISTARIVA — chargeur Android/Web + finition narrative finale v5.20, 21 septembre 2026.
+/* CRISTARIVA — chargeur Android/Web + finition narrative finale v5.21, 23 septembre 2026.
    - charge l’astrologie relationnelle et la cohérence de période ;
-   - charge l’Oracle Amour ;
+   - charge l’Oracle Amour et le Tarot divinatoire ;
+   - filtre les cartes Relation selon le domaine et la question ;
    - corrige en dernier ressort les phrases sans sujet dans le récit ;
    - supprime les amorces mécaniques avec « alors » ;
    - conserve une progression avant / maintenant / élan pour les tirages à 3 cartes.
@@ -61,6 +62,152 @@
     return window.__CRISTARIVA_LOVE_DIRECT_BOOTSTRAP__;
   }
 
+  /* Filtrage contextuel des cartes Relation — Grand Oracle, Oracle Amour et Tarot. */
+  const REL_EXCLUDE={
+    relations:new Set([103,104,110]),
+    love:new Set([97,99,101,103,104,110,114]),
+    work:new Set([97,99,101,102,109]),
+    social:new Set([103,104,109,110]),
+    general:new Set([103,104,109,110])
+  };
+
+  function relNorm(value){
+    return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  }
+
+  function relationQuestion(){
+    return String((typeof state==='object'&&state?.question)||document.querySelector('#question')?.value||'').trim();
+  }
+
+  function questionTone(question){
+    const q=relNorm(question);
+    if(/\b(amour|amoureux|amoureuse|sentimental|romance|couple|crush|attirance|desir|sexualite|sexuel|partenaire amoureux|ex[- ]?partenaire|love|romantic|romance)\b/.test(q))return 'love';
+    if(/\b(travail|emploi|profession|professionnel|projet|entreprise|societe|carriere|client|recruteur|recrutement|manager|responsable|collegue|work|job|career|business|project)\b/.test(q))return 'work';
+    if(/\b(famille|familial|parent|pere|mere|enfant|fils|fille|frere|soeur|ami|amie|amitie|social|family|parent|child|brother|sister|friend|friendship)\b/.test(q))return 'social';
+    return '';
+  }
+
+  function relationContext(){
+    const domain=String((typeof state==='object'&&state?.domain)||document.querySelector('#domain')?.value||'');
+    const d=relNorm(domain);
+    const tone=questionTone(relationQuestion());
+    if(d.includes('sentimental'))return 'love';
+    if(d.includes('profession'))return 'work';
+    if(d.includes('relations'))return tone==='love'?'love':tone==='social'?'social':'relations';
+    if(d.includes('tarot')){
+      if(tone)return tone;
+      try{
+        if(typeof cr51Scope==='function'){
+          const scope=cr51Scope();
+          if(scope==='work')return 'work';
+          if(scope==='relation')return 'relations';
+        }
+      }catch(e){}
+      return 'general';
+    }
+    return 'general';
+  }
+
+  function isGrandRelationArray(arr){
+    if(!Array.isArray(arr)||!arr.length)return false;
+    if(typeof DATA==='object'&&Array.isArray(DATA?.relation)&&arr===DATA.relation)return true;
+    return arr.every(function(c){return c&&c.group==='relation'&&Number(c.id)>=96&&Number(c.id)<=115;});
+  }
+
+  function isLoveRelationArray(arr){
+    if(!Array.isArray(arr)||!arr.length)return false;
+    if(window.AMOUR_DATA&&Array.isArray(window.AMOUR_DATA.relation)&&arr===window.AMOUR_DATA.relation)return true;
+    return arr.every(function(c){return c&&c.oracle==='amour'&&c.group==='relation'&&Number(c.id)>=61&&Number(c.id)<=70;});
+  }
+
+  function filteredGrandRelations(arr){
+    const context=relationContext();
+    const excluded=REL_EXCLUDE[context]||REL_EXCLUDE.general;
+    const filtered=arr.filter(function(card){return !excluded.has(Number(card.id));});
+    return filtered.length?filtered:arr;
+  }
+
+  function filteredLoveRelations(arr){
+    const domain=relNorm((typeof state==='object'&&state?.domain)||document.querySelector('#domain')?.value||'');
+    if(domain.includes('sentimental'))return arr;
+    if(domain.includes('relations')){
+      const keep=new Set([62,65,70]);
+      if(questionTone(relationQuestion())==='love')keep.add(69);
+      const subset=arr.filter(function(card){return keep.has(Number(card.id));});
+      return subset.length?subset:arr;
+    }
+    if(typeof DATA==='object'&&Array.isArray(DATA?.relation))return filteredGrandRelations(DATA.relation);
+    return arr;
+  }
+
+  function tarotRelationRelevant(){
+    const domain=relNorm((typeof state==='object'&&state?.domain)||document.querySelector('#domain')?.value||'');
+    if(!domain.includes('tarot'))return true;
+    const question=relationQuestion();
+    const tone=questionTone(question);
+    if(tone==='love'||tone==='work'||tone==='social')return true;
+    const q=relNorm(question);
+    if(/\b(relation|lien|personne|partenaire|ami|amie|rival|mentor|contact|rencontre|avec qui|qui |il |elle |lui |eux |nous )/.test(q))return true;
+    try{if(typeof cr51Scope==='function'&&cr51Scope()==='relation')return true;}catch(e){}
+    return false;
+  }
+
+  function installRelationDomainFilter(){
+    try{
+      if(typeof window.rand!=='function')return false;
+      if(window.rand.__cristarivaRelationFilter)return true;
+      const baseRand=window.rand;
+      const wrapped=function(arr,n){
+        let pool=arr;
+        try{
+          if(isLoveRelationArray(arr))pool=filteredLoveRelations(arr);
+          else if(isGrandRelationArray(arr))pool=filteredGrandRelations(arr);
+        }catch(e){pool=arr;}
+        return baseRand.call(this,pool,n);
+      };
+      wrapped.__cristarivaRelationFilter=true;
+      wrapped.__cristarivaRelationFilterVersion='2026.09.23-v1';
+      window.rand=wrapped;
+      return true;
+    }catch(e){console.error('CRISTARIVA filtre Relation',e);return false;}
+  }
+
+  function updateRelationFilterUI(){
+    try{
+      const btn=document.querySelector('#relationBtn');
+      if(!btn)return;
+      const domain=relNorm((typeof state==='object'&&state?.domain)||document.querySelector('#domain')?.value||'');
+      const text=btn.previousElementSibling;
+      const en=typeof state==='object'&&state?.lang==='en';
+      if(domain.includes('sentimental')&&window.AMOUR_DATA?.relation){
+        btn.disabled=false;
+        if(text)text.textContent=en?'One of the 10 Love Oracle Relationship cards to clarify the person or type of bond.':'Une carte parmi les 10 cartes Relation de l’Oracle Amour pour préciser la personne ou le type de lien.';
+        return;
+      }
+      if(domain.includes('tarot')&&!tarotRelationRelevant()){
+        btn.disabled=true;
+        state.relation=null;
+        const result=document.querySelector('#relationResult');if(result)result.innerHTML='';
+        if(text)text.textContent=en?'No Relationship card is needed for this question because no person or identifiable bond is involved.':'Aucune carte Relation n’est nécessaire pour cette question : aucune personne ni aucun lien identifiable n’est concerné.';
+        return;
+      }
+      btn.disabled=false;
+      const count=(typeof DATA==='object'&&Array.isArray(DATA?.relation))?filteredGrandRelations(DATA.relation).length:20;
+      if(text)text.textContent=en?`One card among ${count} context-appropriate Relationship cards.`:`Une carte parmi ${count} cartes Relation adaptées au domaine et à la question.`;
+    }catch(e){}
+  }
+
+  function bindRelationFilterUI(){
+    if(window.__CRISTARIVA_RELATION_FILTER_UI__)return;
+    window.__CRISTARIVA_RELATION_FILTER_UI__=true;
+    const domain=document.querySelector('#domain');
+    const question=document.querySelector('#question');
+    domain?.addEventListener('change',function(){setTimeout(updateRelationFilterUI,0);});
+    question?.addEventListener('input',updateRelationFilterUI);
+    question?.addEventListener('change',updateRelationFilterUI);
+    document.querySelector('#drawBtn')?.addEventListener('click',function(){setTimeout(updateRelationFilterUI,0);});
+  }
+
   function polishRepeatedStoryOpeners(html){
     try{
       if(!html||state.lang==='en')return html;
@@ -82,7 +229,7 @@
         }
       }
       const root=tpl.content.querySelector('.story-reading');
-      if(root)root.dataset.storyEngine='5.20';
+      if(root)root.dataset.storyEngine='5.21';
       return tpl.innerHTML;
     }catch(e){return html;}
   }
@@ -182,8 +329,12 @@
     await ensureOracleAmour();
     if(typeof window.storyInterpretation==='function'&&window.storyInterpretation!==installedBase){installStoryPolish();}
     await ensureTarot();
+    installRelationDomainFilter();
+    bindRelationFilterUI();
+    updateRelationFilterUI();
     setTimeout(installStoryPolish,50);
     setTimeout(installStoryPolish,250);
+    setTimeout(updateRelationFilterUI,250);
   }
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
