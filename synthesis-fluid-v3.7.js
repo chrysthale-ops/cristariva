@@ -1,8 +1,11 @@
-/* CRISTARIVA — synthèse générale fluide v3.7
+/* CRISTARIVA — synthèse générale fluide v3.8
    Transforme la synthèse du domaine Général / spirituel en réponse continue
    à la question, sans exposer la mécanique du tirage (début, centre, issue,
-   première/dernière carte, etc.). */
-const CRISTARIVA_FLUID_SYNTHESIS_VERSION='3.7';
+   première/dernière carte, etc.).
+   Supprime aussi les répétitions mécaniques de « Il est ici question… »
+   dans les récits affichés.
+*/
+const CRISTARIVA_FLUID_SYNTHESIS_VERSION='3.8';
 
 (function(){
   'use strict';
@@ -90,6 +93,57 @@ const CRISTARIVA_FLUID_SYNTHESIS_VERSION='3.7';
     if(typeof cr367GeneralThread==='function')cr367GeneralThread=fluidThread;
     if(typeof cr367GeneralOutcome==='function')cr367GeneralOutcome=fluidOutcome;
   }catch(e){}
+
+  function articleAfterQuestion(raw){
+    const a=String(raw||'').toLowerCase().replace("'",'’');
+    if(a==='d’un')return'un';
+    if(a==='d’une')return'une';
+    if(a==='de la')return'la';
+    if(a==='du')return'le';
+    if(a==='des')return'des';
+    if(a==='de l’')return'l’';
+    return raw;
+  }
+
+  function varyQuestionOpeners(root){
+    try{
+      if(!root)return;
+      let occurrence=0;
+      const openers=[
+        'Le tirage évoque',
+        'La suite fait apparaître',
+        'Cette dynamique met en lumière',
+        'Un autre aspect concerne'
+      ];
+      const scopes=root.matches?.('.story-continuous')?[root]:[...root.querySelectorAll('.story-continuous')];
+      for(const scope of scopes){
+        const walker=document.createTreeWalker(scope,NodeFilter.SHOW_TEXT);
+        while(walker.nextNode()){
+          const node=walker.currentNode;
+          if(node.parentElement?.closest('b,strong,a,code'))continue;
+          const before=node.textContent;
+          const after=before.replace(/\bIl est ici question\s+(d[’']un|d[’']une|de la|du|des|de l[’'])\s+/gi,function(_,article){
+            const opener=openers[occurrence%openers.length];
+            occurrence++;
+            return opener+' '+articleAfterQuestion(article)+' ';
+          });
+          if(after!==before)node.textContent=after;
+        }
+      }
+    }catch(e){}
+  }
+
+  function installStoryWordingGuard(){
+    const reading=document.getElementById('reading');
+    if(!reading||reading.__cristarivaQuestionOpenerGuard)return;
+    reading.__cristarivaQuestionOpenerGuard=true;
+    varyQuestionOpeners(reading);
+    const observer=new MutationObserver(function(){varyQuestionOpeners(reading);});
+    observer.observe(reading,{childList:true,subtree:true,characterData:true});
+  }
+
+  installStoryWordingGuard();
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installStoryWordingGuard,{once:true});
 
   /* Rafraîchit immédiatement une synthèse déjà affichée. */
   try{
