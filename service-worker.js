@@ -1,7 +1,7 @@
-/* CRISTARIVA — service worker v15 — Android/Web stable, 23 septembre 2026.
-   Force la correction du tirage Relation pour les questions saisies sous forme de prénom et conserve
-   le Tarot divinatoire, l’Oracle Amour ainsi que la correction visuelle de la carte Relation 62. */
-const CACHE_NAME='cristariva-v15-20260923-relation-button';
+/* CRISTARIVA — service worker v16 — Android/Web stable, 23 septembre 2026.
+   Force la mise à jour des récits afin de supprimer les amorces répétitives
+   tout en conservant le Tarot divinatoire, l’Oracle Amour et les corrections Relation. */
+const CACHE_NAME='cristariva-v16-20260923-story-openers';
 const SHELL=[
  "./tarot-divinatoire-data.js?v=20260922-tarot32",
  "./tarot-divinatoire-integration.js?v=20260922-tarot32",
@@ -153,7 +153,7 @@ self.addEventListener('activate',event=>{
     const clients=await self.clients.matchAll({type:'window',includeUncontrolled:true});
     for(const client of clients){
       try{
-        client.postMessage({type:'CRISTARIVA_UPDATED',version:'2026.09.23-relation-button'});
+        client.postMessage({type:'CRISTARIVA_UPDATED',version:'2026.09.23-story-openers'});
         if(client.url)await client.navigate(client.url);
       }catch(e){}
     }
