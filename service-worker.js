@@ -1,7 +1,7 @@
-/* CRISTARIVA — service worker v14 — Android/Web stable, 23 septembre 2026.
-   Force la mise à jour du filtrage contextuel des cartes Relation et conserve
+/* CRISTARIVA — service worker v15 — Android/Web stable, 23 septembre 2026.
+   Force la correction du tirage Relation pour les questions saisies sous forme de prénom et conserve
    le Tarot divinatoire, l’Oracle Amour ainsi que la correction visuelle de la carte Relation 62. */
-const CACHE_NAME='cristariva-v14-20260923-relation-filter';
+const CACHE_NAME='cristariva-v15-20260923-relation-button';
 const SHELL=[
  "./tarot-divinatoire-data.js?v=20260922-tarot32",
  "./tarot-divinatoire-integration.js?v=20260922-tarot32",
@@ -45,7 +45,7 @@ const SHELL=[
  './manifest-en.webmanifest',
  './icon-192.png',
  './icon-512.png',
- './relation-astrology.js?v=20260923-relation-filter',
+ './relation-astrology.js?v=20260923-relation-button',
  './story-fluid-v5.1.js',
  './question-context-story-v5.2.js',
  './question-project-story-v5.5.js',
@@ -153,7 +153,7 @@ self.addEventListener('activate',event=>{
     const clients=await self.clients.matchAll({type:'window',includeUncontrolled:true});
     for(const client of clients){
       try{
-        client.postMessage({type:'CRISTARIVA_UPDATED',version:'2026.09.23-relation-filter'});
+        client.postMessage({type:'CRISTARIVA_UPDATED',version:'2026.09.23-relation-button'});
         if(client.url)await client.navigate(client.url);
       }catch(e){}
     }
