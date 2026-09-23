@@ -1,7 +1,7 @@
-/* CRISTARIVA — chargeur Android/Web + finition narrative finale v5.21, 23 septembre 2026.
+/* CRISTARIVA — chargeur Android/Web + finition narrative finale v5.22, 23 septembre 2026.
    - charge l’astrologie relationnelle et la cohérence de période ;
    - charge l’Oracle Amour et le Tarot divinatoire ;
-   - filtre les cartes Relation selon le domaine et la question ;
+   - filtre les cartes Relation selon le domaine et la question sans bloquer le tirage ;
    - corrige en dernier ressort les phrases sans sujet dans le récit ;
    - supprime les amorces mécaniques avec « alors » ;
    - conserve une progression avant / maintenant / élan pour les tirages à 3 cartes.
@@ -140,18 +140,6 @@
     return arr;
   }
 
-  function tarotRelationRelevant(){
-    const domain=relNorm((typeof state==='object'&&state?.domain)||document.querySelector('#domain')?.value||'');
-    if(!domain.includes('tarot'))return true;
-    const question=relationQuestion();
-    const tone=questionTone(question);
-    if(tone==='love'||tone==='work'||tone==='social')return true;
-    const q=relNorm(question);
-    if(/\b(relation|lien|personne|partenaire|ami|amie|rival|mentor|contact|rencontre|avec qui|qui |il |elle |lui |eux |nous )/.test(q))return true;
-    try{if(typeof cr51Scope==='function'&&cr51Scope()==='relation')return true;}catch(e){}
-    return false;
-  }
-
   function installRelationDomainFilter(){
     try{
       if(typeof window.rand!=='function')return false;
@@ -166,7 +154,7 @@
         return baseRand.call(this,pool,n);
       };
       wrapped.__cristarivaRelationFilter=true;
-      wrapped.__cristarivaRelationFilterVersion='2026.09.23-v1';
+      wrapped.__cristarivaRelationFilterVersion='2026.09.23-v2';
       window.rand=wrapped;
       return true;
     }catch(e){console.error('CRISTARIVA filtre Relation',e);return false;}
@@ -182,13 +170,6 @@
       if(domain.includes('sentimental')&&window.AMOUR_DATA?.relation){
         btn.disabled=false;
         if(text)text.textContent=en?'One of the 10 Love Oracle Relationship cards to clarify the person or type of bond.':'Une carte parmi les 10 cartes Relation de l’Oracle Amour pour préciser la personne ou le type de lien.';
-        return;
-      }
-      if(domain.includes('tarot')&&!tarotRelationRelevant()){
-        btn.disabled=true;
-        state.relation=null;
-        const result=document.querySelector('#relationResult');if(result)result.innerHTML='';
-        if(text)text.textContent=en?'No Relationship card is needed for this question because no person or identifiable bond is involved.':'Aucune carte Relation n’est nécessaire pour cette question : aucune personne ni aucun lien identifiable n’est concerné.';
         return;
       }
       btn.disabled=false;
@@ -229,7 +210,7 @@
         }
       }
       const root=tpl.content.querySelector('.story-reading');
-      if(root)root.dataset.storyEngine='5.21';
+      if(root)root.dataset.storyEngine='5.22';
       return tpl.innerHTML;
     }catch(e){return html;}
   }
