@@ -1,5 +1,5 @@
-/* CRISTARIVA — service worker v18 — force le moteur de récit synthétique v5.30. */
-const CACHE_NAME='cristariva-v18-20260923-story-synthesis';
+/* CRISTARIVA — service worker v19 — moteur de récit synthétique v5.31. */
+const CACHE_NAME='cristariva-v19-20260923-story-semantic';
 const SHELL=[
  "./tarot-divinatoire-data.js?v=20260922-tarot32",
  "./tarot-divinatoire-integration.js?v=20260922-tarot32",
@@ -135,6 +135,64 @@ const SHELL=[
  './cards/amour/080.webp?v=20260918'
 ];
 
+/* Patch sémantique ajouté au moteur actuel après chargement.
+   Il ne reprend jamais les définitions : il transforme les titres en notions de synthèse. */
+const STORY_SEMANTIC_PATCH=`
+;(function(){
+  var previous=typeof cr51Keywords==='function'?cr51Keywords:null;
+  function norm(v){return String(v||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();}
+  var fr={
+    'dissimulation':['non-dits','zones d’ombre','besoin de transparence'],
+    'origines':['racines du lien','schémas anciens','histoire commune'],
+    'signe':['indices concrets','répétitions','comportements révélateurs'],
+    'equilibre':['équilibre','réciprocité','juste échange'],
+    'equite':['équilibre','juste répartition','réciprocité'],
+    'complicite':['complicité','entente naturelle','plaisir partagé'],
+    'liberte':['autonomie','espace personnel','liberté de chacun'],
+    'retour':['reprise de contact','réapparition du passé','nouvelle lecture du lien'],
+    'communication':['échanges directs','paroles claires','mise au point'],
+    'clarte':['clarification','intentions lisibles','cohérence'],
+    'reconciliation':['reprise du dialogue','apaisement','réparation du lien'],
+    'amour':['sentiments','attachement','ouverture affective'],
+    'peur':['craintes','besoin de sécurité','frein au rapprochement'],
+    'regrets':['regrets','passé encore actif','désir de réparation'],
+    'cycles':['schémas répétitifs','alternance','retour d’une ancienne dynamique'],
+    'memoire':['souvenirs partagés','empreinte du passé','réactions anciennes'],
+    'empreinte':['marque du passé','réactions persistantes','histoire encore active'],
+    'reciprocite':['initiatives mutuelles','réponse de l’autre','équilibre des efforts'],
+    'progression':['avancée concrète','échanges plus réguliers','construction progressive'],
+    'blocage':['frein précis','immobilité','obstacle à clarifier'],
+    'eloignement':['distance','retrait','baisse de proximité'],
+    'juste distance':['proximité ajustée','limites respectées','autonomie'],
+    'transformation':['changement de forme','nouveaux repères','redéfinition du lien'],
+    'renouveau':['nouvel élan','seconde chance','fonctionnement différent'],
+    'naissance':['nouveau départ','émergence','dynamique nouvelle'],
+    'connexion':['connexion','compréhension mutuelle','envie de rapprochement'],
+    'sincerite':['parole honnête','authenticité','cohérence entre mots et actes'],
+    'mensonge':['vérité fragilisée','omissions','besoin de vérification'],
+    'trahison':['confiance blessée','loyauté rompue','besoin de réparation'],
+    'instabilite':['irrégularité','alternance de proximité et de retrait','manque de continuité'],
+    'patience':['temps nécessaire','maturation','progression régulière'],
+    'rythme':['tempo du lien','phases de rapprochement','maturation affective']
+  };
+  var en={
+    'dissimulation':['unspoken issues','hidden elements','need for transparency'],
+    'origines':['roots of the bond','older patterns','shared history'],
+    'signe':['concrete clues','repeated facts','revealing behaviour'],
+    'equilibre':['balance','reciprocity','fair exchange'],
+    'complicite':['complicity','natural understanding','shared pleasure'],
+    'liberte':['autonomy','personal space','freedom']
+  };
+  cr51Keywords=function(card,isEn){
+    var name=norm(isEn?(card&&card.en&&card.en.name||card&&card.name):(card&&card.name));
+    var map=isEn?en:fr;
+    if(map[name])return map[name].slice();
+    return previous?previous(card,isEn):[isEn?'evolution':'évolution'];
+  };
+  self.CRISTARIVA_STORY_SEMANTIC_PATCH='5.31';
+})();
+`;
+
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting()));
 });
@@ -151,7 +209,7 @@ self.addEventListener('activate',event=>{
     const clients=await self.clients.matchAll({type:'window',includeUncontrolled:true});
     for(const client of clients){
       try{
-        client.postMessage({type:'CRISTARIVA_UPDATED',version:'2026.09.23-story-synthesis-v5.30'});
+        client.postMessage({type:'CRISTARIVA_UPDATED',version:'2026.09.23-story-semantic-v5.31'});
         if(client.url)await client.navigate(client.url);
       }catch(e){}
     }
@@ -171,10 +229,31 @@ async function networkFirst(request){
   }
 }
 
+async function storyEngineResponse(request){
+  let response=null;
+  try{response=await fetch(request,{cache:'no-store'});}catch(e){}
+  if(!response||!response.ok)response=await caches.match(request,{ignoreSearch:true});
+  if(!response)return Response.error();
+  try{
+    const text=await response.text();
+    const headers=new Headers(response.headers);
+    headers.delete('content-length');
+    headers.delete('content-encoding');
+    return new Response(text+STORY_SEMANTIC_PATCH,{status:response.status,statusText:response.statusText,headers});
+  }catch(e){return response;}
+}
+
 self.addEventListener('fetch',event=>{
   const request=event.request;
   const url=new URL(request.url);
   if(request.method!=='GET'||url.origin!==self.location.origin)return;
+
+  /* Même si index.html demande encore ?v=5.20, le navigateur reçoit le fichier actuel
+     depuis le réseau et le patch sémantique v5.31. */
+  if(url.pathname.endsWith('/story-fluid-v5.1.js')){
+    event.respondWith(storyEngineResponse(request));
+    return;
+  }
 
   if(request.mode==='navigate'){
     event.respondWith(networkFirst(request));
