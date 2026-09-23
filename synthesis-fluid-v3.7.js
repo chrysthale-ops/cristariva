@@ -1,11 +1,11 @@
-/* CRISTARIVA — synthèse générale fluide v3.8
+/* CRISTARIVA — synthèse générale fluide v3.9
    Transforme la synthèse du domaine Général / spirituel en réponse continue
    à la question, sans exposer la mécanique du tirage (début, centre, issue,
    première/dernière carte, etc.).
    Supprime aussi les répétitions mécaniques de « Il est ici question… »
-   dans les récits affichés.
+   et de « la situation » dans les récits affichés.
 */
-const CRISTARIVA_FLUID_SYNTHESIS_VERSION='3.8';
+const CRISTARIVA_FLUID_SYNTHESIS_VERSION='3.9';
 
 (function(){
   'use strict';
@@ -105,6 +105,11 @@ const CRISTARIVA_FLUID_SYNTHESIS_VERSION='3.8';
     return raw;
   }
 
+  function storyScopes(root){
+    if(!root)return[];
+    return root.matches?.('.story-continuous')?[root]:[...root.querySelectorAll('.story-continuous')];
+  }
+
   function varyQuestionOpeners(root){
     try{
       if(!root)return;
@@ -115,8 +120,7 @@ const CRISTARIVA_FLUID_SYNTHESIS_VERSION='3.8';
         'Cette dynamique met en lumière',
         'Un autre aspect concerne'
       ];
-      const scopes=root.matches?.('.story-continuous')?[root]:[...root.querySelectorAll('.story-continuous')];
-      for(const scope of scopes){
+      for(const scope of storyScopes(root)){
         const walker=document.createTreeWalker(scope,NodeFilter.SHOW_TEXT);
         while(walker.nextNode()){
           const node=walker.currentNode;
@@ -133,12 +137,50 @@ const CRISTARIVA_FLUID_SYNTHESIS_VERSION='3.8';
     }catch(e){}
   }
 
+  function varySituationRepeats(root){
+    try{
+      if(!root)return;
+      const alternatives=['cette dynamique','ce mouvement','le tirage','le message','cette évolution'];
+      for(const scope of storyScopes(root)){
+        const text=scope.textContent||'';
+        const matches=text.match(/\bla situation\b/gi)||[];
+        if(matches.length<2)continue;
+        let seen=0;
+        const walker=document.createTreeWalker(scope,NodeFilter.SHOW_TEXT);
+        while(walker.nextNode()){
+          const node=walker.currentNode;
+          if(node.parentElement?.closest('b,strong,a,code'))continue;
+          const before=node.textContent;
+          const after=before.replace(/\bla situation\b/gi,function(match){
+            seen++;
+            if(seen===1)return match;
+            let replacement=alternatives[(seen-2)%alternatives.length];
+            if(match.charAt(0)==='L')replacement=replacement.charAt(0).toUpperCase()+replacement.slice(1);
+            return replacement;
+          });
+          if(after!==before)node.textContent=after;
+        }
+      }
+    }catch(e){}
+  }
+
+  function polishStoryWording(root){
+    varyQuestionOpeners(root);
+    varySituationRepeats(root);
+  }
+
   function installStoryWordingGuard(){
     const reading=document.getElementById('reading');
     if(!reading||reading.__cristarivaQuestionOpenerGuard)return;
     reading.__cristarivaQuestionOpenerGuard=true;
-    varyQuestionOpeners(reading);
-    const observer=new MutationObserver(function(){varyQuestionOpeners(reading);});
+    polishStoryWording(reading);
+    let polishing=false;
+    const observer=new MutationObserver(function(){
+      if(polishing)return;
+      polishing=true;
+      polishStoryWording(reading);
+      polishing=false;
+    });
     observer.observe(reading,{childList:true,subtree:true,characterData:true});
   }
 
