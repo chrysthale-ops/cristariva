@@ -1,7 +1,5 @@
-/* CRISTARIVA — service worker v16 — Android/Web stable, 23 septembre 2026.
-   Force la mise à jour des récits afin de supprimer les amorces répétitives
-   tout en conservant le Tarot divinatoire, l’Oracle Amour et les corrections Relation. */
-const CACHE_NAME='cristariva-v17-20260923-oracle-selection';
+/* CRISTARIVA — service worker v18 — force le moteur de récit synthétique v5.30. */
+const CACHE_NAME='cristariva-v18-20260923-story-synthesis';
 const SHELL=[
  "./tarot-divinatoire-data.js?v=20260922-tarot32",
  "./tarot-divinatoire-integration.js?v=20260922-tarot32",
@@ -38,7 +36,6 @@ const SHELL=[
  "./cards/tarot/008.webp?v=20260922-tarot32",
  "./cards/tarot/009.webp?v=20260922-tarot32",
  "./cards/tarot/010.webp?v=20260922-tarot32",
-
  './',
  './index.html',
  './oracle-selection.js?v=20260923',
@@ -47,7 +44,7 @@ const SHELL=[
  './icon-192.png',
  './icon-512.png',
  './relation-astrology.js?v=20260923-relation-button',
- './story-fluid-v5.1.js',
+ './story-fluid-v5.1.js?v=5.30',
  './question-context-story-v5.2.js',
  './question-project-story-v5.5.js',
  './relation-astrology-core-v1.4.js',
@@ -154,7 +151,7 @@ self.addEventListener('activate',event=>{
     const clients=await self.clients.matchAll({type:'window',includeUncontrolled:true});
     for(const client of clients){
       try{
-        client.postMessage({type:'CRISTARIVA_UPDATED',version:'2026.09.23-story-openers'});
+        client.postMessage({type:'CRISTARIVA_UPDATED',version:'2026.09.23-story-synthesis-v5.30'});
         if(client.url)await client.navigate(client.url);
       }catch(e){}
     }
@@ -184,7 +181,6 @@ self.addEventListener('fetch',event=>{
     return;
   }
 
-  /* Les fichiers applicatifs doivent suivre les mises à jour immédiatement sur Android. */
   if(/\.(?:js|html|webmanifest)$/.test(url.pathname)){
     event.respondWith(networkFirst(request));
     return;
