@@ -18,6 +18,39 @@ const domainSelect=document.querySelector('#domain');
 const isTarot=()=>typeof state==='object'&&state&&state.oracle==='tarot';
 const esc=value=>typeof readingEscape==='function'?readingEscape(value):String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 
+/* La refonte conserve les anciennes valeurs techniques afin de ne casser
+   aucune lecture existante, mais tous les libellés visibles utilisent les
+   nouveaux noms demandés. */
+function syncDomainDisplayLabels(){
+  if(!domainSelect)return;
+  const en=state?.lang==='en';
+  const labels=en?{
+    'Sentimental':'Romantic',
+    'Relations':'Relationships',
+    'Professionnelle / Projet':'Professional / Project',
+    'Général / spirituel':'General / Spiritual'
+  }:{
+    'Sentimental':'Sentimental',
+    'Relations':'Relationnel',
+    'Professionnelle / Projet':'Professionnel / projet',
+    'Général / spirituel':'Général / spirituel'
+  };
+  [...domainSelect.options].forEach(option=>{if(labels[option.value])option.textContent=labels[option.value];});
+}
+function syncCardDetailDisplayLabels(root=document){
+  if(state?.lang==='en')return;
+  root.querySelectorAll?.('.card-detail-row h4').forEach(node=>{
+    node.textContent=node.textContent
+      .replace(/Relations/g,'Relationnel')
+      .replace(/Professionnelle\s*\/\s*Projet/g,'Professionnel / projet');
+  });
+}
+const cardDialogBody=document.querySelector('#cardDialogBody');
+if(cardDialogBody){
+  syncCardDetailDisplayLabels(cardDialogBody);
+  new MutationObserver(()=>syncCardDetailDisplayLabels(cardDialogBody)).observe(cardDialogBody,{childList:true,subtree:true});
+}
+
 function fixTarotCard(card){
   if(!card||card.oracle!=='tarot')return card;
   const identity=window.CR_TAROT_IDENTITIES?.[Number(card.id)];
@@ -59,6 +92,7 @@ function ensureContext(){
   return c;
 }
 function updateContext(){
+  syncDomainDisplayLabels();
   const c=ensureContext();if(!c)return;
   c.hidden=!isTarot();
   c.innerHTML=state?.lang==='en'
@@ -135,16 +169,17 @@ document.querySelector('#tarotCatalogGrid')?.addEventListener('click',event=>{
   const b=event.target.closest('[data-tarot-card-id]');if(!b)return;
   const card=fixTarotCard(window.TAROT_DATA.main.find(x=>x.id===Number(b.dataset.tarotCardId)));if(!card)return;
   const en=state.lang==='en',local=en?(card.en||{}):card,name=esc(local.name||card.name);
-  const family=card.arcana==='minor'?(en?((card.en?.name||'').split(' of ').pop()||'Minor Arcana'):card.suit): (en?'Major Arcana':'Arcane majeur');
+  const family=card.arcana==='minor'?(en?((card.en?.name||'').split(' of ').pop()||'Minor Arcana'):card.suit):(en?'Major Arcana':'Arcane majeur');
   document.querySelector('#cardDialogBody').innerHTML=`<div class="card-detail-layout"><div><img class="card-detail-image" src="${esc(cardImage(card))}" alt="${name}"></div><div><p class="muted">${en?'CRISTARIVA Divinatory Tarot':'Tarot divinatoire CRISTARIVA'} · ${family} · ${en?'Card':'Carte'} ${String(card.id).padStart(2,'0')}</p><h2 id="cardDialogTitle">${name}</h2><p><b>${en?'Definition':'Définition'}</b><br>${esc(local.definition)}</p><p><b>${en?'Essential message':'Message essentiel'}</b><br>${esc(local.message)}</p><p><b>${en?'Keywords':'Mots-clés'}</b><br>${esc(local.keywords)}</p></div></div>`;
   const dialog=document.querySelector('#cardDialog');if(dialog&&!dialog.open)dialog.showModal();
 });
 
 if(typeof applyLanguage==='function'){
   const old=applyLanguage;
-  applyLanguage=function(){old();(window.TAROT_DATA.main||[]).forEach(fixTarotCard);updateContext();renderTarotCatalog();};
+  applyLanguage=function(){old();(window.TAROT_DATA.main||[]).forEach(fixTarotCard);syncDomainDisplayLabels();syncCardDetailDisplayLabels(cardDialogBody||document);updateContext();renderTarotCatalog();};
 }
+syncDomainDisplayLabels();
 updateContext();renderTarotCatalog();
 window.__CRISTARIVA_TAROT_READY__=true;
-window.CR_TAROT_INTEGRATION_VERSION='2026.09.24-tarot78';
+window.CR_TAROT_INTEGRATION_VERSION='2026.09.24-tarot78-regression-fix';
 })();
