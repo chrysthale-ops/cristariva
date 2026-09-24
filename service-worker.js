@@ -1,8 +1,8 @@
-/* CRISTARIVA — service worker v21 — récits Oracle Amour v6.0 + Tarot v6.1.
-   Force le chargement des moteurs actuels sur PC et Android et évite qu'une
-   ancienne version du récit reste active dans le cache de la PWA. */
-const CACHE_NAME='cristariva-v21-20260923-tarot-story61';
-const APP_VERSION='2026.09.23-tarot-story-v6.1';
+/* CRISTARIVA — service worker v22 — Tarot 78 cartes.
+   Active les 22 arcanes majeurs + 56 arcanes mineurs sur PC et Android
+   et invalide les anciennes versions Tarot 32 conservées dans le cache. */
+const CACHE_NAME='cristariva-v22-20260924-tarot78';
+const APP_VERSION='2026.09.24-tarot78';
 const SHELL=[
   './',
   './index.html',
@@ -21,6 +21,18 @@ const SHELL=[
   './oracle-amour-compat.js?v=20260923-love-story6',
   './tarot-divinatoire-data.js?v=20260922-tarot32',
   './tarot-divinatoire-integration.js?v=20260922-tarot32',
+  './tarot-title-image-hotfix.js?v=20260924-tarot78',
+  './tarot-divinatoire-integration-v78.js?v=20260924-tarot78-red2',
+  './tarot-minor-sprite-loader.js?v=20260924-red2',
+  './tarot-minors-data-batons.js?v=20260924',
+  './tarot-minors-data-coupes.js?v=20260924',
+  './tarot-minors-data-epees.js?v=20260924',
+  './tarot-minors-data-deniers.js?v=20260924',
+  './tarot-minors-v1.js?v=20260924-tarot78-red2',
+  './.cristariva-tarot78-sprite/part-00?v=20260924-red2',
+  './.cristariva-tarot78-sprite/part-01?v=20260924-red2',
+  './.cristariva-tarot78-sprite/part-02?v=20260924-red2',
+  './.cristariva-tarot78-sprite/part-03?v=20260924-red2',
   './relation-astrology.js?v=20260923-relation-button'
 ];
 
@@ -89,8 +101,7 @@ self.addEventListener('fetch',event=>{
     return;
   }
 
-  /* Les moteurs, données et manifests passent toujours par le réseau d'abord. */
-  if(/\.(?:js|html|json|webmanifest)$/.test(url.pathname)){
+  if(/\.(?:js|html|json|webmanifest)$/.test(url.pathname)||url.pathname.includes('.cristariva-tarot78-sprite/')){
     event.respondWith(networkFirst(request));
     return;
   }
