@@ -2,7 +2,7 @@
 (function(){
   'use strict';
 
-  const VERSION='20260924-tarot78-r6';
+  const VERSION='20260924-tarot78-r7';
 
   function appendScript(src){
     return new Promise((resolve,reject)=>{
@@ -26,11 +26,11 @@
       const majors=(window.TAROT_DATA?.main||[]).filter(c=>Number(c.id)>=1&&Number(c.id)<=22);
       window.TAROT_DATA={main:majors,all:majors.slice()};
 
-      /* Recharger les illustrations des mineurs. Le dossier de planche commence
-         par un point et peut être ignoré par GitHub Pages ; le loader possède
-         donc maintenant un secours via raw.githubusercontent.com. */
+      /* Recharger la planche des 56 mineurs. Le chargeur r7 détecte maintenant
+         automatiquement les dimensions réelles de la planche (7 × 8 cartes). */
       try{
         delete window.CR_TAROT_MINOR_IMAGES_READY;
+        delete window.CR_TAROT_MINOR_SPRITE_INFO;
         window.CR_TAROT_MINOR_IMAGES={};
         await appendScript('./tarot-minor-sprite-loader.js?v='+VERSION);
         if(window.CR_TAROT_MINOR_IMAGES_READY)await window.CR_TAROT_MINOR_IMAGES_READY;
@@ -58,7 +58,7 @@
       delete window.__CRISTARIVA_TAROT_READY__;
       await appendScript('./tarot-divinatoire-integration-v78.js?v='+VERSION);
 
-      window.CR_TAROT_HOTFIX_VERSION='2026.09.24-tarot78-r6';
+      window.CR_TAROT_HOTFIX_VERSION='2026.09.24-tarot78-r7';
       document.documentElement.dataset.cristarivaTarot='78';
     }catch(e){
       console.error('CRISTARIVA : impossible d’activer le Tarot 78 cartes.',e);
