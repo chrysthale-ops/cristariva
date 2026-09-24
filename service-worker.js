@@ -1,8 +1,8 @@
-/* CRISTARIVA — service worker v25 — Tarot 78 cartes r6.
+/* CRISTARIVA — service worker v26 — Tarot 78 cartes r7.
    Force 22 arcanes majeurs + 56 arcanes mineurs sur PC et Android
-   et invalide définitivement l’ancienne version Tarot 32. */
-const CACHE_NAME='cristariva-v25-20260924-tarot78-r6';
-const APP_VERSION='2026.09.24-tarot78-r6';
+   et recharge les illustrations corrigées des arcanes mineurs. */
+const CACHE_NAME='cristariva-v26-20260924-tarot78-r7';
+const APP_VERSION='2026.09.24-tarot78-r7';
 const SHELL=[
   './',
   './index.html',
@@ -19,16 +19,16 @@ const SHELL=[
   './oracle-amour-card62-fix.js?v=20260923-love-story6',
   './oracle-amour-integration.js?v=20260923-love-story6',
   './oracle-amour-compat.js?v=20260923-love-story6',
-  './tarot-divinatoire-data.js?v=20260924-tarot78-base-r6',
+  './tarot-divinatoire-data.js?v=20260924-tarot78-base-r7',
   './tarot-divinatoire-integration.js?v=20260924-tarot78-r4-compat',
-  './tarot-title-image-hotfix.js?v=20260924-tarot78-r6',
-  './tarot-divinatoire-integration-v78.js?v=20260924-tarot78-r6',
-  './tarot-minor-sprite-loader.js?v=20260924-tarot78-r6',
-  './tarot-minors-data-batons.js?v=20260924-tarot78-r6',
-  './tarot-minors-data-coupes.js?v=20260924-tarot78-r6',
-  './tarot-minors-data-epees.js?v=20260924-tarot78-r6',
-  './tarot-minors-data-deniers.js?v=20260924-tarot78-r6',
-  './tarot-minors-v1.js?v=20260924-tarot78-r6',
+  './tarot-title-image-hotfix.js?v=20260924-tarot78-r7',
+  './tarot-divinatoire-integration-v78.js?v=20260924-tarot78-r7',
+  './tarot-minor-sprite-loader.js?v=20260924-tarot78-r7',
+  './tarot-minors-data-batons.js?v=20260924-tarot78-r7',
+  './tarot-minors-data-coupes.js?v=20260924-tarot78-r7',
+  './tarot-minors-data-epees.js?v=20260924-tarot78-r7',
+  './tarot-minors-data-deniers.js?v=20260924-tarot78-r7',
+  './tarot-minors-v1.js?v=20260924-tarot78-r7',
   './relation-astrology.js?v=20260923-relation-button'
 ];
 
