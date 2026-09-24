@@ -2,7 +2,7 @@
 (function(){
   'use strict';
 
-  const VERSION='20260924-tarot78-r3';
+  const VERSION='20260924-tarot78-r4';
 
   function loadScript(src){
     return new Promise((resolve,reject)=>{
@@ -19,17 +19,17 @@
 
   async function activateTarot78(){
     try{
-      /* La page publique ne chargeait pas toujours les données Tarot avant
-         l'intégration 78 cartes. On garantit maintenant cet ordre. */
       if(!window.TAROT_DATA||!Array.isArray(window.TAROT_DATA.main)){
-        await loadScript('./tarot-divinatoire-data.js?v=20260924-tarot78-base');
+        await loadScript('./tarot-divinatoire-data.js?v=20260924-tarot78-base-r4');
       }
 
-      if(!window.__CRISTARIVA_TAROT_READY__){
-        await loadScript('./tarot-divinatoire-integration-v78.js?v='+VERSION);
+      /* Une ancienne intégration 32 cartes peut avoir posé ce marqueur.
+         Elle ne doit plus empêcher le chargement de la version 78. */
+      if(window.CR_TAROT_INTEGRATION_VERSION==='2026.09.22-tarot32'){
+        delete window.__CRISTARIVA_TAROT_READY__;
       }
+      await loadScript('./tarot-divinatoire-integration-v78.js?v='+VERSION);
 
-      /* L'intégration 78 construit ensuite exactement 22 majeurs + 56 mineurs. */
       if(window.CR_TAROT_MINOR_IMAGES_READY){
         try{await window.CR_TAROT_MINOR_IMAGES_READY;}catch(e){console.error('CRISTARIVA Tarot images:',e);}
       }
@@ -39,5 +39,5 @@
   }
 
   activateTarot78();
-  window.CR_TAROT_HOTFIX_VERSION='2026.09.24-tarot78-r3';
+  window.CR_TAROT_HOTFIX_VERSION='2026.09.24-tarot78-r4';
 })();
