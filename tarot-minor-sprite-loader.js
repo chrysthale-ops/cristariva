@@ -1,24 +1,25 @@
-/* CRISTARIVA — illustrations des 56 arcanes mineurs depuis la planche WebP 7 × 8. */
+/* CRISTARIVA — illustrations des 56 arcanes mineurs depuis la planche WebP validée. */
 (function(){
 'use strict';
 if(window.CR_TAROT_MINOR_IMAGES_READY)return;
 window.CR_TAROT_MINOR_IMAGES=window.CR_TAROT_MINOR_IMAGES||{};
 window.CR_TAROT_MINOR_IMAGES_READY=(async()=>{
-  const parts=[];
   const rawBase='https://raw.githubusercontent.com/chrysthale-ops/cristariva/main/.cristariva-tarot78-sprite/';
-  async function fetchPart(i){
-    const name=`part-${String(i).padStart(2,'0')}`;
-    const local=`./.cristariva-tarot78-sprite/${name}?v=20260924-r7`;
+  const names=['part-00a','part-00b','part-00c','part-01','part-02','part-03','part-04','part-05','part-06','part-07'];
+
+  async function fetchPart(name){
+    const local=`./.cristariva-tarot78-sprite/${name}?v=20260924-r8`;
     try{
       const r=await fetch(local,{cache:'no-store'});
       if(r.ok)return await r.text();
     }catch(e){}
-    const r=await fetch(rawBase+name+'?v=20260924-r7',{cache:'no-store',mode:'cors'});
-    if(!r.ok)throw new Error('Partie de planche manquante '+i);
+    const r=await fetch(rawBase+name+'?v=20260924-r8',{cache:'no-store',mode:'cors'});
+    if(!r.ok)throw new Error('Segment de planche manquant : '+name);
     return await r.text();
   }
-  for(let i=0;i<4;i++)parts.push(await fetchPart(i));
 
+  const parts=[];
+  for(const name of names)parts.push(await fetchPart(name));
   const encoded=parts.join('').replace(/\s+/g,'');
   const bin=atob(encoded);
   const bytes=new Uint8Array(bin.length);
@@ -33,18 +34,13 @@ window.CR_TAROT_MINOR_IMAGES_READY=(async()=>{
       x.src=url;
     });
 
-    /* La planche réelle mesure 630 × 1080 px : 7 colonnes × 8 lignes,
-       donc chaque carte mesure 90 × 135 px. L'ancien chargeur utilisait
-       à tort 120 × 180 px, ce qui produisait les rectangles noirs. */
-    const COLS=7, ROWS=8;
+    const COLS=7,ROWS=8;
     const sourceW=img.naturalWidth||img.width;
     const sourceH=img.naturalHeight||img.height;
     if(sourceW%COLS!==0||sourceH%ROWS!==0){
       throw new Error(`Dimensions inattendues de la planche : ${sourceW}×${sourceH}`);
     }
-    const W=sourceW/COLS;
-    const H=sourceH/ROWS;
-
+    const W=sourceW/COLS,H=sourceH/ROWS;
     const canvas=document.createElement('canvas');
     canvas.width=W;canvas.height=H;
     const ctx=canvas.getContext('2d');
@@ -59,7 +55,10 @@ window.CR_TAROT_MINOR_IMAGES_READY=(async()=>{
       window.CR_TAROT_MINOR_IMAGES[id]=canvas.toDataURL('image/webp',0.94);
     }
 
-    window.CR_TAROT_MINOR_SPRITE_INFO={width:sourceW,height:sourceH,cardWidth:W,cardHeight:H,count:56,version:'2026.09.24-r7'};
+    const count=Object.keys(window.CR_TAROT_MINOR_IMAGES).filter(k=>Number(k)>=23&&Number(k)<=78).length;
+    if(count!==56)throw new Error(`Seulement ${count}/56 illustrations mineures ont été préparées.`);
+
+    window.CR_TAROT_MINOR_SPRITE_INFO={width:sourceW,height:sourceH,cardWidth:W,cardHeight:H,count,version:'2026.09.24-r8'};
     return window.CR_TAROT_MINOR_IMAGES;
   }finally{
     URL.revokeObjectURL(url);
