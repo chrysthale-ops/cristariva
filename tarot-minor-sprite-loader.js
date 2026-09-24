@@ -5,11 +5,19 @@ if(window.CR_TAROT_MINOR_IMAGES_READY)return;
 window.CR_TAROT_MINOR_IMAGES=window.CR_TAROT_MINOR_IMAGES||{};
 window.CR_TAROT_MINOR_IMAGES_READY=(async()=>{
   const parts=[];
-  for(let i=0;i<4;i++){
-    const r=await fetch(`./.cristariva-tarot78-sprite/part-${String(i).padStart(2,'0')}?v=20260924-red2`,{cache:'no-store'});
+  const rawBase='https://raw.githubusercontent.com/chrysthale-ops/cristariva/main/.cristariva-tarot78-sprite/';
+  async function fetchPart(i){
+    const name=`part-${String(i).padStart(2,'0')}`;
+    const local=`./.cristariva-tarot78-sprite/${name}?v=20260924-r5`;
+    try{
+      const r=await fetch(local,{cache:'no-store'});
+      if(r.ok)return await r.text();
+    }catch(e){}
+    const r=await fetch(rawBase+name+'?v=20260924-r5',{cache:'no-store',mode:'cors'});
     if(!r.ok)throw new Error('Partie de planche manquante '+i);
-    parts.push(await r.text());
+    return await r.text();
   }
+  for(let i=0;i<4;i++)parts.push(await fetchPart(i));
   const bin=atob(parts.join('').trim());
   const bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
   const url=URL.createObjectURL(new Blob([bytes],{type:'image/webp'}));
