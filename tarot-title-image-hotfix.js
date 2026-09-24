@@ -1,18 +1,16 @@
-/* CRISTARIVA — activation fiable du Tarot divinatoire 78 cartes — 2026-09-24. */
+/* CRISTARIVA — réparation forcée du Tarot divinatoire 78 cartes — 2026-09-24. */
 (function(){
   'use strict';
 
-  const VERSION='20260924-tarot78-r4';
+  const VERSION='20260924-tarot78-r6';
 
-  function loadScript(src){
+  function appendScript(src){
     return new Promise((resolve,reject)=>{
-      const base=src.split('?')[0];
-      if([...document.scripts].some(s=>String(s.src||'').includes(base)))return resolve();
       const s=document.createElement('script');
       s.src=src;
       s.async=false;
       s.onload=resolve;
-      s.onerror=()=>reject(new Error('Impossible de charger '+base));
+      s.onerror=()=>reject(new Error('Impossible de charger '+src));
       document.head.appendChild(s);
     });
   }
@@ -20,24 +18,52 @@
   async function activateTarot78(){
     try{
       if(!window.TAROT_DATA||!Array.isArray(window.TAROT_DATA.main)){
-        await loadScript('./tarot-divinatoire-data.js?v=20260924-tarot78-base-r4');
+        await appendScript('./tarot-divinatoire-data.js?v='+VERSION+'-base');
       }
 
-      /* Une ancienne intégration 32 cartes peut avoir posé ce marqueur.
-         Elle ne doit plus empêcher le chargement de la version 78. */
-      if(window.CR_TAROT_INTEGRATION_VERSION==='2026.09.22-tarot32'){
-        delete window.__CRISTARIVA_TAROT_READY__;
-      }
-      await loadScript('./tarot-divinatoire-integration-v78.js?v='+VERSION);
+      /* Repartir proprement des 22 majeurs : les 10 cartes spéciales ne doivent
+         plus appartenir au Tarot actif. */
+      const majors=(window.TAROT_DATA?.main||[]).filter(c=>Number(c.id)>=1&&Number(c.id)<=22);
+      window.TAROT_DATA={main:majors,all:majors.slice()};
 
-      if(window.CR_TAROT_MINOR_IMAGES_READY){
-        try{await window.CR_TAROT_MINOR_IMAGES_READY;}catch(e){console.error('CRISTARIVA Tarot images:',e);}
+      /* Recharger les illustrations des mineurs. Le dossier de planche commence
+         par un point et peut être ignoré par GitHub Pages ; le loader possède
+         donc maintenant un secours via raw.githubusercontent.com. */
+      try{
+        delete window.CR_TAROT_MINOR_IMAGES_READY;
+        window.CR_TAROT_MINOR_IMAGES={};
+        await appendScript('./tarot-minor-sprite-loader.js?v='+VERSION);
+        if(window.CR_TAROT_MINOR_IMAGES_READY)await window.CR_TAROT_MINOR_IMAGES_READY;
+      }catch(e){
+        console.error('CRISTARIVA Tarot images mineures :',e);
       }
+
+      /* Reconstruire les 56 mineurs sans dépendre d'un ancien état du navigateur. */
+      window.CR_TAROT_MINOR_ROWS=[];
+      for(const file of [
+        'tarot-minors-data-batons.js',
+        'tarot-minors-data-coupes.js',
+        'tarot-minors-data-epees.js',
+        'tarot-minors-data-deniers.js'
+      ]){
+        await appendScript('./'+file+'?v='+VERSION);
+      }
+      await appendScript('./tarot-minors-v1.js?v='+VERSION);
+
+      if(!window.TAROT_DATA||window.TAROT_DATA.main.length!==78){
+        throw new Error('Le Tarot reconstruit contient '+(window.TAROT_DATA?.main?.length||0)+' cartes au lieu de 78.');
+      }
+
+      /* Réexécuter l'intégration d'affichage avec le jeu désormais correct. */
+      delete window.__CRISTARIVA_TAROT_READY__;
+      await appendScript('./tarot-divinatoire-integration-v78.js?v='+VERSION);
+
+      window.CR_TAROT_HOTFIX_VERSION='2026.09.24-tarot78-r6';
+      document.documentElement.dataset.cristarivaTarot='78';
     }catch(e){
       console.error('CRISTARIVA : impossible d’activer le Tarot 78 cartes.',e);
     }
   }
 
   activateTarot78();
-  window.CR_TAROT_HOTFIX_VERSION='2026.09.24-tarot78-r4';
 })();
