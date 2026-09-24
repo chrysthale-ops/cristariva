@@ -2,7 +2,7 @@
 (function(){
   'use strict';
 
-  const VERSION='20260924-tarot78-r7';
+  const VERSION='20260924-tarot78-r8';
 
   function appendScript(src){
     return new Promise((resolve,reject)=>{
@@ -21,24 +21,20 @@
         await appendScript('./tarot-divinatoire-data.js?v='+VERSION+'-base');
       }
 
-      /* Repartir proprement des 22 majeurs : les 10 cartes spéciales ne doivent
-         plus appartenir au Tarot actif. */
       const majors=(window.TAROT_DATA?.main||[]).filter(c=>Number(c.id)>=1&&Number(c.id)<=22);
       window.TAROT_DATA={main:majors,all:majors.slice()};
 
-      /* Recharger la planche des 56 mineurs. Le chargeur r7 détecte maintenant
-         automatiquement les dimensions réelles de la planche (7 × 8 cartes). */
-      try{
-        delete window.CR_TAROT_MINOR_IMAGES_READY;
-        delete window.CR_TAROT_MINOR_SPRITE_INFO;
-        window.CR_TAROT_MINOR_IMAGES={};
-        await appendScript('./tarot-minor-sprite-loader.js?v='+VERSION);
-        if(window.CR_TAROT_MINOR_IMAGES_READY)await window.CR_TAROT_MINOR_IMAGES_READY;
-      }catch(e){
-        console.error('CRISTARIVA Tarot images mineures :',e);
+      delete window.CR_TAROT_MINOR_IMAGES_READY;
+      delete window.CR_TAROT_MINOR_SPRITE_INFO;
+      window.CR_TAROT_MINOR_IMAGES={};
+      await appendScript('./tarot-minor-sprite-loader.js?v='+VERSION);
+      if(window.CR_TAROT_MINOR_IMAGES_READY)await window.CR_TAROT_MINOR_IMAGES_READY;
+
+      const imageCount=Object.keys(window.CR_TAROT_MINOR_IMAGES||{}).filter(k=>Number(k)>=23&&Number(k)<=78).length;
+      if(imageCount!==56){
+        throw new Error('Seulement '+imageCount+'/56 illustrations mineures sont disponibles.');
       }
 
-      /* Reconstruire les 56 mineurs sans dépendre d'un ancien état du navigateur. */
       window.CR_TAROT_MINOR_ROWS=[];
       for(const file of [
         'tarot-minors-data-batons.js',
@@ -54,12 +50,12 @@
         throw new Error('Le Tarot reconstruit contient '+(window.TAROT_DATA?.main?.length||0)+' cartes au lieu de 78.');
       }
 
-      /* Réexécuter l'intégration d'affichage avec le jeu désormais correct. */
       delete window.__CRISTARIVA_TAROT_READY__;
       await appendScript('./tarot-divinatoire-integration-v78.js?v='+VERSION);
 
-      window.CR_TAROT_HOTFIX_VERSION='2026.09.24-tarot78-r7';
+      window.CR_TAROT_HOTFIX_VERSION='2026.09.24-tarot78-r8';
       document.documentElement.dataset.cristarivaTarot='78';
+      document.documentElement.dataset.cristarivaTarotImages='56';
     }catch(e){
       console.error('CRISTARIVA : impossible d’activer le Tarot 78 cartes.',e);
     }
