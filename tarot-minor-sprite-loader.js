@@ -5,9 +5,9 @@ if(window.CR_TAROT_MINOR_IMAGES_READY)return;
 window.CR_TAROT_MINOR_IMAGES=window.CR_TAROT_MINOR_IMAGES||{};
 window.CR_TAROT_MINOR_IMAGES_READY=(async()=>{
   const parts=[];
-  for(let i=0;i<9;i++){
-    const r=await fetch(`./.cristariva-tarot78-sprite/part-${String(i).padStart(2,'0')}?v=20260924-red`,{cache:'force-cache'});
-    if(!r.ok){if(i===8)break;throw new Error('Partie de planche manquante '+i);}
+  for(let i=0;i<4;i++){
+    const r=await fetch(`./.cristariva-tarot78-sprite/part-${String(i).padStart(2,'0')}?v=20260924-red2`,{cache:'no-store'});
+    if(!r.ok)throw new Error('Partie de planche manquante '+i);
     parts.push(await r.text());
   }
   const bin=atob(parts.join('').trim());
@@ -20,7 +20,7 @@ window.CR_TAROT_MINOR_IMAGES_READY=(async()=>{
   for(let id=23;id<=78;id++){
     const n=id-23,x=(n%COLS)*W,y=Math.floor(n/COLS)*H;
     ctx.clearRect(0,0,W,H);ctx.drawImage(img,x,y,W,H,0,0,W,H);
-    window.CR_TAROT_MINOR_IMAGES[id]=canvas.toDataURL('image/webp',0.86);
+    window.CR_TAROT_MINOR_IMAGES[id]=canvas.toDataURL('image/webp',0.9);
   }
   URL.revokeObjectURL(url);
   return window.CR_TAROT_MINOR_IMAGES;
