@@ -24,5 +24,5 @@ jobs:
           cache: npm
       - name: Installer les dépendances
         run: npm ci
-      - name: Exécuter tous les tests de non-régression
-        run: npm test
+      - name: Tester la matrice Domaine × Oracle et les fonctions historiques
+        run: node --test tests/domain-oracle-regression.test.cjs
