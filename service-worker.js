@@ -1,8 +1,8 @@
-/* CRISTARIVA — service worker v22 — Tarot 78 cartes.
+/* CRISTARIVA — service worker v23 — Tarot 78 cartes r3.
    Active les 22 arcanes majeurs + 56 arcanes mineurs sur PC et Android
-   et invalide les anciennes versions Tarot 32 conservées dans le cache. */
-const CACHE_NAME='cristariva-v22-20260924-tarot78';
-const APP_VERSION='2026.09.24-tarot78';
+   et invalide les anciennes versions conservées dans le cache. */
+const CACHE_NAME='cristariva-v23-20260924-tarot78-r3';
+const APP_VERSION='2026.09.24-tarot78-r3';
 const SHELL=[
   './',
   './index.html',
@@ -19,20 +19,19 @@ const SHELL=[
   './oracle-amour-card62-fix.js?v=20260923-love-story6',
   './oracle-amour-integration.js?v=20260923-love-story6',
   './oracle-amour-compat.js?v=20260923-love-story6',
-  './tarot-divinatoire-data.js?v=20260922-tarot32',
-  './tarot-divinatoire-integration.js?v=20260922-tarot32',
-  './tarot-title-image-hotfix.js?v=20260924-tarot78',
-  './tarot-divinatoire-integration-v78.js?v=20260924-tarot78-red2',
-  './tarot-minor-sprite-loader.js?v=20260924-red2',
+  './tarot-divinatoire-data.js?v=20260924-tarot78-base',
+  './tarot-title-image-hotfix.js?v=20260924-tarot78-r3',
+  './tarot-divinatoire-integration-v78.js?v=20260924-tarot78-r3',
+  './tarot-minor-sprite-loader.js?v=20260924-r3',
   './tarot-minors-data-batons.js?v=20260924',
   './tarot-minors-data-coupes.js?v=20260924',
   './tarot-minors-data-epees.js?v=20260924',
   './tarot-minors-data-deniers.js?v=20260924',
-  './tarot-minors-v1.js?v=20260924-tarot78-red2',
-  './.cristariva-tarot78-sprite/part-00?v=20260924-red2',
-  './.cristariva-tarot78-sprite/part-01?v=20260924-red2',
-  './.cristariva-tarot78-sprite/part-02?v=20260924-red2',
-  './.cristariva-tarot78-sprite/part-03?v=20260924-red2',
+  './tarot-minors-v1.js?v=20260924-tarot78-r3',
+  './.cristariva-tarot78-sprite/part-00?v=20260924-r3',
+  './.cristariva-tarot78-sprite/part-01?v=20260924-r3',
+  './.cristariva-tarot78-sprite/part-02?v=20260924-r3',
+  './.cristariva-tarot78-sprite/part-03?v=20260924-r3',
   './relation-astrology.js?v=20260923-relation-button'
 ];
 
