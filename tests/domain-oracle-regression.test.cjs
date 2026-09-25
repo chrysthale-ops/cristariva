@@ -75,6 +75,14 @@ test('matrice complète Domaine × Oracle : tirage, Relation, Datation, astrolog
       window.URL.createObjectURL = () => 'blob:cristariva-test';
       window.URL.revokeObjectURL = () => {};
       window.Image = class {
+        constructor() {
+          // Dimensions de la planche Tarot mineur : le test ne dessine pas
+          // réellement l’image, mais le chargeur vérifie une grille 7 × 8.
+          this.naturalWidth = 700;
+          this.naturalHeight = 800;
+          this.width = 700;
+          this.height = 800;
+        }
         set src(value) { this._src = value; queueMicrotask(() => this.onload?.()); }
         get src() { return this._src; }
       };
