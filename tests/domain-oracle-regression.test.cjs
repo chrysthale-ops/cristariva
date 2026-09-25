@@ -105,8 +105,12 @@ test('matrice complète Domaine × Oracle : tirage, Relation, Datation, astrolog
   try {
     await new Promise(resolve => w.addEventListener('load', resolve, {once: true}));
     await waitFor(
-      () => w.TAROT_DATA?.main?.length === 78 && w.eval("Object.prototype.hasOwnProperty.call(state,'relationAstro')"),
-      'Les modules Tarot 78 et astrologie relationnelle doivent être chargés'
+      () =>
+        w.TAROT_DATA?.main?.length === 78 &&
+        String(w.CR_TAROT_INTEGRATION_VERSION || '').includes('tarot78') &&
+        w.eval("Object.prototype.hasOwnProperty.call(state,'relationAstro')"),
+      'Les modules Tarot 78 et astrologie relationnelle doivent être chargés',
+      10000
     );
 
     const state = w.eval('state');
