@@ -541,8 +541,8 @@ function cardThemeFR(c){
 const READING_THEMES=[
 [/rupture|fin$|perte|abandon|rejet|éloignement|indifférence|incompatibilité|porte fermée/, "separation","une séparation ou une distance qui oblige à reconsidérer le lien","a separation or distance that calls the relationship into question"],
 [/mensonge|trahison|manipulation|emprise|fausse promesse|masque|désillusion/, "truth","une confiance fragilisée par ce qui n’a pas été dit ou par des attentes déçues","trust weakened by what remains unsaid or by disappointed expectations"],
-[/conflit|opposition|impasse|échec|épuisement|instabilité|dépendance|doute|peur|tempête|nœud|labyrinthe|retard/, "block","une résistance qui empêche la situation de suivre son cours naturel","a resistance preventing the situation from moving naturally"],
-[/réconciliation|main tendue|lien|accord|ensemble|partagé|réciproques|communication|chant qui relie|pont des deux|confiance/, "bond","un rapprochement qui demande des gestes réciproques et une parole sincère","a rapprochement that needs mutual gestures and sincere communication"],
+[/conflit|dispute|tension|opposition|impasse|échec|épuisement|instabilité|dépendance|doute|peur|tempête|nœud|labyrinthe|retard/, "block","une résistance qui empêche la situation de suivre son cours naturel","a resistance preventing the situation from moving naturally"],
+[/réconciliation|main tendue|lien|accord|ensemble|partagé|réciproques|communication|chant qui relie|pont des deux|confiance|âme jumelle|ame jumelle|miroir/, "bond","un rapprochement qui demande des gestes réciproques et une parole sincère","a rapprochement that needs mutual gestures and sincere communication"],
 [/naissance|graine|nid prêt|nouveau|neuves|aube|possibilité|possible|ouverture|arrivée|prochain|devenir|cadeau|abondance|richesse|moisson/, "opening","une possibilité nouvelle qui commence à prendre forme","a new possibility beginning to take shape"],
 [/choix|carrefour|deux chemins|priorité|intégrité|balance|équité|boussole|cap|direction/, "choice","un choix nécessaire entre plusieurs directions ou plusieurs désirs","a necessary choice between different paths or desires"],
 [/passé|mémoire|anciens|échos|regrets|retour|revient|transmission|racines/, "past","une histoire ancienne qui continue d’influencer le présent","an old story that continues to influence the present"],
@@ -640,6 +640,43 @@ function preciseGeneralConclusion(cards,focus,en){
  if(["patience","retard","rythme","transition"].includes(n))return "La synthèse ne ferme pas la situation, mais elle refuse l’idée d’un résultat immédiat : le temps et les étapes intermédiaires font partie de la réponse.";
  return readingOutcome(last,false);
 }
+
+function narrativeFirstSentence(text){
+ const clean=String(text||"").replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
+ if(!clean)return "";
+ const m=clean.match(/^.*?[.!?](?:\s|$)/);
+ return (m?m[0]:clean).trim();
+}
+function narrativeLowerStart(text){
+ const s=String(text||"").trim();
+ return s?s.charAt(0).toLocaleLowerCase("fr-FR")+s.slice(1):s;
+}
+function threeCardSynthesis(cards,en){
+ const themes=cards.map(c=>readingTheme(c)[1]);
+ const [a,b,z]=themes;
+ if(en){
+  if(b==="opening"&&z==="block")return "Taken together, the cards describe a real opening that also brings an unresolved tension to the surface. The potential is present, but the next step depends on addressing the disagreement clearly rather than letting it undermine what is developing.";
+  if((a==="bond"||a==="feeling")&&z==="block")return "Taken together, the cards show that the bond has substance, yet the next phase tests it. What matters now is not the intensity of the connection but the ability to clarify the source of tension and respond through concrete actions.";
+  if(z==="separation")return "Taken together, the story moves toward distance or the end of a cycle. The earlier cards still matter, but they do not cancel the limit shown by the final card.";
+  if(z==="bond")return "Taken together, the story moves toward rapprochement. The opening becomes constructive when both people support it through clear, reciprocal actions.";
+  if(z==="opening")return "Taken together, the story opens a new possibility. It is promising, but its form and timing still need to be confirmed by what happens in practice.";
+  if(z==="time")return "Taken together, the story remains open but unfolds slowly. The next step is maturation rather than an immediate result.";
+  if(z==="choice")return "Taken together, the story reaches a crossroads. What follows depends on a clear decision rather than remaining in ambiguity.";
+  if(z==="truth")return "Taken together, the story now depends on truth and clarity. The relationship can only move forward if what is unclear or disappointing is faced directly.";
+  if(z==="movement")return "Taken together, the cards describe a shift in direction. The situation is leaving its previous pattern and entering a different phase.";
+  return "Taken together, the cards describe a change in the situation rather than three isolated messages. The final card shows what must now be understood or acted on for the story to move forward.";
+ }
+ if(b==="opening"&&z==="block")return "Ensemble, les cartes racontent une ouverture réelle qui fait aussi remonter une tension jusque-là évitable. Le potentiel est présent, mais la suite dépend de la manière dont le désaccord sera nommé et traité, sans laisser le conflit abîmer ce qui est en train de s’ouvrir.";
+ if((a==="bond"||a==="feeling")&&z==="block")return "Ensemble, les cartes montrent que le lien a de la substance, mais que la phase qui s’ouvre le met à l’épreuve. L’enjeu n’est plus seulement l’intensité de la connexion : il faut maintenant clarifier la source de la tension et regarder comment chacun agit concrètement.";
+ if(z==="separation")return "Ensemble, l’histoire va vers une prise de distance ou une fin de cycle. Les cartes précédentes gardent leur sens, mais elles n’annulent pas la limite indiquée par la dernière carte.";
+ if(z==="bond")return "Ensemble, l’histoire va vers un rapprochement. Ce potentiel devient constructif lorsque les deux personnes le soutiennent par des gestes clairs, cohérents et réciproques.";
+ if(z==="opening")return "Ensemble, les cartes ouvrent une possibilité nouvelle. Elle est encourageante, mais sa forme et son calendrier doivent encore être confirmés par les faits.";
+ if(z==="time")return "Ensemble, l’histoire reste ouverte mais avance lentement. La prochaine étape est celle de la maturation plutôt que d’un résultat immédiat.";
+ if(z==="choice")return "Ensemble, l’histoire arrive à un carrefour. La suite dépend d’une décision claire qui permettra de sortir de l’entre-deux.";
+ if(z==="truth")return "Ensemble, l’histoire dépend désormais d’une mise au clair. La relation ne peut avancer que si ce qui est flou, tu ou décevant est regardé directement.";
+ if(z==="movement")return "Ensemble, les cartes décrivent un changement de direction. La situation quitte progressivement son ancien fonctionnement pour entrer dans une phase différente.";
+ return "Ensemble, les cartes racontent une évolution et non trois messages séparés. La dernière carte indique ce qu’il faut maintenant comprendre ou traiter pour que l’histoire puisse réellement avancer.";
+}
 function storyInterpretation(cards){
  if(!cards.length)return "";
  const en=state.lang==="en", n=cards.length, focus=preciseQuestionFocus();
@@ -650,14 +687,13 @@ function storyInterpretation(cards){
   paragraphs.push(en?`For ${subject}, <strong>${name(a)}</strong> is the central message: ${read(a)} ${preciseGeneralConclusion(cards,focus,true)}`:`Pour ${subject}, <strong>${name(a)}</strong> donne le message central : ${read(a)} ${preciseGeneralConclusion(cards,focus,false)}`);
  }else if(n===3){
   const [a,b,c]=cards;
+  const ra=narrativeFirstSentence(read(a)), rb=narrativeFirstSentence(read(b)), rc=narrativeFirstSentence(read(c));
   if(en){
-   paragraphs.push(`The starting point is <strong>${name(a)}</strong>: ${read(a)}`);
-   paragraphs.push(`The present is described by <strong>${name(b)}</strong>: ${read(b)}`);
-   paragraphs.push(`The direction is carried by <strong>${name(c)}</strong>: ${read(c)} ${preciseGeneralConclusion(cards,focus,true)}`);
+   paragraphs.push(`The reading unfolds as a progression. <strong>${name(a)}</strong> shows what shaped the starting point: ${narrativeLowerStart(ra)} <strong>${name(b)}</strong> then describes what is opening or taking shape now: ${narrativeLowerStart(rb)} Finally, <strong>${name(c)}</strong> shows where this movement leads or what it brings to the surface: ${narrativeLowerStart(rc)}`);
+   paragraphs.push(threeCardSynthesis(cards,true));
   }else{
-   paragraphs.push(`Le tirage part de <strong>${name(a)}</strong> : ${read(a)}`);
-   paragraphs.push(`La situation actuelle est précisée par <strong>${name(b)}</strong> : ${read(b)}`);
-   paragraphs.push(`La direction donnée par <strong>${name(c)}</strong> est la suivante : ${read(c)} ${preciseGeneralConclusion(cards,focus,false)}`);
+   paragraphs.push(`Le tirage raconte une progression. <strong>${name(a)}</strong> montre ce qui a façonné le point de départ : ${narrativeLowerStart(ra)} <strong>${name(b)}</strong> décrit ensuite ce qui s’ouvre ou se construit maintenant : ${narrativeLowerStart(rb)} Enfin, <strong>${name(c)}</strong> indique vers quoi ce mouvement conduit ou ce qu’il fait remonter : ${narrativeLowerStart(rc)}`);
+   paragraphs.push(threeCardSynthesis(cards,false));
   }
  }else{
   const [a,b,c,d,e]=cards;
