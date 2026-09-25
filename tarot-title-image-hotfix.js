@@ -1,8 +1,8 @@
-/* CRISTARIVA — réparation forcée du Tarot divinatoire 78 cartes — 2026-09-24. */
+/* CRISTARIVA — réparation forcée du Tarot divinatoire 78 cartes — 2026-09-25. */
 (function(){
   'use strict';
 
-  const VERSION='20260924-tarot78-r8';
+  const VERSION='20260925-tarot78-story62-r1';
 
   function appendScript(src){
     return new Promise((resolve,reject)=>{
@@ -52,10 +52,12 @@
 
       delete window.__CRISTARIVA_TAROT_READY__;
       await appendScript('./tarot-divinatoire-integration-v78.js?v='+VERSION);
+      await appendScript('./tarot-story-fluid-v6.2.js?v='+VERSION);
 
-      window.CR_TAROT_HOTFIX_VERSION='2026.09.24-tarot78-r8';
+      window.CR_TAROT_HOTFIX_VERSION='2026.09.25-tarot78-story62-r1';
       document.documentElement.dataset.cristarivaTarot='78';
       document.documentElement.dataset.cristarivaTarotImages='56';
+      document.documentElement.dataset.cristarivaTarotStory='6.2';
     }catch(e){
       console.error('CRISTARIVA : impossible d’activer le Tarot 78 cartes.',e);
     }
