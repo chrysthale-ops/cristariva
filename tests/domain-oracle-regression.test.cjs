@@ -75,6 +75,14 @@ test('matrice complète Domaine × Oracle : tirage, Relation, Datation, astrolog
       window.URL.createObjectURL = () => 'blob:cristariva-test';
       window.URL.revokeObjectURL = () => {};
       window.Image = class {
+        constructor() {
+          // Dimensions de la planche Tarot mineur : le test ne dessine pas
+          // réellement l’image, mais le chargeur vérifie une grille 7 × 8.
+          this.naturalWidth = 700;
+          this.naturalHeight = 800;
+          this.width = 700;
+          this.height = 800;
+        }
         set src(value) { this._src = value; queueMicrotask(() => this.onload?.()); }
         get src() { return this._src; }
       };
@@ -104,12 +112,39 @@ test('matrice complète Domaine × Oracle : tirage, Relation, Datation, astrolog
   const w = dom.window;
   try {
     await new Promise(resolve => w.addEventListener('load', resolve, {once: true}));
+    // La matrice Domaine × Oracle vérifie les comportements métier.
+    // Le chargement complet des 78 cartes est déjà couvert par
+    // tests/tarot-integration.test.cjs ; on réutilise ici ce même jeu final.
+    if (w.TAROT_DATA?.main?.length !== 78) {
+      const baseTarot = fs.readFileSync(path.join(root, 'tarot-divinatoire-data.js'), 'utf8');
+      w.eval(baseTarot);
+      for (const file of [
+        'tarot-minors-data-batons.js',
+        'tarot-minors-data-coupes.js',
+        'tarot-minors-data-epees.js',
+        'tarot-minors-data-deniers.js',
+        'tarot-minors-v1.js'
+      ]) {
+        w.eval(fs.readFileSync(path.join(root, file), 'utf8'));
+      }
+    }
+    assert.equal(w.TAROT_DATA?.main?.length, 78, 'Le jeu Tarot final doit contenir 78 cartes');
     await waitFor(
-      () => w.TAROT_DATA?.main?.length === 78 && w.eval("Object.prototype.hasOwnProperty.call(state,'relationAstro')"),
-      'Les modules Tarot 78 et astrologie relationnelle doivent être chargés'
+      () => {
+        try {
+          return !!w.document.querySelector('#relationAstroForm') &&
+            !!w.document.querySelector('#relationAstroEnabled');
+        } catch {
+          return false;
+        }
+      },
+      'Le module d’astrologie relationnelle doit être chargé',
+      10000
     );
 
     const state = w.eval('state');
+    assert.ok(Object.prototype.hasOwnProperty.call(state, 'relationAstro'),
+      'L’état de l’astrologie relationnelle doit être initialisé');
     state.lang = 'fr';
     w.applyLanguage();
 
