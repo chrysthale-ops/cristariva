@@ -1,4 +1,4 @@
-/* CRISTARIVA — illustrations des 56 arcanes mineurs depuis la planche WebP validée. */
+/* CRISTARIVA — illustrations HD des 56 arcanes mineurs depuis la planche validée r9. */
 (function(){
 'use strict';
 if(window.CR_TAROT_MINOR_IMAGES_READY)return;
@@ -8,12 +8,12 @@ window.CR_TAROT_MINOR_IMAGES_READY=(async()=>{
   const names=['part-00a','part-00b','part-00c','part-01','part-02','part-03','part-04','part-05','part-06','part-07'];
 
   async function fetchPart(name){
-    const local=`./.cristariva-tarot78-sprite/${name}?v=20260924-r8`;
+    const local=`./.cristariva-tarot78-sprite/${name}?v=20260924-r9`;
     try{
       const r=await fetch(local,{cache:'no-store'});
       if(r.ok)return await r.text();
     }catch(e){}
-    const r=await fetch(rawBase+name+'?v=20260924-r8',{cache:'no-store',mode:'cors'});
+    const r=await fetch(rawBase+name+'?v=20260924-r9',{cache:'no-store',mode:'cors'});
     if(!r.ok)throw new Error('Segment de planche manquant : '+name);
     return await r.text();
   }
@@ -52,13 +52,13 @@ window.CR_TAROT_MINOR_IMAGES_READY=(async()=>{
       const y=Math.floor(n/COLS)*H;
       ctx.clearRect(0,0,W,H);
       ctx.drawImage(img,x,y,W,H,0,0,W,H);
-      window.CR_TAROT_MINOR_IMAGES[id]=canvas.toDataURL('image/webp',0.94);
+      window.CR_TAROT_MINOR_IMAGES[id]=canvas.toDataURL('image/webp',0.96);
     }
 
     const count=Object.keys(window.CR_TAROT_MINOR_IMAGES).filter(k=>Number(k)>=23&&Number(k)<=78).length;
     if(count!==56)throw new Error(`Seulement ${count}/56 illustrations mineures ont été préparées.`);
 
-    window.CR_TAROT_MINOR_SPRITE_INFO={width:sourceW,height:sourceH,cardWidth:W,cardHeight:H,count,version:'2026.09.24-r8'};
+    window.CR_TAROT_MINOR_SPRITE_INFO={width:sourceW,height:sourceH,cardWidth:W,cardHeight:H,count,version:'2026.09.24-r9'};
     return window.CR_TAROT_MINOR_IMAGES;
   }finally{
     URL.revokeObjectURL(url);
