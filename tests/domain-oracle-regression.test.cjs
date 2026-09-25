@@ -104,6 +104,12 @@ test('matrice complète Domaine × Oracle : tirage, Relation, Datation, astrolog
   const w = dom.window;
   try {
     await new Promise(resolve => w.addEventListener('load', resolve, {once: true}));
+    if (w.TAROT_DATA?.main?.length !== 78 || !String(w.CR_TAROT_INTEGRATION_VERSION || '').includes('tarot78')) {
+      const tarotLoader = w.document.createElement('script');
+      tarotLoader.src = './tarot-divinatoire-integration.js?v=test-domain-oracle';
+      tarotLoader.async = false;
+      w.document.head.appendChild(tarotLoader);
+    }
     await waitFor(
       () => w.TAROT_DATA?.main?.length === 78 &&
         String(w.CR_TAROT_INTEGRATION_VERSION || '').includes('tarot78'),
