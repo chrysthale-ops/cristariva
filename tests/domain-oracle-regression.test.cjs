@@ -104,11 +104,20 @@ test('matrice complète Domaine × Oracle : tirage, Relation, Datation, astrolog
   const w = dom.window;
   try {
     await new Promise(resolve => w.addEventListener('load', resolve, {once: true}));
+    // Le Tarot 78 possède déjà son test d’intégration dédié. Ici, on charge
+    // explicitement les mêmes fichiers afin de tester la matrice Domaine × Oracle
+    // sans dépendre du déclenchement différé du chargeur de l’interface.
+    const loadLocalScript = src => new Promise((resolve, reject) => {
+      const script = w.document.createElement('script');
+      script.src = src;
+      script.async = false;
+      script.addEventListener('load', resolve, {once: true});
+      script.addEventListener('error', reject, {once: true});
+      w.document.head.appendChild(script);
+    });
     if (w.TAROT_DATA?.main?.length !== 78 || !String(w.CR_TAROT_INTEGRATION_VERSION || '').includes('tarot78')) {
-      const tarotLoader = w.document.createElement('script');
-      tarotLoader.src = './tarot-divinatoire-integration.js?v=test-domain-oracle';
-      tarotLoader.async = false;
-      w.document.head.appendChild(tarotLoader);
+      await loadLocalScript('./tarot-divinatoire-data.js?v=test-domain-oracle');
+      await loadLocalScript('./tarot-divinatoire-integration-v78.js?v=test-domain-oracle');
     }
     await waitFor(
       () => w.TAROT_DATA?.main?.length === 78 &&
