@@ -279,7 +279,6 @@
       installedBase=base;
       const wrapped=function(cards){
         let html=base.apply(this,arguments);
-        html=enforceThreeCardArc(html,cards);
         return polishRepeatedStoryOpeners(html);
       };
       wrapped.__cristarivaFinalPolish520=true;
