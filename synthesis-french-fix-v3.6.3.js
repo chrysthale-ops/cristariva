@@ -75,7 +75,7 @@ function cr367WorkNatal(a){
   }catch(e){return'';}}
 
 function cr367PickHit(a){
-  if(!a||!state?.date)return null;try{const i=cr33Intent(),t=cr3DominantTheme(state.draw||[],false),w=cr3TimingWindow(state.date,cr3ReadingMoment(),false);let h=typeof cr37RelevantWindows==='function'?cr37RelevantWindows(a,t,w,i)||[]:[];if(h[0])return h[0];const p=cr3PeriodSummary(a,t,w,false);return cr33BestWindow(p,i);}catch(e){return null;}}
+  if(!a||!state?.date)return null;try{const i=cr33Intent(),t=cr3DominantTheme(state.draw||[],false),w=cr3TimingWindow(state.date,cr3ReadingMoment(),false);const hits=typeof cr37RelevantWindows==='function'?cr37RelevantWindows(a,t,w,i)||[]:[];return hits[0]||null;}catch(e){return null;}}
 function cr367Timing(a,general=false){
   const h=cr367PickHit(a);if(!h)return'';const d=cr3Date(h.bestDate,false),asp=String(h.name||'').toLowerCase(),tr=String(h.tr||''),na=String(h.na||''),adj=['Lune','Vénus'].includes(na)?'natale':'natal',co=asp==='conjonction'?'avec':'à';
   const gm={'Jupiter':'élargit le champ des possibles et renforce la confiance pour explorer une direction plus vaste','Vénus':'aide à reconnaître ce qui correspond davantage à vos valeurs et à vos attirances profondes','Mars':'renforce l’élan pour agir, décider ou donner une forme concrète à ce qui vous mobilise','Saturne':'favorise la structuration et le tri entre ce qui peut durer et ce qui reste fragile','Uranus':'peut ouvrir une voie inattendue ou vous aider à sortir d’un cadre devenu trop étroit','Neptune':'accentue la perception intuitive et la quête de sens'};
