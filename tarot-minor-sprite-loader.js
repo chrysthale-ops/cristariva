@@ -1,67 +1,72 @@
-/* CRISTARIVA — illustrations HD des 56 arcanes mineurs depuis la planche validée r9. */
+/* CRISTARIVA — 56 arcanes mineurs HD individuels — 2026-09-26. */
 (function(){
 'use strict';
 if(window.CR_TAROT_MINOR_IMAGES_READY)return;
-window.CR_TAROT_MINOR_IMAGES=window.CR_TAROT_MINOR_IMAGES||{};
-window.CR_TAROT_MINOR_IMAGES_READY=(async()=>{
-  const rawBase='https://raw.githubusercontent.com/chrysthale-ops/cristariva/main/.cristariva-tarot78-sprite/';
-  const names=['part-00a','part-00b','part-00c','part-01','part-02','part-03','part-04','part-05','part-06','part-07'];
-
-  async function fetchPart(name){
-    const local=`./.cristariva-tarot78-sprite/${name}?v=20260924-r9`;
-    try{
-      const r=await fetch(local,{cache:'no-store'});
-      if(r.ok)return await r.text();
-    }catch(e){}
-    const r=await fetch(rawBase+name+'?v=20260924-r9',{cache:'no-store',mode:'cors'});
-    if(!r.ok)throw new Error('Segment de planche manquant : '+name);
-    return await r.text();
-  }
-
-  const parts=[];
-  for(const name of names)parts.push(await fetchPart(name));
-  const encoded=parts.join('').replace(/\s+/g,'');
-  const bin=atob(encoded);
-  const bytes=new Uint8Array(bin.length);
-  for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
-  const url=URL.createObjectURL(new Blob([bytes],{type:'image/webp'}));
-
-  try{
-    const img=await new Promise((resolve,reject)=>{
-      const x=new Image();
-      x.onload=()=>resolve(x);
-      x.onerror=()=>reject(new Error('Planche Tarot mineur illisible'));
-      x.src=url;
-    });
-
-    const COLS=7,ROWS=8;
-    const sourceW=img.naturalWidth||img.width;
-    const sourceH=img.naturalHeight||img.height;
-    if(sourceW%COLS!==0||sourceH%ROWS!==0){
-      throw new Error(`Dimensions inattendues de la planche : ${sourceW}×${sourceH}`);
-    }
-    const W=sourceW/COLS,H=sourceH/ROWS;
-    const canvas=document.createElement('canvas');
-    canvas.width=W;canvas.height=H;
-    const ctx=canvas.getContext('2d');
-    if(!ctx)throw new Error('Canvas indisponible');
-
-    for(let id=23;id<=78;id++){
-      const n=id-23;
-      const x=(n%COLS)*W;
-      const y=Math.floor(n/COLS)*H;
-      ctx.clearRect(0,0,W,H);
-      ctx.drawImage(img,x,y,W,H,0,0,W,H);
-      window.CR_TAROT_MINOR_IMAGES[id]=canvas.toDataURL('image/webp',0.96);
-    }
-
-    const count=Object.keys(window.CR_TAROT_MINOR_IMAGES).filter(k=>Number(k)>=23&&Number(k)<=78).length;
-    if(count!==56)throw new Error(`Seulement ${count}/56 illustrations mineures ont été préparées.`);
-
-    window.CR_TAROT_MINOR_SPRITE_INFO={width:sourceW,height:sourceH,cardWidth:W,cardHeight:H,count,version:'2026.09.24-r9'};
-    return window.CR_TAROT_MINOR_IMAGES;
-  }finally{
-    URL.revokeObjectURL(url);
-  }
-})();
+const BASE='./cards/tarot/cartes mineures HD/';
+const FILES={
+  23:"as_de_bâtons_au_crépuscule.png",
+  24:"deux_de_bâtons_au_clair_de_lune.png",
+  25:"trois_de_bâtons_au_crépuscule.png",
+  26:"quatre_de_bâtons_au_crépuscule.png",
+  27:"cinq_de_bâtons_au_crépuscule.png",
+  28:"six_de_bâtons_au_bord_du_lac.png",
+  29:"sept_de_bâtons_au_crépuscule.png",
+  30:"huit_de_bâtons_au_crépuscule.png",
+  31:"neuf_de_bâtons_au_clair_de_lune.png",
+  32:"dix_de_bâtons_au_coucher_du_soleil.png",
+  33:"valet_de_bâtons_au_crépuscule.png",
+  34:"cavalier_de_bâtons_au_clair_de_lune.png",
+  35:"reine_de_bâtons_au_crépuscule.png",
+  36:"roi_de_bâtons_au_crépuscule.png",
+  37:"as_de_coupes_au_lac_étoilé.png",
+  38:"deux_de_coupes_au_crépuscule.png",
+  39:"trois_de_coupes_au_coucher_du_soleil.png",
+  40:"quatre_de_coupes_au_crépuscule.png",
+  41:"cinq_de_coupes_au_crépuscule.png",
+  42:"six_de_coupes_au_lac_d_or.png",
+  43:"sept_de_coupes_célestes.png",
+  44:"huit_de_coupes_sous_la_lune.png",
+  45:"neuf_de_coupes_au_crépuscule.png",
+  46:"dix_de_coupes_famille_sous_l_arc_doré.png",
+  47:"valet_de_coupes_au_crépuscule.png",
+  48:"cavalier_de_coupes_au_clair_de_lune.png",
+  49:"reine_de_coupes_au_crépuscule.png",
+  50:"roi_de_coupes_au_crépuscule.png",
+  51:"as_d_épées_au_coucher_du_soleil.png",
+  52:"deux_d_épées_au_crépuscule.png",
+  53:"trois_d_épées_au_coucher_du_soleil.png",
+  54:"quatre_d_épées_au_coucher_du_soleil.png",
+  55:"cinq_d_épées_au_coucher_du_soleil.png",
+  56:"six_d_épées_au_coucher_du_soleil.png",
+  57:"sept_d_épées_au_crépuscule.png",
+  58:"huit_d_épées_au_crépuscule_lacustre.png",
+  59:"neuf_d_épées_au_crépuscule.png",
+  60:"dix_d_épées_au_crépuscule.png",
+  61:"valet_d_épées_au_crépuscule.png",
+  62:"cavalier_d_épées_au_coucher_du_soleil.png",
+  63:"reine_d_épées_au_crépuscule.png",
+  64:"roi_d_épées_au_coucher_du_soleil.png",
+  65:"as_de_deniers_au_manteau_cramoisi.png",
+  66:"deux_de_deniers_au_crépuscule.png",
+  67:"trois_de_deniers_au_coucher_du_soleil.png",
+  68:"quatre_de_deniers_au_coucher_du_soleil.png",
+  69:"cinq_de_deniers_au_coucher_du_soleil.png",
+  70:"six_de_deniers_en_rouge_cramoisi.png",
+  71:"sept_de_deniers_au_coucher_du_soleil.png",
+  72:"huit_de_deniers_au_coucher_du_soleil.png",
+  73:"neuf_de_deniers_cramoisi.png",
+  74:"dix_de_deniers_en_rouge_cramoisi.png",
+  75:"valet_de_deniers_au_coucher_du_soleil.png",
+  76:"cavalier_de_deniers_au_coucher_du_soleil.png",
+  77:"reine_de_deniers_au_coucher_du_soleil.png",
+  78:"roi_de_deniers_au_coucher_du_soleil.png"
+};
+window.CR_TAROT_MINOR_IMAGES={};
+for(const [id,file] of Object.entries(FILES)){
+  window.CR_TAROT_MINOR_IMAGES[id]=BASE+file+'?v=20260926-minor-hd-r1';
+}
+const count=Object.keys(window.CR_TAROT_MINOR_IMAGES).filter(k=>Number(k)>=23&&Number(k)<=78).length;
+if(count!==56)throw new Error('CRISTARIVA Tarot : '+count+'/56 illustrations mineures HD référencées.');
+window.CR_TAROT_MINOR_SPRITE_INFO={count,source:'individual-hd-png',base:BASE,version:'2026.09.26-minor-hd-r1'};
+window.CR_TAROT_MINOR_IMAGES_READY=Promise.resolve(window.CR_TAROT_MINOR_IMAGES);
 })();
