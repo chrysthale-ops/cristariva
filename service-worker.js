@@ -1,8 +1,8 @@
-/* CRISTARIVA — service worker v28 — Tarot 78 cartes r9.
+/* CRISTARIVA — service worker v29 — récit professionnel développé.
    Force 22 arcanes majeurs + 56 arcanes mineurs HD sur PC et Android
    et recharge la planche validée complète des arcanes mineurs. */
-const CACHE_NAME='cristariva-v28-20260924-tarot78-r9';
-const APP_VERSION='2026.09.24-tarot78-r9';
+const CACHE_NAME='cristariva-v29-20260926-story-length';
+const APP_VERSION='2026.09.26-story-length';
 const SHELL=[
   './',
   './index.html',
@@ -13,7 +13,7 @@ const SHELL=[
   './story-fluid-v5.1.js?v=5.30',
   './question-context-story-v5.2.js?v=5.2.2',
   './question-intent-story-v5.3.js?v=5.6',
-  './question-project-story-v5.5.js?v=5.20',
+  './question-project-story-v5.5.js?v=5.21',
   './oracle-selection.js?v=20260923-tarot-story61',
   './oracle-amour-data.js?v=20260923-love-story6',
   './oracle-amour-card62-fix.js?v=20260923-love-story6',
