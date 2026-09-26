@@ -797,8 +797,14 @@ $('#drawBtn').addEventListener('click',()=>{
   $('#results').classList.remove('hidden'); $('#deepening').classList.remove('hidden');
   $('#results').scrollIntoView({behavior:'smooth',block:'start'});
 });
+const CRISTARIVA_RELATION_IDS={
+  'Professionnelle / Projet':new Set([103,104,107,105,106,110,112,114,115]),
+  'Sentimental':new Set([96,98,100,102,106,109,111,112,113])
+};
 $('#relationBtn').addEventListener('click',()=>{
-  state.relation=rand(DATA.relation,1)[0];
+  const allowed=state.oracle==='cristariva'?CRISTARIVA_RELATION_IDS[state.domain]:null;
+  const relationCards=allowed?DATA.relation.filter(card=>allowed.has(card.id)):DATA.relation;
+  state.relation=rand(relationCards,1)[0];
   $('#relationResult').innerHTML=cardHTML(state.relation,t("Relation"));
   if(!$('#synthesis').classList.contains('hidden'))renderSynthesis();
 });
