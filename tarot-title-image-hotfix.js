@@ -2,7 +2,7 @@
 (function(){
   'use strict';
 
-  const VERSION='20260925-tarot78-story62-r1';
+  const VERSION='20260926-minor-hd-r1';
 
   function appendScript(src){
     return new Promise((resolve,reject)=>{
@@ -54,7 +54,7 @@
       await appendScript('./tarot-divinatoire-integration-v78.js?v='+VERSION);
       await appendScript('./tarot-story-fluid-v6.2.js?v=6.6-'+VERSION);
 
-      window.CR_TAROT_HOTFIX_VERSION='2026.09.25-tarot78-story62-r1';
+      window.CR_TAROT_HOTFIX_VERSION='2026.09.26-minor-hd-r1';
       document.documentElement.dataset.cristarivaTarot='78';
       document.documentElement.dataset.cristarivaTarotImages='56';
       document.documentElement.dataset.cristarivaTarotStory='6.2';
