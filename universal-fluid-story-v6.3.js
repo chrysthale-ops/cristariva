@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.4';
+const VERSION='6.5';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -27,6 +27,9 @@ function scope(){
   return 'life';
 }
 function theme(card,en=false){
+  const title=norm((en?card?.en?.name:card?.name)||card?.name);
+  if(/communication|dialogue|parole|conversation|clarification|communication|dialog/.test(title))return 'insight';
+  if(/impasse|incompatibil|blocage|obstacle|rupture|conflit|betrayal|deadlock/.test(title))return 'tension';
   const h=hay(card,en);
   if(/secret|cache|non dit|dissim|mystere|ambigu|incert|hesit|flou|doute|unknown|uncertain|hidden/.test(h))return 'ambiguity';
   if(/liberte|autonom|independan|espace|distance saine|freedom|autonomy|independence/.test(h))return 'freedom';
@@ -245,8 +248,16 @@ function build(cards){
   if(!Array.isArray(cards)||!cards.length)return '';
   const chosen=cards.slice(0,12), r=roles(chosen.length), sc=scope(), enMode=state?.lang==='en';
   const q=String(state?.question||'').replace(/\s+/g,' ').trim();
-  const parts=chosen.map((c,i)=>enMode?en(c,r[i]||'evolution',sc,i):fr(c,r[i]||'evolution',sc,i)).filter(Boolean);
-  if(chosen.length>1)parts.push(conclusion(chosen,sc,enMode));
+  const themes=chosen.map(c=>theme(c,enMode));
+  const stuckThenClarity=chosen.length===3&&themes[0]==='tension'&&themes[1]==='tension'&&themes[2]==='insight';
+  const parts=stuckThenClarity?(enMode?[
+    'The earlier difficulty suggests that the route taken has stopped offering a workable answer. The present situation brings the mismatch into focus: continuing to force it could require giving up something essential.',
+    'The next step is to put the difficulty into clear words, distinguish what can be discussed from what cannot be compromised, and see whether a different way forward is possible. The cards point to a conversation and a choice, rather than a guaranteed outcome.'
+  ]:[
+    'Une difficulté ancienne semble avoir épuisé la voie suivie jusqu’ici. Ce qui coince aujourd’hui n’est peut-être pas un simple manque d’efforts : certaines attentes ou façons d’avancer ne s’accordent plus, et insister risque de demander trop de renoncements.',
+    'La suite invite à nommer clairement le désaccord, à distinguer ce qui peut se négocier de ce qui compte vraiment pour vous, puis à regarder si une autre voie est possible. Le tirage suggère une mise au clair et un choix, sans promettre une issue précise.'
+  ]):chosen.map((c,i)=>enMode?en(c,r[i]||'evolution',sc,i):fr(c,r[i]||'evolution',sc,i)).filter(Boolean);
+  if(chosen.length>1&&!stuckThenClarity)parts.push(conclusion(chosen,sc,enMode));
   if(sc==='work'&&chosen.length>=5){
     const extra=workExpansion(chosen,enMode);
     if(extra)parts.push(extra);
