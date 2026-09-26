@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.3';
+const VERSION='6.4';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -223,12 +223,34 @@ function conclusion(cards,sc,enMode){
   if(last==='tension')return "Dans l’ensemble, le prochain mouvement utile consiste surtout à transformer ce qui freine encore la situation.";
   return "Dans l’ensemble, le tirage raconte une progression continue plutôt qu’une succession de significations isolées : chaque étape éclaire la suivante et donne peu à peu sa cohérence au récit.";
 }
+function workExpansion(cards,enMode=false){
+  if(!Array.isArray(cards)||cards.length<5)return '';
+  const th=cards.slice(0,5).map(c=>theme(c,enMode));
+  if(enMode){
+    let s="For the next decisions, it is useful to separate three things: what still belongs to the previous difficulty, what can genuinely support progress now, and what must be abandoned because it no longer matches reality.";
+    if(th[0]==='tension'||th[1]==='tension')s+=" The reading therefore discourages decisions made under pressure and favors a more deliberate pace.";
+    if(th[2]==='tension')s+=" Even a refusal or limitation can become useful when it helps eliminate an unsuitable option and sharpen the direction.";
+    if(th[3]==='change'||th[3]==='insight')s+=" The evolution becomes constructive when the lesson is converted into a practical adjustment rather than remaining only an observation.";
+    if(th[4]==='ground')s+=" The final movement favors stabilization and a calmer environment in which choices can be made with more confidence.";
+    return s;
+  }
+  let s="Pour les prochaines décisions, il est utile de distinguer trois choses : ce qui appartient encore à la difficulté précédente, ce qui peut réellement soutenir l’avancée maintenant, et ce qu’il faut accepter d’abandonner parce que cela ne correspond plus à la réalité.";
+  if(th[0]==='tension'||th[1]==='tension')s+=" Le tirage déconseille donc les choix pris sous pression et invite à retrouver un rythme plus posé avant de trancher.";
+  if(th[2]==='tension')s+=" Même un refus ou une limite peut devenir utile s’il permet d’écarter une option mal adaptée et de rendre la direction plus nette.";
+  if(th[3]==='change'||th[3]==='insight')s+=" L’évolution devient constructive lorsque ce qui a été compris se transforme en ajustement concret, plutôt qu’en simple constat.";
+  if(th[4]==='ground')s+=" Le mouvement final favorise la stabilisation et un cadre plus calme, dans lequel les choix peuvent être faits avec davantage de confiance.";
+  return s;
+}
 function build(cards){
   if(!Array.isArray(cards)||!cards.length)return '';
   const chosen=cards.slice(0,12), r=roles(chosen.length), sc=scope(), enMode=state?.lang==='en';
   const q=String(state?.question||'').replace(/\s+/g,' ').trim();
   const parts=chosen.map((c,i)=>enMode?en(c,r[i]||'evolution',sc,i):fr(c,r[i]||'evolution',sc,i)).filter(Boolean);
   if(chosen.length>1)parts.push(conclusion(chosen,sc,enMode));
+  if(sc==='work'&&chosen.length>=5){
+    const extra=workExpansion(chosen,enMode);
+    if(extra)parts.push(extra);
+  }
   const question=q?`<p class="reading-question">${enMode?'Your question':'Votre question'} : « ${esc(q)} »</p>`:'';
   return `<div class="story-reading" data-story-engine="universal-fluid-${VERSION}"><h3>${enMode?'The story told by your cards':'L’histoire racontée par vos cartes'}</h3>${question}<p class="story-continuous">${esc(parts.join(' ').replace(/\s+/g,' ').trim())}</p></div>`;
 }
