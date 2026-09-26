@@ -203,6 +203,32 @@
     return selected.map(pairNarrative).join(' ');
   }
 
+  function synthesisComparison(c,r){
+    const mine=bestHits(c,2),other=bestHits(r,2),pairs=sharedPairs(c,r);
+    if(!mine.length&&!other.length) return text(
+      'Sur la période retenue, aucun pic individuel suffisamment net ne ressort pour l’un ou l’autre thème ; le tirage ne permet pas d’isoler un moment commun.',
+      'During the selected period, neither chart shows a sufficiently clear individual peak, so no shared moment can be isolated.'
+    );
+    const describe=(hits,person)=>{
+      if(!hits.length)return text(
+        person==='mine'?'aucun pic suffisamment net ne ressort sur votre thème':'aucun pic suffisamment net ne ressort sur le thème de l’autre personne',
+        person==='mine'?'no sufficiently clear peak appears in your chart':'no sufficiently clear peak appears in the other person’s chart'
+      );
+      const labels=hits.map(h=>`${h.tr||''} ${h.name||''} ${h.na||''} ${text('natal','natal')} (${dateLabel(h.bestDate)})`);
+      return text(
+        `${person==='mine'?'votre thème':'le thème de l’autre personne'} retient ${labels.join(' et ')}`,
+        `${person==='mine'?'your chart':'the other person’s chart'} shows ${labels.join(' and ')}`
+      );
+    };
+    const intro=text('Sur la période du tirage,','During the reading period,');
+    const conclusion=pairs.length
+      ? text('Certains de ces moments se recouvrent, mais ils agissent différemment sur chaque thème et ne garantissent pas à eux seuls une évolution du lien.',
+             'Some of these moments overlap, but they act differently in each chart and do not by themselves guarantee a relationship outcome.')
+      : text('Ces indications individuelles ne forment pas un pic partagé suffisamment net ; il faut les lire séparément, sans en déduire une échéance certaine pour le lien.',
+             'These individual indications do not form a sufficiently clear shared peak; they should be read separately, without inferring a definite relationship event.');
+    return `${intro} ${describe(mine,'mine')}, ${text('tandis que','while')} ${describe(other,'other')}. ${conclusion}`;
+  }
+
   function rewriteCrossPeriod(){
     if(rewriting) return;
     try{
@@ -219,6 +245,13 @@
       if(ps[0]&&ps[0].textContent!==intro) ps[0].textContent=intro;
       if(ps[1]&&ps[1].textContent!==body) ps[1].textContent=body;
       section.dataset.periodConsistency='1.6';
+      const synthesis=box.querySelector('.cr362-global');
+      if(synthesis){
+        let comparison=synthesis.querySelector('.cr-cross-summary');
+        if(!comparison){comparison=document.createElement('p');comparison.className='cr-cross-summary';synthesis.appendChild(comparison);}
+        const summary=synthesisComparison(state.astro,state.relationAstro);
+        if(comparison.textContent!==summary)comparison.textContent=summary;
+      }
     }catch(e){ console.warn('CRISTARIVA cohérence analyse croisée',e); }
     finally{ rewriting=false; }
   }
