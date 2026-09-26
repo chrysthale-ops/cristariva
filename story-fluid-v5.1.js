@@ -2,7 +2,7 @@
    Le récit final synthétise les cartes au lieu de recopier leurs définitions.
    Il s'appuie sur les mots-clés, la tonalité, la position et la question.
 */
-const CRISTARIVA_FLUID_STORY_VERSION='5.30';
+const CRISTARIVA_FLUID_STORY_VERSION='5.31';
 
 function cr51Esc(value){
   try{return typeof readingEscape==='function'?readingEscape(String(value??'')):String(value??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -79,61 +79,231 @@ function cr51Variant(card,role){
   const seed=Number(card?.id||0)+String(role||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0);
   return Math.abs(seed)%3;
 }
+function cr51NarrativeFamily(card,en=false){
+  const fam=cr51Family(card,en);
+  const map={
+    past:'past', tension:'tension', bond:'bond', insight:'insight',
+    movement:'movement', change:'change', ground:'ground',
+    ambiguity:'ambiguity', opening:'opening', neutral:'neutral'
+  };
+  return map[fam]||'neutral';
+}
+function cr51Pick(arr,card,role){
+  const a=Array.isArray(arr)?arr:[];
+  if(!a.length)return '';
+  return a[cr51Variant(card,role)%a.length];
+}
 function cr51StageFrench(card,role,scope){
-  const k=cr51Join(cr51Keywords(card,false),false),tone=cr51Tone(card,false),v=cr51Variant(card,role);
-  const relation={
+  const fam=cr51NarrativeFamily(card,false);
+  const tone=cr51Tone(card,false);
+
+  const common={
     origin:{
-      positive:[`Au départ, le lien s’est construit sur ${k}, ce qui montre qu’un socle favorable a déjà existé.`,`Dans ce qui précède la situation actuelle, ${k} ont constitué les points les plus porteurs du lien.`,`À l’origine de la dynamique, ${k} ont donné au lien une base qui pouvait soutenir un rapprochement.`],
-      nuanced:[`Au départ, ${k} ont installé une dynamique contrastée, avec du potentiel mais aussi des ajustements à trouver.`,`Ce qui précède montre surtout ${k} : le lien n’était ni complètement fermé ni réellement stabilisé.`,`À l’origine, ${k} ont créé une situation intermédiaire, capable d’évoluer mais encore irrégulière.`],
-      negative:[`Au départ, ${k} ont fragilisé le lien et limité ce qui pouvait réellement se construire.`,`Dans le passé récent du lien, ${k} ont pesé davantage que les éléments favorables.`,`À l’origine de la difficulté, ${k} ont créé une distance ou un déséquilibre qu’il reste à dépasser.`]
-    },
-    evolution:{
-      positive:[`Aujourd’hui, ${k} prennent davantage de place et rendent possible un échange plus naturel si l’élan reste partagé.`,`Dans le présent, ${k} soutiennent une dynamique plus simple, plus fluide et plus réciproque.`,`Actuellement, ${k} peuvent faciliter un rapprochement, à condition que les gestes suivent réellement l’intention.`],
-      nuanced:[`Aujourd’hui, ${k} montrent que le lien bouge encore, mais qu’il cherche sa forme et son rythme.`,`Dans le présent, ${k} traduisent une évolution possible, sans que tout soit encore fixé.`,`Actuellement, ${k} créent une dynamique intermédiaire : quelque chose évolue, mais demande encore des ajustements.`],
-      negative:[`Aujourd’hui, ${k} restent le point sensible et freinent encore une reprise stable du lien.`,`Dans le présent, ${k} montrent ce qui continue d’empêcher le lien de se déployer librement.`,`Actuellement, ${k} dominent encore la dynamique et rendent le rapprochement plus difficile à installer.`]
-    },
-    outcome:{
-      positive:[`Pour la suite, ${k} ouvrent une voie plus favorable, à condition de laisser la relation se construire sans la forcer.`,`L’élan à venir met ${k} au premier plan : la suite peut gagner en qualité si chacun respecte la place de l’autre.`,`La direction qui se dessine valorise ${k}; elle invite à construire autrement plutôt qu’à répéter l’ancien fonctionnement.`],
-      nuanced:[`Pour la suite, ${k} suggèrent une évolution possible, mais dépendante de la manière dont chacun trouve sa place.`,`L’élan à venir repose sur ${k} : la situation peut évoluer, mais elle ne se stabilisera pas toute seule.`,`La direction reste ouverte autour de ${k}; elle demande un nouveau réglage du lien plutôt qu’un retour automatique au passé.`],
-      negative:[`Pour la suite, ${k} indiquent qu’un changement réel sera nécessaire avant qu’un rapprochement durable puisse s’installer.`,`L’élan à venir reste freiné par ${k}; une reprise ne pourrait tenir qu’en modifiant profondément cette dynamique.`,`La direction actuelle laisse ${k} comme obstacle principal : sans évolution concrète, le lien risque de reproduire ses difficultés.`]
+      tension:[
+        "Au départ, quelque chose semble avoir ralenti l’évolution de la situation, comme si un obstacle, une hésitation ou une difficulté à décider avait maintenu les choses en suspens.",
+        "La situation paraît d’abord avoir traversé une phase de ralentissement, avec l’impression qu’un élément empêchait d’avancer aussi librement qu’espéré."
+      ],
+      ambiguity:[
+        "Au départ, la situation semble s’être installée dans une forme d’incertitude, avec des signaux difficiles à interpréter et une direction encore peu claire.",
+        "La première impression est celle d’un entre-deux : quelque chose existe, mais sans parvenir encore à trouver une forme vraiment définie."
+      ],
+      opening:[
+        "Au départ, une ouverture semble s’être créée, apportant une possibilité nouvelle ou l’impression qu’un autre chemin devenait envisageable.",
+        "La situation paraît avoir commencé sur une note d’ouverture, avec un potentiel réel qui demandait encore à se confirmer."
+      ],
+      bond:[
+        "Au départ, un lien important semble avoir servi de point d’ancrage et donné du sens à ce qui allait suivre.",
+        "La première dynamique évoque un attachement ou une proximité qui a constitué la base de la situation."
+      ],
+      change:[
+        "Au départ, une période de transition semble déjà avoir été engagée, comme si une ancienne manière de vivre la situation arrivait à son terme.",
+        "La situation paraît s’être ouverte dans un contexte de changement, avec la nécessité de laisser évoluer ce qui ne pouvait plus rester identique."
+      ],
+      neutral:[
+        "Au départ, la situation semble avoir traversé une phase d’ajustement qui a préparé progressivement la suite.",
+        "La première étape évoque surtout une période où les choses se mettaient en place sans être encore totalement définies."
+      ]
     },
     obstacle:{
-      positive:[`Un point de vigilance apparaît pourtant autour de ${k} : ce potentiel doit rester concret et partagé.`,`La difficulté n’est pas l’absence de potentiel, mais la manière de transformer ${k} en actes réguliers.`,`Même favorable, ${k} peut devenir fragile si l’un des deux porte seul la relation.`],
-      nuanced:[`La difficulté se concentre autour de ${k}, qui peuvent aussi bien aider le lien que le maintenir dans l’entre-deux.`,`Le principal point de tension concerne ${k}, encore trop instables pour donner une direction nette.`,`Ce qui complique la situation tient à ${k}, qui demandent d’être clarifiés plutôt que laissés dans l’ambiguïté.`],
-      negative:[`L’obstacle principal se situe dans ${k}, qui entretiennent la distance ou la tension.`,`Ce qui bloque le plus le lien reste ${k}; tant que cela domine, le rapprochement demeure fragile.`,`La difficulté centrale vient de ${k}, qui empêchent encore une relation plus sereine de s’installer.`]
+      tension:[
+        "Ce qui complique aujourd’hui le chemin tient surtout à une résistance encore présente, qu’elle vienne des circonstances, des peurs ou d’une difficulté à agir clairement.",
+        "La difficulté principale semble venir d’un frein qui continue d’entretenir l’attente ou la tension."
+      ],
+      ambiguity:[
+        "Le point le plus délicat reste le manque de clarté : tant que certaines intentions ou certains ressentis demeurent flous, il est difficile de savoir dans quelle direction avancer.",
+        "L’obstacle semble surtout venir de ce qui reste indécis ou ambigu, laissant trop de place aux suppositions."
+      ],
+      movement:[
+        "Le mouvement lui-même peut devenir déstabilisant s’il est trop rapide ou irrégulier ; il demande à être accompagné par des choix plus posés.",
+        "La difficulté vient moins de l’absence d’élan que de sa rapidité, qui peut rendre la situation difficile à stabiliser."
+      ],
+      past:[
+        "Une partie du frein semble encore liée à ce qui appartient au passé et continue d’influencer la manière de vivre la situation présente.",
+        "Ce qui a déjà été vécu pèse encore sur la suite et peut empêcher d’aborder pleinement la situation avec un regard neuf."
+      ],
+      neutral:[
+        "La difficulté tient surtout à ce qui n’a pas encore trouvé sa juste place et demande à être mieux compris avant d’aller plus loin.",
+        "Le principal frein semble venir d’un déséquilibre encore non résolu, plus que d’une fermeture définitive."
+      ]
     },
     resource:{
-      positive:[`Le meilleur point d’appui se trouve dans ${k}, qui peuvent redonner au lien une base plus saine.`,`Pour avancer, ${k} constituent la ressource la plus constructive du tirage.`,`Ce qui peut réellement aider la relation passe par ${k}, à traduire en gestes simples et cohérents.`],
-      nuanced:[`La ressource consiste à mieux utiliser ${k}, sans les idéaliser ni les écarter.`,`Un appui existe dans ${k}, à condition d’en faire quelque chose de concret.`,`Pour sortir de l’entre-deux, ${k} peuvent servir de point d’appui s’ils sont clarifiés.`],
-      negative:[`La ressource vient du fait de reconnaître clairement ${k}, afin de ne plus les laisser diriger la relation.`,`Le point d’appui consiste à regarder ${k} en face et à changer ce qui peut l’être.`,`Pour avancer, il faut surtout ne plus minimiser ${k} et en tirer une limite claire.`]
+      change:[
+        "La meilleure ressource réside dans la capacité à accepter une transformation réelle, plutôt que de chercher à conserver exactement ce qui existait auparavant.",
+        "Un changement profond peut devenir un véritable point d’appui, à condition de l’accueillir comme une évolution plutôt que comme une perte."
+      ],
+      insight:[
+        "La situation peut progresser grâce à une compréhension plus lucide de ce qui se joue réellement, sans chercher à forcer une réponse immédiate.",
+        "Le meilleur appui vient d’un regard plus clair sur les faits, les émotions et les limites de chacun."
+      ],
+      ground:[
+        "Ce qui peut le mieux soutenir la suite est de retrouver une base plus stable, plus simple et plus concrète.",
+        "La ressource principale consiste à avancer avec davantage de stabilité, en privilégiant ce qui est réellement solide."
+      ],
+      bond:[
+        "Le lien lui-même peut devenir une ressource s’il repose sur une présence sincère, une écoute mutuelle et une implication réellement partagée.",
+        "Ce qui peut aider vient de la qualité du lien, à condition qu’il reste équilibré et nourri des deux côtés."
+      ],
+      opening:[
+        "Une nouvelle possibilité peut servir de point d’appui si elle est accueillie sans précipitation et laissée libre d’évoluer naturellement.",
+        "La situation bénéficie d’une ouverture qui peut permettre d’envisager la suite autrement."
+      ],
+      neutral:[
+        "La ressource se trouve dans une manière plus consciente et plus souple d’aborder la situation, sans chercher à tout définir immédiatement.",
+        "Ce qui peut aider est de laisser émerger une réponse plus claire à partir de faits concrets et d’un positionnement plus serein."
+      ]
+    },
+    evolution:{
+      movement:[
+        "Désormais, quelque chose recommence à bouger. Une impulsion nouvelle peut relancer la situation, à condition de ne pas confondre vitesse et profondeur.",
+        "La dynamique actuelle retrouve du mouvement et peut ouvrir une nouvelle étape, mais elle demande encore à être consolidée."
+      ],
+      change:[
+        "Peu à peu, une transformation se dessine. La manière de vivre, de comprendre ou d’aborder la situation semble évoluer vers quelque chose de différent.",
+        "La situation entre dans une phase de mutation : certaines anciennes habitudes perdent de leur importance et laissent place à une autre manière d’avancer."
+      ],
+      opening:[
+        "Aujourd’hui, une ouverture devient plus visible et permet d’envisager la suite avec davantage de souplesse.",
+        "La dynamique actuelle laisse apparaître une possibilité nouvelle, encore fragile mais suffisamment présente pour modifier la perspective."
+      ],
+      ground:[
+        "La situation cherche maintenant davantage de stabilité et d’équilibre, comme si le besoin de construire sur des bases plus sûres devenait prioritaire.",
+        "L’évolution actuelle pousse vers quelque chose de plus posé, plus cohérent et plus respectueux des besoins réels."
+      ],
+      ambiguity:[
+        "Pour l’instant, l’évolution reste réelle mais encore difficile à définir complètement. Tout n’a pas encore pris une forme stable.",
+        "Quelque chose évolue, mais la direction exacte n’est pas encore entièrement fixée et demande encore un peu de temps."
+      ],
+      neutral:[
+        "La dynamique évolue progressivement, sans rupture brutale, et semble conduire vers une nouvelle manière de considérer la situation.",
+        "Un déplacement s’opère peu à peu, invitant à regarder la situation autrement qu’au début du tirage."
+      ]
+    },
+    outcome:{
+      ambiguity:[
+        "Pour la suite, tout n’est pas encore complètement éclairci. Certaines intentions, émotions ou informations peuvent rester difficiles à exprimer ou à comprendre.",
+        "La suite conserve une part d’incertitude, notamment autour de ce qui n’est pas encore formulé ouvertement."
+      ],
+      tension:[
+        "Pour avancer durablement, il faudra probablement lever un frein encore présent plutôt que prolonger la situation telle qu’elle fonctionne aujourd’hui.",
+        "La suite dépendra surtout de la capacité à dépasser ce qui continue de créer de la tension ou de la retenue."
+      ],
+      opening:[
+        "La suite semble pouvoir s’ouvrir progressivement, sans exiger de tout savoir immédiatement. L’essentiel sera de laisser la situation révéler sa véritable direction.",
+        "Une possibilité nouvelle se dessine pour la suite, à condition de ne pas la forcer et de rester attentif à ce qui se confirme réellement."
+      ],
+      ground:[
+        "La direction la plus constructive consiste à privilégier ce qui apporte de la stabilité, de la cohérence et un sentiment d’équilibre durable.",
+        "La suite gagnera à se construire sur des bases simples et solides plutôt que sur des impressions passagères."
+      ],
+      change:[
+        "La suite semble surtout annoncer un nouveau chapitre : ce qui viendra ne pourra probablement pas être une simple répétition de ce qui existait auparavant.",
+        "La direction qui se dessine passe par un véritable changement de cadre ou de manière d’avancer."
+      ],
+      neutral:[
+        "La suite reste ouverte et paraît devoir se préciser progressivement, au rythme des choix et des événements à venir.",
+        "Rien ne semble entièrement figé : la direction se construira surtout à partir de ce qui sera réellement vécu et exprimé."
+      ]
     }
   };
-  const work={
-    origin:{positive:[`Au départ, ${k} ont donné une base solide au projet.`,`La situation s’est d’abord appuyée sur ${k}.`,`À l’origine, ${k} ont créé des conditions plutôt favorables.`],nuanced:[`Au départ, ${k} ont créé une situation encore incomplète.`,`La base du projet repose sur ${k}, avec plusieurs ajustements à prévoir.`,`À l’origine, ${k} ont installé une dynamique encore irrégulière.`],negative:[`Au départ, ${k} ont freiné le projet.`,`La difficulté initiale vient surtout de ${k}.`,`À l’origine, ${k} ont limité la progression.`]},
-    evolution:{positive:[`Aujourd’hui, ${k} soutiennent une progression plus nette.`,`Dans le présent, ${k} rendent l’avancée plus concrète.`,`Actuellement, ${k} renforcent la dynamique du projet.`],nuanced:[`Aujourd’hui, ${k} montrent une progression encore en réglage.`,`Dans le présent, ${k} demandent des choix plus précis.`,`Actuellement, ${k} laissent plusieurs scénarios ouverts.`],negative:[`Aujourd’hui, ${k} freinent encore l’avancée.`,`Dans le présent, ${k} restent les principaux points de blocage.`,`Actuellement, ${k} compliquent la progression du projet.`]},
-    outcome:{positive:[`Pour la suite, ${k} ouvrent une perspective constructive.`,`La direction à venir s’appuie favorablement sur ${k}.`,`La suite peut se consolider autour de ${k}.`],nuanced:[`Pour la suite, ${k} demandent encore des arbitrages.`,`La direction reste ouverte autour de ${k}.`,`La suite dépendra de la manière dont ${k} seront gérés.`],negative:[`Pour la suite, ${k} exigent une correction de trajectoire.`,`La direction actuelle reste freinée par ${k}.`,`La suite demande de résoudre ${k} avant d’espérer une progression stable.`]},
-    obstacle:{positive:[`Le point de vigilance concerne ${k}, qui doivent rester concrets.`,`La difficulté est de transformer ${k} en résultats.`,`Le potentiel de ${k} doit être structuré pour devenir utile.`],nuanced:[`L’obstacle tient à ${k}, encore insuffisamment clarifiés.`,`La difficulté se concentre autour de ${k}.`,`Le projet reste hésitant autour de ${k}.`],negative:[`L’obstacle principal vient de ${k}.`,`Ce qui bloque le plus reste ${k}.`,`La difficulté centrale concerne ${k}.`]},
-    resource:{positive:[`${k} constituent le meilleur levier pour avancer.`,`Le point d’appui le plus solide se trouve dans ${k}.`,`Pour progresser, la ressource principale reste ${k}.`],nuanced:[`${k} peuvent devenir utiles s’ils sont mieux structurés.`,`Un levier existe dans ${k}, à clarifier.`,`La ressource passe par une meilleure utilisation de ${k}.`],negative:[`La ressource consiste à traiter directement ${k}.`,`Pour avancer, il faut d’abord réduire l’effet de ${k}.`,`Le point d’appui vient d’une gestion plus lucide de ${k}.`]}
+
+  const relationOverrides={
+    origin:{
+      tension:[
+        "Une période de ralentissement semble avoir marqué la vie affective, comme si quelque chose avait empêché les sentiments ou la relation d’évoluer pleinement.",
+        "Sur le plan sentimental, la situation paraît d’abord avoir été freinée par une attente, une hésitation ou une difficulté à faire avancer le lien."
+      ],
+      bond:[
+        "Au départ, un attachement réel semble avoir donné au lien sa force et son importance.",
+        "La relation semble s’être construite autour d’une proximité ou d’un attachement qui a compté sincèrement."
+      ]
+    },
+    obstacle:{
+      movement:[
+        "Une émotion très vive ou un rapprochement soudain peut bouleverser l’équilibre. L’intensité est réelle, mais elle demande du temps pour révéler sa profondeur.",
+        "Ce qui déstabilise le plus peut être la force soudaine d’une attirance ou d’un élan, capable d’accélérer les choses avant qu’elles aient trouvé leur équilibre."
+      ]
+    },
+    resource:{
+      change:[
+        "Une transformation profonde peut permettre de sortir des anciens schémas et d’aborder les sentiments d’une manière plus juste et plus consciente.",
+        "Le meilleur point d’appui vient de la capacité à faire évoluer la relation ou sa manière d’aimer, plutôt que de répéter ce qui ne fonctionne plus."
+      ]
+    },
+    evolution:{
+      ground:[
+        "Peu à peu, le besoin d’une relation plus équilibrée se fait sentir, avec davantage de respect pour l’espace, le rythme et l’identité de chacun.",
+        "L’évolution actuelle invite à trouver un équilibre entre proximité et liberté, afin que chacun puisse rester lui-même dans le lien."
+      ]
+    },
+    outcome:{
+      ambiguity:[
+        "Tout n’est cependant pas encore complètement éclairci. Certains sentiments, certaines intentions ou certaines vérités peuvent rester discrets ou difficiles à exprimer.",
+        "La suite garde une part de non-dit : quelque chose semble encore devoir être révélé ou formulé avant que la relation puisse être pleinement comprise."
+      ]
+    }
   };
-  const spirit={
-    origin:{positive:[`Au départ, ${k} ont constitué un point d’appui intérieur.`,`La dynamique s’est d’abord organisée autour de ${k}.`,`À l’origine, ${k} ont ouvert une compréhension utile.`],nuanced:[`Au départ, ${k} ont créé une phase de transition.`,`La dynamique initiale s’est construite autour de ${k}, encore difficiles à équilibrer.`,`À l’origine, ${k} ont installé une période d’ajustement.`],negative:[`Au départ, ${k} ont créé une tension intérieure.`,`La difficulté initiale s’est organisée autour de ${k}.`,`À l’origine, ${k} ont pesé sur la situation.`]},
-    evolution:{positive:[`Aujourd’hui, ${k} deviennent plus accessibles et soutiennent l’évolution.`,`Dans le présent, ${k} offrent une compréhension plus claire.`,`Actuellement, ${k} permettent de retrouver un axe plus constructif.`],nuanced:[`Aujourd’hui, ${k} montrent une évolution encore en cours.`,`Dans le présent, ${k} demandent surtout de l’observation et du discernement.`,`Actuellement, ${k} indiquent une phase de transition plutôt qu’une réponse définitive.`],negative:[`Aujourd’hui, ${k} restent ce qui brouille le plus la situation.`,`Dans le présent, ${k} entretiennent encore la tension.`,`Actuellement, ${k} demandent d’être reconnus avant de pouvoir avancer.`]},
-    outcome:{positive:[`Pour la suite, ${k} ouvrent une direction plus sereine.`,`La direction à venir valorise ${k}.`,`La suite peut gagner en cohérence grâce à ${k}.`],nuanced:[`Pour la suite, ${k} demandent encore du temps et de l’ajustement.`,`La direction reste ouverte autour de ${k}.`,`La suite dépendra surtout de la manière dont ${k} seront intégrés.`],negative:[`Pour la suite, ${k} indiquent ce qui doit être transformé en priorité.`,`La direction actuelle reste freinée par ${k}.`,`La suite demande de sortir de ${k} avant de retrouver davantage de clarté.`]},
-    obstacle:{positive:[`Le point de vigilance est de ne pas idéaliser ${k}.`,`La difficulté est de garder ${k} ancrés dans le réel.`,`Même favorables, ${k} doivent être confrontés aux faits.`],nuanced:[`L’obstacle tient à ${k}, encore difficiles à interpréter clairement.`,`La difficulté se concentre autour de ${k}.`,`Ce qui complique la situation vient de ${k}, qui demandent plus de recul.`],negative:[`L’obstacle principal vient de ${k}.`,`Ce qui brouille le plus la situation reste ${k}.`,`La difficulté centrale se situe dans ${k}.`]},
-    resource:{positive:[`${k} constituent le meilleur point d’appui pour avancer.`,`La ressource principale se trouve dans ${k}.`,`Pour retrouver de la cohérence, ${k} peuvent servir de guide.`],nuanced:[`${k} peuvent devenir un appui s’ils sont mieux compris.`,`La ressource passe par une lecture plus lucide de ${k}.`,`Un point d’appui existe dans ${k}, à clarifier.`],negative:[`La ressource consiste à reconnaître ${k} sans les laisser tout envahir.`,`Pour avancer, il faut réduire l’emprise de ${k}.`,`Le point d’appui vient d’une mise à distance plus claire de ${k}.`]}
-  };
-  const bank=scope==='work'?work:scope==='relation'?relation:spirit;
-  const arr=bank?.[role]?.[tone]||bank?.[role]?.nuanced||[];
-  return arr[v%Math.max(arr.length,1)]||'';
+
+  const bank=(scope==='relation'&&relationOverrides?.[role]?.[fam]) ? relationOverrides[role][fam]
+    : common?.[role]?.[fam] || common?.[role]?.[tone] || common?.[role]?.neutral || [];
+  return cr51Pick(bank,card,role);
 }
 function cr51StageEnglish(card,role,scope){
-  const k=cr51Join(cr51Keywords(card,true),true),tone=cr51Tone(card,true),v=cr51Variant(card,role);
-  const positive={origin:[`At first, ${k} gave the situation a constructive base.`,`The earlier dynamic was supported by ${k}.`,`Initially, ${k} created useful common ground.`],evolution:[`Now, ${k} are becoming more visible and support a more constructive evolution.`,`At present, ${k} make the situation easier to develop.`,`Currently, ${k} strengthen the most promising part of the situation.`],outcome:[`Going forward, ${k} open a more constructive direction.`,`The next phase gives more importance to ${k}.`,`The direction ahead can grow around ${k}.`],obstacle:[`The point of caution is to turn ${k} into something concrete.`,`The difficulty is making ${k} consistent in practice.`,`Even with potential, ${k} need to be sustained by actions.`],resource:[`${k} provide the strongest resource for moving forward.`,`The best support comes from ${k}.`,`Progress is most likely to come through ${k}.`]};
-  const nuanced={origin:[`At first, ${k} created a mixed and still unsettled dynamic.`,`The earlier situation revolved around ${k}, without fully stabilising.`,`Initially, ${k} left several possibilities open.`],evolution:[`Now, ${k} show movement, but not yet a fixed outcome.`,`At present, ${k} point to an evolution that still needs adjustment.`,`Currently, ${k} keep the situation open rather than settled.`],outcome:[`Going forward, ${k} suggest a possible evolution that still depends on how the situation is handled.`,`The next phase remains open around ${k}.`,`The direction ahead depends on how ${k} are integrated.`],obstacle:[`The main difficulty lies around ${k}, which are still unclear.`,`The obstacle is the unresolved nature of ${k}.`,`What complicates the situation most is ${k}.`],resource:[`${k} can become useful if they are clarified.`,`A resource exists in ${k}, but it needs structure.`,`The best support comes from understanding ${k} more clearly.`]};
-  const negative={origin:[`At first, ${k} weakened the situation or limited what could develop.`,`The earlier difficulty was driven by ${k}.`,`Initially, ${k} carried more weight than the favourable factors.`],evolution:[`Now, ${k} remain the main source of friction.`,`At present, ${k} still slow the situation down.`,`Currently, ${k} continue to make progress harder.`],outcome:[`Going forward, ${k} show what must change before the situation can stabilise.`,`The next phase remains constrained by ${k}.`,`The direction ahead requires a real change around ${k}.`],obstacle:[`The main obstacle comes from ${k}.`,`What blocks progress most is ${k}.`,`The central difficulty remains ${k}.`],resource:[`The resource lies in addressing ${k} directly.`,`Moving forward requires reducing the impact of ${k}.`,`The best support comes from facing ${k} clearly.`]};
-  const bank=tone==='positive'?positive:tone==='negative'?negative:nuanced;
-  const arr=bank[role]||bank.evolution;
-  return arr[v%arr.length];
+  const fam=cr51NarrativeFamily(card,true);
+  const common={
+    origin:{
+      tension:["At first, the situation seems to have been slowed by a blockage, hesitation or difficulty moving forward.","The story begins with a period of delay, as though something kept the situation from developing freely."],
+      ambiguity:["At first, the situation seems to have settled into uncertainty, with no fully clear direction.","The opening stage feels unresolved, with something present but not yet clearly defined."],
+      change:["The story begins in a period of transition, as though an older pattern was already starting to change."],
+      neutral:["At first, the situation appears to have been in a period of adjustment, preparing the ground for what followed."]
+    },
+    obstacle:{
+      tension:["The main difficulty comes from a resistance that is still present and continues to slow progress.","What complicates the situation most is a lingering blockage that keeps things in suspense."],
+      ambiguity:["The main difficulty is the lack of clarity; some intentions or feelings still seem hard to read.","The obstacle lies in what remains uncertain or unspoken."],
+      movement:["A sudden burst of emotion or momentum can be powerful, but its speed can also make the situation harder to stabilise."],
+      neutral:["The main difficulty lies in something that has not yet found its proper place or meaning."]
+    },
+    resource:{
+      change:["The strongest resource is the ability to accept a real transformation instead of trying to preserve the past unchanged.","A genuine change of perspective can become the key to moving forward."],
+      insight:["Clearer understanding and a more lucid view of the facts can help the situation progress."],
+      ground:["The best support comes from rebuilding on a steadier, simpler and more concrete foundation."],
+      neutral:["The most useful resource is a calmer, more conscious way of approaching the situation."]
+    },
+    evolution:{
+      movement:["Now, something begins to move again. A fresh impulse can reopen the situation, provided speed is not confused with depth."],
+      change:["Gradually, a transformation is taking shape and the way the situation is understood or lived is beginning to change."],
+      ground:["The situation is now moving toward greater balance and stability."],
+      ambiguity:["Something is changing, but the exact direction is not fully settled yet."],
+      neutral:["The dynamic is evolving gradually and invites a different way of looking at the situation."]
+    },
+    outcome:{
+      ambiguity:["Going forward, not everything is fully clear yet. Some feelings, intentions or information may still remain unspoken.","The next phase still contains uncertainty around what has not yet been openly expressed."],
+      tension:["For lasting progress, an unresolved source of tension will probably need to be addressed rather than carried forward unchanged."],
+      change:["The direction ahead points to a new chapter rather than a simple repetition of the past."],
+      ground:["The most constructive direction is the one that brings greater stability, coherence and balance."],
+      neutral:["The future remains open and is likely to become clearer through what is actually lived, chosen and expressed."]
+    }
+  };
+  return cr51Pick(common?.[role]?.[fam]||common?.[role]?.neutral||[],card,role);
 }
 function cr51FinalFrench(cards,scope,q){
   const tones=cards.map(c=>cr51Tone(c,false));
