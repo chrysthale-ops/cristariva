@@ -659,6 +659,10 @@ function narrativeStorySentence(c,focus,en){
  let s=narrativeFirstSentence(preciseReading(c,focus,en));
  if(!en){
   s=s
+   .replace(/^Dans le travail,\s*/i,"")
+   .replace(/^Dans une relation,\s*/i,"")
+   .replace(/^Dans le cadre professionnel(?: ou d’un projet)?,\s*/i,"")
+   .replace(/^Dans le cadre relationnel,\s*/i,"")
    .replace(/^Sur le plan général ou spirituel,\s*/i,"")
    .replace(/^Sur le plan général,\s*/i,"")
    .replace(/^Sur le plan intérieur,\s*/i,"")
@@ -721,13 +725,20 @@ function storyInterpretation(cards){
   paragraphs.push(en?`For ${subject}, <strong>${name(a)}</strong> is the central message: ${read(a)} ${preciseGeneralConclusion(cards,focus,true)}`:`Pour ${subject}, <strong>${name(a)}</strong> donne le message central : ${read(a)} ${preciseGeneralConclusion(cards,focus,false)}`);
  }else if(n===3){
   const [a,b,c]=cards;
-  const ra=narrativeFirstSentence(read(a)), rb=narrativeFirstSentence(read(b)), rc=narrativeFirstSentence(read(c));
+  const sa=narrativeStorySentence(a,focus,en), sb=narrativeStorySentence(b,focus,en), sc=narrativeStorySentence(c,focus,en);
+  const adviceB=narrativeCardMessage(b,en), adviceC=narrativeCardMessage(c,en);
   if(en){
-   paragraphs.push(`The reading unfolds as a progression. <strong>${name(a)}</strong> shows what shaped the starting point: ${narrativeLowerStart(ra)} <strong>${name(b)}</strong> then describes what is opening or taking shape now: ${narrativeLowerStart(rb)} Finally, <strong>${name(c)}</strong> shows where this movement leads or what it brings to the surface: ${narrativeLowerStart(rc)}`);
-   paragraphs.push(threeCardSynthesis(cards,true));
+   paragraphs.push(`The thread is simple: the reading moves from <strong>${name(a)}</strong> to <strong>${name(b)}</strong>, then toward <strong>${name(c)}</strong>.`);
+   paragraphs.push(`<strong>Before — ${name(a)}.</strong> ${sa}`);
+   paragraphs.push(`<strong>Now — ${name(b)}.</strong> ${sb}`);
+   paragraphs.push(`<strong>Momentum — ${name(c)}.</strong> ${sc}`);
+   paragraphs.push(`<strong>In practical terms:</strong> ${[adviceB,adviceC].filter(Boolean).join(" ")}`);
   }else{
-   paragraphs.push(`Le tirage raconte une progression. <strong>${name(a)}</strong> montre ce qui a façonné le point de départ : ${narrativeLowerStart(ra)} <strong>${name(b)}</strong> décrit ensuite ce qui s’ouvre ou se construit maintenant : ${narrativeLowerStart(rb)} Enfin, <strong>${name(c)}</strong> indique vers quoi ce mouvement conduit ou ce qu’il fait remonter : ${narrativeLowerStart(rc)}`);
-   paragraphs.push(threeCardSynthesis(cards,false));
+   paragraphs.push(`Le fil du tirage est simple : vous passez de <strong>${name(a)}</strong> à <strong>${name(b)}</strong>, puis vers <strong>${name(c)}</strong>.`);
+   paragraphs.push(`<strong>Avant — ${name(a)}.</strong> ${sa}`);
+   paragraphs.push(`<strong>Maintenant — ${name(b)}.</strong> ${sb}`);
+   paragraphs.push(`<strong>Élan — ${name(c)}.</strong> ${sc}`);
+   paragraphs.push(`<strong>En clair :</strong> ${[adviceB,adviceC].filter(Boolean).join(" ")}`);
   }
  }else{
   const [a,b,c,d,e]=cards;
