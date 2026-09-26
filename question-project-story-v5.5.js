@@ -2,7 +2,7 @@
    Corrige les amorces sans sujet et supprime les répétitions mécaniques.
    Le sens et l'ordre des cartes sont conservés.
    v5.20 : toutes les phrases commencent par un sujet grammatical explicite. */
-const CRISTARIVA_PROJECT_STORY_VERSION='5.20';
+const CRISTARIVA_PROJECT_STORY_VERSION='5.21';
 
 function cr55Question(){return String(state?.question||'').replace(/\s+/g,' ').trim();}
 function cr55Esc(v){try{return typeof cr53Esc==='function'?cr53Esc(v):typeof cr51Esc==='function'?cr51Esc(v):String(v??'');}catch(e){return String(v??'');}}
@@ -18,31 +18,216 @@ function cr55Hay(card,en=false){
 function cr57Cap(s){s=String(s||'').trim();return s?s.charAt(0).toLocaleUpperCase()+s.slice(1):'';}
 function cr57LowerFirst(s){s=String(s||'');return s?s.charAt(0).toLocaleLowerCase()+s.slice(1):s;}
 
-function cr55ProjectClause(card,role,en=false){
+function cr55ProjectTheme(card,en=false){
   const h=cr55Hay(card,en).toLowerCase();
+  if(/tempête|tempete|crise|surcharge|conflit|imprévu|imprevu|urgence|turbulence|storm|crisis|overload/.test(h))return 'crisis';
+  if(/vision|stratég|strateg|anticip|objectif à long terme|objectif a long terme|long terme|planification|planning/.test(h))return 'strategy';
+  if(/rejet|refus|écart|ecart|candidature.*écart|candidature.*ecart|rejection|refusal/.test(h))return 'rejection';
+  if(/désillusion|desillusion|déception|deception|illusion|ne correspond pas|disillusion|disappoint/.test(h))return 'disillusion';
+  if(/paix|apais|calme|stabilis|diminution des conflits|peace|calm/.test(h))return 'peace';
+  if(/connexion|réseau|reseau|coopér|cooper|association|collaboration|partenariat|network|connection/.test(h))return 'connection';
+  if(/éveil|eveil|clarté|clarte|compréhension|comprehension|prise de conscience|lucid|insight|clarity/.test(h))return 'insight';
+  if(/transformation|mutation|changement|renouveau|naissance|éclos|eclos|émerg|emerg|change|renew/.test(h))return 'change';
+  if(/patience|attente|délai|delai|matur|timing|wait/.test(h))return 'timing';
+  if(/soutien|protection|providence|aide|allié|allie|opportun|succès|succes|progress|support|opportun|success/.test(h))return 'support';
+  if(/choix|décision|decision|direction|cap|orientation|choice|decision|direction/.test(h))return 'choice';
+  if(/bloc|retard|impasse|peur|pression|contrainte|obstacle|block|delay|fear|pressure|constraint/.test(h))return 'block';
+  return 'neutral';
+}
+function cr55ProjectMessage(card,en=false){
+  const l=en?(card?.en||{}):(card||{});
+  return String(l.message||'').replace(/\s+/g,' ').trim();
+}
+function cr55ProjectClause(card,role,en=false){
+  const t=cr55ProjectTheme(card,en),msg=cr55ProjectMessage(card,en);
   if(en){
-    if(/block|delay|refus|reject|impasse|fear|pressure|constraint/.test(h))return 'a concrete obstacle still needs to be identified and handled before the project can move forward naturally';
-    if(/support|protect|providence|help|ally|opportun|success|progress/.test(h))return 'a useful opening or support can help the project move from intention to a more concrete stage';
-    if(/choice|decision|direction|path/.test(h))return 'a clearer choice is needed so that effort is concentrated on the direction that matters most';
-    if(/transform|change|renew|birth|eclos|emerg/.test(h))return 'the project is changing form and beginning to reveal a more workable way forward';
-    if(/patience|timing|matur|wait/.test(h))return 'progress depends on respecting the right timing rather than forcing a result before the conditions are ready';
-    return role==='outcome'?'the next step becomes clearer when the idea is translated into a concrete and coherent action':'the situation is redefining the conditions needed for the project to advance';
+    const bank={
+      origin:{
+        crisis:"The starting point still carries the effects of a turbulent period. Pressure, conflict or an unexpected event may have forced quick reactions, so the next decisions benefit from being made with more distance than before.",
+        strategy:"The project began with a broad vision and a need to look ahead. That perspective is useful, but it now has to be translated into a sequence of concrete priorities.",
+        rejection:"The starting point includes a refusal or an option that did not open as expected. Rather than defining the whole project, that setback can help clarify which direction is no longer worth pursuing.",
+        disillusion:"The project starts from a gap between what was expected and what proved realistic. This calls for a more factual reading of what is still viable.",
+        peace:"The starting point is calmer and more stable than before. This creates room to review choices without acting under pressure.",
+        connection:"The project has been shaped by useful contacts, cooperation or a network that can influence what happens next.",
+        insight:"The starting point contains an important realization that changes the way the project should be understood.",
+        change:"The project is already changing form. An older approach is becoming less suitable and a different way forward is beginning to emerge.",
+        timing:"The project starts in a phase where timing matters. Progress depends on respecting the right sequence instead of trying to accelerate every step.",
+        support:"The starting point contains support or an opening that can be used as a real base for progress.",
+        choice:"The project is already asking for a clearer direction. Several options may exist, but not all deserve the same level of effort.",
+        block:"The project begins with a concrete limitation that still influences current decisions.",
+        neutral:"The starting point is still being reorganized. The situation is not fixed, but it needs a clearer framework before the next move."
+      },
+      obstacle:{
+        crisis:"The main difficulty is the risk of remaining in emergency mode. If pressure continues to dictate the pace, it becomes harder to distinguish what is urgent from what is actually important.",
+        strategy:"The obstacle is not a lack of ideas, but the distance between a long-term vision and the decision that must be made now. The project needs a narrower priority so that strategy becomes actionable.",
+        rejection:"A refusal, closed door or discarded proposal is the main point of resistance. The challenge is to accept the information it brings without turning it into a verdict on the whole project.",
+        disillusion:"The obstacle comes from an expectation that no longer matches reality. Progress requires letting go of the original image so that the project can be judged on what is actually available.",
+        peace:"Too much caution can become an obstacle if avoiding tension also prevents necessary decisions. Calm is useful only if it still allows clear choices.",
+        connection:"The project may depend too heavily on other people, contacts or agreements. Cooperation helps, but the direction still needs to remain clear even if one connection changes.",
+        insight:"The difficulty is that a realization has not yet been turned into a concrete decision. Understanding the situation is only useful if it changes what is done next.",
+        change:"The obstacle lies in resisting a change that has already begun. Trying to preserve the old form may consume more energy than adapting the project.",
+        timing:"The main difficulty is impatience or a timetable that is too tight. Some steps need more maturation before they can support the next one.",
+        support:"Help may exist, but it can remain ineffective if the project has not clearly defined what support is actually needed.",
+        choice:"The obstacle is dispersion between several directions. A decision is needed to stop dividing effort between options that cannot all remain priorities.",
+        block:"A concrete constraint still needs to be identified and handled before progress can become more fluid.",
+        neutral:"The main difficulty is still insufficiently defined. Clarifying what truly limits progress is more useful than trying to push harder in every direction."
+      },
+      resource:{
+        crisis:"The strength lies in the ability to react, reorganize and regain control after a difficult phase. Experience gained under pressure can now be used more calmly and selectively.",
+        strategy:"The strongest resource is the ability to take a broader view and connect present choices with a longer-term goal.",
+        rejection:"Paradoxically, a refusal can become a useful filter. What is ruled out helps reduce dispersion and can redirect effort toward an option with better foundations.",
+        disillusion:"The resource is realism. Seeing what no longer matches expectations makes it possible to stop investing energy in an image and focus on what remains workable.",
+        peace:"The best support is a calmer environment that allows decisions to be made without unnecessary confrontation or haste.",
+        connection:"Useful contacts, cooperation or a well-chosen partnership can become a real lever for the project.",
+        insight:"A clearer understanding of the situation is the main resource. It helps separate assumptions from facts and makes the next decision more precise.",
+        change:"The strength lies in the ability to transform the project instead of defending a form that no longer fits.",
+        timing:"Patience and sequencing are assets here. Respecting the right moment can prevent a premature decision from weakening the project.",
+        support:"A genuine opening, ally or support can help move the project from intention to a more concrete stage.",
+        choice:"The resource is the ability to choose a direction and concentrate effort instead of keeping every option open.",
+        block:"The strength lies in identifying the exact obstacle. Once it is named, the project becomes easier to reorganize around it.",
+        neutral:"The resource comes from a more deliberate and flexible way of approaching the situation, with attention to what can be acted on now."
+      },
+      evolution:{
+        crisis:"The evolution points toward leaving emergency mode behind. The project becomes more manageable when reactions give way to deliberate choices and a clearer order of priorities.",
+        strategy:"The next phase asks for a clearer plan, with a long-term direction translated into short, verifiable steps.",
+        rejection:"The evolution may include letting go of an option that is not opening. That can free time and energy for a more realistic direction.",
+        disillusion:"The project moves through a return to reality. An offer, role, promise or expectation may prove different from what was imagined, but that clarification can prevent a larger mistake later.",
+        peace:"The evolution tends toward stabilization, fewer conflicts and a calmer way of deciding what comes next.",
+        connection:"The project can evolve through networking, cooperation or the meeting of two ideas that strengthen each other.",
+        insight:"A decisive understanding can change the strategy, the objective or the way the work is organized.",
+        change:"The project is entering a genuine transformation. The old approach loses relevance while a more workable form begins to take shape.",
+        timing:"Progress remains gradual. The next step becomes stronger if it is prepared rather than forced.",
+        support:"The evolution is helped by a useful opening or support that makes a more concrete stage possible.",
+        choice:"The project now needs a clearer choice so that effort is concentrated on the direction that matters most.",
+        block:"The evolution remains slowed until the limiting point is treated directly rather than bypassed.",
+        neutral:"The project continues to redefine the conditions needed for progress and is moving toward a more concrete next step."
+      },
+      outcome:{
+        crisis:"The final direction is not to keep fighting the same emergency, but to restore a level of control that allows decisions to become deliberate again.",
+        strategy:"The synthesis favors a clearer hierarchy of priorities and a plan that connects immediate action with the longer-term goal.",
+        rejection:"The synthesis asks you to take a refusal or closed option seriously, while using it to redirect rather than immobilize the project.",
+        disillusion:"The outcome favors a realistic repositioning: the project becomes stronger when it is based on what is actually available rather than on the original expectation.",
+        peace:"The synthesis points toward stabilization, reduced tension and a calmer environment in which decisions can be clarified without forcing them.",
+        connection:"The outcome remains constructive when cooperation is concrete, reciprocal and aligned with the real objective of the project.",
+        insight:"The synthesis emphasizes a new understanding that should now be converted into a practical decision.",
+        change:"The final direction is a real change of form rather than a simple return to the previous way of working.",
+        timing:"The outcome remains open, but it depends on respecting the right sequence and allowing the project enough time to mature.",
+        support:"The synthesis keeps an opening available and suggests using the support that is genuinely present rather than waiting for ideal conditions.",
+        choice:"The final point is a decision: one direction needs to become clearly more important than the others.",
+        block:"The outcome stays conditional on resolving the main constraint before expecting the project to move naturally.",
+        neutral:"The next step becomes clearer when the intention is translated into a concrete, coherent and verifiable action."
+      }
+    };
+    let s=(bank[role]?.[t]||bank[role]?.neutral||'').trim();
+    if(msg&&(role==='resource'||role==='outcome'))s+=' '+msg;
+    return s;
   }
-  if(/bloc|retard|refus|rejet|impasse|peur|pression|contrainte/.test(h))return 'un obstacle concret doit encore être identifié et traité avant que le projet puisse avancer naturellement';
-  if(/soutien|protection|providence|aide|allié|allie|opportun|succès|succes|progress/.test(h))return 'une ouverture ou un soutien utile peut aider le projet à passer de l’intention à une étape plus concrète';
-  if(/choix|décision|decision|direction|cap|orientation/.test(h))return 'un choix plus clair devient nécessaire afin de concentrer les efforts sur la direction réellement prioritaire';
-  if(/transformation|mutation|changement|renouveau|naissance|éclos|eclos|émerg|emerg/.test(h))return 'le projet change de forme et commence à révéler une manière plus concrète d’avancer';
-  if(/patience|attente|délai|delai|matur|timing/.test(h))return 'la progression dépend davantage du bon moment que d’une accélération forcée avant que les conditions soient prêtes';
-  return role==='outcome'?'la prochaine étape devient plus claire lorsque l’idée se transforme en action concrète et cohérente':'la situation redéfinit progressivement les conditions nécessaires pour faire avancer le projet';
+
+  const bank={
+    origin:{
+      crisis:"Le point de départ porte encore la trace d’une période agitée. Une crise, une surcharge, un conflit ou un imprévu a pu obliger à réagir vite ; les prochaines décisions gagnent donc à être prises avec davantage de recul qu’auparavant.",
+      strategy:"Le projet s’est construit autour d’une vision assez large et d’un besoin d’anticiper. Cette capacité à voir loin reste utile, mais elle doit maintenant être traduite en priorités plus concrètes.",
+      rejection:"Le point de départ comprend un refus ou une option qui ne s’est pas ouverte comme prévu. Ce contretemps ne résume pas tout le projet, mais il aide à repérer la direction qui ne mérite plus autant d’énergie.",
+      disillusion:"Le projet part d’un décalage entre ce qui était attendu et ce qui s’est révélé réellement possible. Il devient nécessaire de regarder ce qui reste viable sans essayer de sauver à tout prix l’image initiale.",
+      peace:"Le point de départ est plus calme et plus stable qu’auparavant. Ce climat crée de meilleures conditions pour revoir les choix sans décider sous pression.",
+      connection:"Le projet s’est appuyé sur des contacts, une coopération ou un réseau qui ont déjà influencé sa trajectoire. La qualité de ces liens reste un élément à prendre en compte dans la suite.",
+      insight:"Une prise de conscience importante modifie déjà la manière de comprendre le projet. Ce nouveau regard peut servir de base à des décisions plus précises.",
+      change:"Le projet a déjà commencé à changer de forme. Une ancienne manière d’avancer devient moins adaptée et une autre façon de construire la suite commence à émerger.",
+      timing:"Le point de départ montre que le calendrier compte autant que l’idée elle-même. Certaines étapes demandent encore d’être respectées avant de pouvoir engager la suivante.",
+      support:"Une ouverture, un appui ou une aide utile existe déjà dans le contexte. Cela peut constituer une base réelle pour avancer, à condition de l’utiliser concrètement.",
+      choice:"Le projet demande déjà un cap plus clair. Plusieurs directions peuvent rester possibles, mais elles ne méritent pas toutes le même niveau d’effort.",
+      block:"Une contrainte concrète influence encore le projet dès son point de départ. La comprendre précisément est plus utile que de chercher à avancer malgré elle.",
+      neutral:"Le point de départ reste en cours de réorganisation. Rien n’est figé, mais le projet a besoin d’un cadre plus clair avant d’engager la prochaine décision."
+    },
+    obstacle:{
+      crisis:"La difficulté principale est le risque de rester dans un fonctionnement d’urgence. Tant que la pression impose le rythme, il devient difficile de distinguer ce qui est réellement prioritaire de ce qui exige seulement une réaction immédiate.",
+      strategy:"L’obstacle n’est pas le manque d’idées, mais l’écart entre une vision à long terme et la décision qu’il faut prendre maintenant. Le projet a besoin d’une priorité plus étroite pour que la stratégie devienne réellement applicable.",
+      rejection:"Le principal frein prend la forme d’un refus, d’une porte fermée ou d’une proposition écartée. L’enjeu est d’accepter l’information contenue dans cette réponse sans en faire un jugement global sur tout le projet.",
+      disillusion:"Le frein vient d’une attente qui ne correspond plus tout à fait à la réalité. Avancer suppose de renoncer à l’image initiale pour juger le projet à partir de ce qui est effectivement disponible.",
+      peace:"La recherche d’apaisement peut devenir un obstacle si elle conduit à éviter une décision nécessaire. Le calme reste utile à condition qu’il n’empêche pas de trancher ce qui doit l’être.",
+      connection:"Le projet peut dépendre trop fortement d’un contact, d’un accord ou d’un partenaire. La coopération aide, mais la direction doit rester lisible même si l’un de ces liens évolue.",
+      insight:"La difficulté vient du fait qu’une compréhension nouvelle n’a pas encore été transformée en décision concrète. Comprendre davantage ne suffit pas si rien ne change ensuite dans l’action.",
+      change:"L’obstacle réside dans la résistance à une transformation déjà engagée. Vouloir conserver exactement l’ancienne forme peut consommer davantage d’énergie que l’adaptation elle-même.",
+      timing:"Le principal frein tient à l’impatience ou à un calendrier trop serré. Certaines étapes ont encore besoin de maturer avant de pouvoir soutenir la suivante.",
+      support:"Une aide peut être disponible sans être vraiment utile si le besoin n’a pas été défini. Il faut préciser ce qui doit être soutenu avant de multiplier les appuis.",
+      choice:"Le frein vient de la dispersion entre plusieurs directions. Une décision devient nécessaire pour éviter de partager l’énergie entre des options qui ne peuvent pas toutes rester prioritaires.",
+      block:"Un obstacle concret doit encore être identifié et traité avant que le projet puisse retrouver un mouvement plus naturel.",
+      neutral:"Le principal frein reste encore mal défini. Clarifier ce qui limite réellement l’avancée est plus utile que de pousser davantage dans toutes les directions."
+    },
+    resource:{
+      crisis:"La force disponible réside dans la capacité à réagir, réorganiser et reprendre le contrôle après une phase difficile. L’expérience acquise sous pression peut maintenant être utilisée avec davantage de calme et de discernement.",
+      strategy:"La meilleure ressource est la capacité à prendre de la hauteur et à relier les décisions présentes à un objectif de plus long terme.",
+      rejection:"Paradoxalement, un refus peut devenir un filtre utile. Ce qui est écarté aide à réduire la dispersion et peut réorienter les efforts vers une option mieux fondée.",
+      disillusion:"La ressource principale est le réalisme. Voir ce qui ne correspond plus aux attentes permet de cesser d’investir dans une image et de concentrer l’énergie sur ce qui reste réellement exploitable.",
+      peace:"Le meilleur appui est un climat plus calme, qui permet de décider sans confrontation inutile ni précipitation.",
+      connection:"Les contacts utiles, la coopération ou un partenariat bien choisi peuvent devenir un véritable levier pour le projet.",
+      insight:"Une compréhension plus nette de la situation constitue la ressource centrale. Elle aide à séparer les suppositions des faits et rend la prochaine décision plus précise.",
+      change:"La force réside dans la capacité à transformer le projet au lieu de défendre une forme qui ne correspond plus à la situation actuelle.",
+      timing:"La patience et le respect des étapes deviennent ici des atouts. Attendre le bon moment peut éviter qu’une décision prématurée fragilise la suite.",
+      support:"Une ouverture, un allié ou un soutien réellement disponible peut aider le projet à passer de l’intention à une étape plus concrète.",
+      choice:"La ressource est la capacité à choisir une direction et à concentrer l’effort, plutôt qu’à maintenir toutes les options ouvertes.",
+      block:"La force consiste à identifier le verrou exact. Une fois nommé, le projet peut être réorganisé autour de cette contrainte au lieu de la subir.",
+      neutral:"La ressource vient d’une manière plus consciente et plus souple d’aborder la situation, en privilégiant ce qui peut réellement être mis en œuvre maintenant."
+    },
+    evolution:{
+      crisis:"L’évolution va vers une sortie progressive du mode d’urgence. Le projet devient plus maîtrisable lorsque les réactions immédiates laissent place à des choix délibérés et à un ordre de priorités plus clair.",
+      strategy:"La suite demande un plan plus lisible, dans lequel la direction à long terme se traduit par des étapes courtes, concrètes et vérifiables.",
+      rejection:"L’évolution peut passer par l’abandon d’une option qui ne s’ouvre pas. Ce renoncement libère du temps et de l’énergie pour une direction plus réaliste.",
+      disillusion:"L’évolution passe par un retour au réel. Un projet, un poste, une promesse ou une attente peut se révéler différent de ce qui avait été imaginé, mais cette clarification peut éviter une erreur plus importante par la suite.",
+      peace:"La dynamique évolue vers davantage de stabilité, moins de conflits et une manière plus calme de décider ce qui doit suivre.",
+      connection:"Le projet peut progresser grâce au réseau, à la coopération ou au rapprochement de deux idées qui se renforcent mutuellement.",
+      insight:"Une compréhension décisive peut modifier la stratégie, l’objectif ou la manière même d’organiser le travail.",
+      change:"Le projet entre dans une transformation réelle. L’ancien fonctionnement perd de sa pertinence tandis qu’une forme plus praticable commence à se dessiner.",
+      timing:"La progression reste graduelle. La prochaine étape sera plus solide si elle est préparée plutôt que forcée.",
+      support:"L’évolution est facilitée par une ouverture ou un soutien utile qui permet d’atteindre une étape plus concrète.",
+      choice:"Un choix plus clair devient nécessaire afin de concentrer les efforts sur la direction réellement prioritaire.",
+      block:"L’évolution reste freinée tant que le point limitant n’est pas traité directement au lieu d’être contourné.",
+      neutral:"Le projet continue de redéfinir les conditions nécessaires à son avancée et se dirige vers une prochaine étape plus concrète."
+    },
+    outcome:{
+      crisis:"La direction finale n’est pas de rester dans la même urgence, mais de retrouver assez de maîtrise pour que les décisions redeviennent choisies plutôt que subies.",
+      strategy:"La synthèse favorise une hiérarchie plus claire des priorités et un plan qui relie l’action immédiate à l’objectif de fond.",
+      rejection:"La synthèse demande de prendre au sérieux une option fermée ou un refus, tout en l’utilisant pour réorienter le projet plutôt que pour l’immobiliser.",
+      disillusion:"La direction finale privilégie un repositionnement réaliste : le projet devient plus solide lorsqu’il s’appuie sur ce qui existe réellement plutôt que sur l’attente initiale.",
+      peace:"La synthèse va vers une stabilisation de l’ambiance, une diminution des tensions et un contexte plus favorable pour clarifier les décisions sans les brusquer.",
+      connection:"La suite reste constructive si la coopération devient concrète, réciproque et réellement alignée sur l’objectif du projet.",
+      insight:"La synthèse met l’accent sur une compréhension nouvelle qui doit maintenant être transformée en décision pratique.",
+      change:"La direction finale passe par un véritable changement de forme plutôt que par un simple retour à l’ancien fonctionnement.",
+      timing:"La suite reste ouverte, mais elle dépend du respect des étapes et du temps nécessaire à la maturation du projet.",
+      support:"La synthèse maintient une ouverture et invite à utiliser les appuis réellement présents plutôt qu’à attendre des conditions idéales.",
+      choice:"Le point final est une décision : une direction doit devenir clairement plus importante que les autres.",
+      block:"La synthèse reste conditionnée par la résolution du principal frein avant d’attendre une progression plus naturelle.",
+      neutral:"La prochaine étape devient plus claire lorsque l’intention se transforme en action concrète, cohérente et vérifiable."
+    }
+  };
+  let s=(bank[role]?.[t]||bank[role]?.neutral||'').trim();
+  if(msg&&(role==='resource'||role==='outcome'))s+=' '+msg;
+  return s;
+}
+function cr55ProjectSynthesis(cards,en=false){
+  const themes=cards.map(c=>cr55ProjectTheme(c,en));
+  if(en){
+    let s="Overall, the reading suggests a sequence rather than a single decisive move: clarify what has been destabilized, identify the real priority, use setbacks as information, and only then commit to the next concrete step.";
+    if(themes.includes('peace'))s+=" The final direction favors a calmer and more stable way of deciding, with less pressure and more attention to what can actually be sustained.";
+    else if(themes.includes('insight'))s+=" The decisive point is to turn the new understanding into a practical choice rather than leaving it at the level of reflection.";
+    else if(themes.includes('change'))s+=" The project becomes stronger by accepting a real change of form instead of trying to restore the previous configuration.";
+    return s;
+  }
+  let s="Dans l’ensemble, le tirage conseille une progression par étapes plutôt qu’une décision unique prise dans l’urgence : clarifier ce qui a été déstabilisé, identifier la priorité réelle, utiliser les contretemps comme des informations, puis seulement engager l’action suivante.";
+  if(themes.includes('peace'))s+=" La direction finale favorise une manière plus calme et plus stable de décider, avec moins de pression et davantage d’attention à ce qui peut réellement tenir dans la durée.";
+  else if(themes.includes('insight'))s+=" Le point décisif consiste à transformer la compréhension acquise en choix pratique, afin que l’analyse débouche réellement sur une nouvelle manière d’agir.";
+  else if(themes.includes('change'))s+=" Le projet devient plus solide en acceptant un véritable changement de forme plutôt qu’en cherchant à rétablir exactement l’ancien fonctionnement.";
+  return s;
 }
 function cr55ProjectStory(cards,en=false){
   const roles=cards.length===1?['outcome']:cards.length===3?['origin','evolution','outcome']:['origin','obstacle','resource','evolution','outcome'];
-  const out=[];
+  const parts=[];
   for(let i=0;i<Math.min(cards.length,roles.length);i++){
-    const t=cr55ProjectClause(cards[i],roles[i],en),k=t.toLowerCase().replace(/[^a-zà-ÿ0-9]+/g,' ').trim();
-    if(k&&!out.some(x=>x.k===k))out.push({k,t:cr57Cap(t)});
+    const t=cr55ProjectClause(cards[i],roles[i],en);
+    if(t)parts.push(t);
   }
-  return out.map(x=>x.t).join('. ')+(out.length?'.':'');
+  if(cards.length>=3)parts.push(cr55ProjectSynthesis(cards.slice(0,roles.length),en));
+  return parts.join(' ').replace(/\s+/g,' ').trim();
 }
 
 /* Dernière passe narrative : les couches précédentes peuvent ajouter un sujet
