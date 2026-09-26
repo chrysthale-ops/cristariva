@@ -131,6 +131,7 @@
 
   if(previousStory){
     storyInterpretation=function(cards){
+      if(typeof window.CR_UNIVERSAL_FLUID_STORY==='function')return window.CR_UNIVERSAL_FLUID_STORY(cards);
       if(state?.oracle==='tarot'&&state?.lang!=='en')return fluidTarotStory(cards);
       return previousStory(cards);
     };
