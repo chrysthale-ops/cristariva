@@ -68,6 +68,9 @@ html[lang="en"] .home-fr{display:none}
 .card .body{flex:1}
 .card .num{overflow-wrap:anywhere}
 .catalog-tools{display:grid;grid-template-columns:1fr minmax(170px,240px);gap:12px;margin:20px 0}
+.reading-fields{grid-template-columns:minmax(0,1.6fr) minmax(150px,.9fr) minmax(190px,1fr);align-items:start}
+.reading-fields>div{min-width:0}
+@media(max-width:800px){.reading-fields{grid-template-columns:1fr}}
 #catalogue .catalog-tools{grid-template-columns:repeat(3,minmax(0,1fr))}
 #catalogue .catalog-tools select,#catalogue .catalog-tools input{min-width:0;width:100%}
 #catalogue .embedded-game-catalog{margin:0;padding:0;border:0;box-shadow:none}
@@ -440,9 +443,10 @@ html{scroll-padding-top:130px}
 <dialog aria-labelledby="cardDialogTitle" class="card-dialog" id="cardDialog"><div class="dialog-actions"><button class="btn ghost" data-i18n="s22" id="closeCard" type="button">Fermer</button></div><div id="cardDialogBody"></div></dialog><section class="shell panel" id="tirage">
 <div class="steps"><span class="step active" data-i18n="s23">1 · Votre question</span><span class="step" data-i18n="s24">2 · Choix du tirage</span><span class="step" data-i18n="s25">3 · Tirage</span><span class="step" data-i18n="s26">4 · Interprétation</span><span class="step" data-i18n="s27">5 · Approfondissements</span><span class="step" data-i18n="s28">6 · Synthèse</span></div>
 <h2 data-i18n="s29">Votre espace de tirage</h2>
-<div class="grid g2">
+<div class="grid reading-fields">
 <div><label data-i18n="s30" for="question">Quelle question souhaitez-vous éclairer ?</label><textarea data-i18n-placeholder="s66" id="question" maxlength="220" placeholder="Formulez une question ouverte…"></textarea></div>
-<div><label data-i18n="s31" for="domain">Domaine</label><select id="domain"><option value="Sentimental">Sentimental</option><option value="Relations">Relationnel</option><option value="Professionnelle / Projet">Professionnel / projet</option><option value="Général / spirituel">Général / spirituel</option></select><label for="oracleChoice" id="oracleChoiceLabel">Oracle à questionner</label><select id="oracleChoice"><option value="cristariva">Oracle CRISTARIVA</option><option value="amour">Oracle sentimental CRISTARIVA</option><option value="tarot">Tarot CRISTARIVA</option></select></div>
+<div><label data-i18n="s31" for="domain">Domaine</label><select id="domain"><option value="Sentimental">Sentimental</option><option value="Relations">Relationnel</option><option value="Professionnelle / Projet">Professionnel / projet</option><option value="Général / spirituel">Général / spirituel</option></select></div>
+<div><label for="oracleChoice" id="oracleChoiceLabel">Oracle à questionner</label><select id="oracleChoice"><option value="cristariva">Oracle CRISTARIVA</option><option value="amour">Oracle sentimental CRISTARIVA</option><option value="tarot">Tarot CRISTARIVA</option></select></div>
 </div>
 <h3 data-i18n="s37">Format du tirage</h3>
 <div class="grid g3">
