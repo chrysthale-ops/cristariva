@@ -655,6 +655,36 @@ function narrativeLowerStart(text){
  const s=String(text||"").trim();
  return s?s.charAt(0).toLocaleLowerCase("fr-FR")+s.slice(1):s;
 }
+function narrativeStorySentence(c,focus,en){
+ let s=narrativeFirstSentence(preciseReading(c,focus,en));
+ if(!en){
+  s=s
+   .replace(/^Sur le plan général ou spirituel,\s*/i,"")
+   .replace(/^Sur le plan général,\s*/i,"")
+   .replace(/^Sur le plan intérieur,\s*/i,"")
+   .replace(/^Sur le plan spirituel,\s*/i,"");
+ }
+ return s.trim();
+}
+function narrativeCardMessage(c,en){
+ if(!c)return "";
+ const s=en?(c.en?.message||""):(c.message||"");
+ return narrativeFirstSentence(s);
+}
+function fiveCardThread(cards,focus,en){
+ const [a,b,c,d,e]=cards;
+ const name=x=>readingEscape(cardName(x));
+ const forceAdvice=narrativeCardMessage(c,en);
+ const finalAdvice=narrativeCardMessage(e,en);
+ if(en){
+  let out=`The thread of the reading is straightforward: <strong>${name(a)}</strong> sets the tone, <strong>${name(b)}</strong> shows what may unsettle it, <strong>${name(c)}</strong> is the resource to use, <strong>${name(d)}</strong> describes the movement to accompany, and <strong>${name(e)}</strong> is the final point to keep in view.`;
+  if(forceAdvice||finalAdvice)out+=` In practice: ${[forceAdvice,finalAdvice].filter(Boolean).join(" ")}`;
+  return out;
+ }
+ let out=`Le fil conducteur du tirage est simple : <strong>${name(a)}</strong> donne le ton de départ, <strong>${name(b)}</strong> montre ce qui peut vous déstabiliser, <strong>${name(c)}</strong> indique la ressource à mobiliser, <strong>${name(d)}</strong> décrit le mouvement à accompagner et <strong>${name(e)}</strong> fixe le point de vigilance final.`;
+ if(forceAdvice||finalAdvice)out+=` En pratique : ${[forceAdvice,finalAdvice].filter(Boolean).join(" ")}`;
+ return out;
+}
 function threeCardSynthesis(cards,en){
  const themes=cards.map(c=>readingTheme(c)[1]);
  const [a,b,z]=themes;
@@ -701,18 +731,21 @@ function storyInterpretation(cards){
   }
  }else{
   const [a,b,c,d,e]=cards;
+  const sa=narrativeStorySentence(a,focus,en), sb=narrativeStorySentence(b,focus,en), sc=narrativeStorySentence(c,focus,en), sd=narrativeStorySentence(d,focus,en), se=narrativeStorySentence(e,focus,en);
   if(en){
-   paragraphs.push(`At the origin of ${subject}, <strong>${name(a)}</strong> sets the starting point: ${read(a)}`);
-   paragraphs.push(`The main obstacle is <strong>${name(b)}</strong>: ${read(b)}`);
-   paragraphs.push(`The resource available is <strong>${name(c)}</strong>: ${read(c)}`);
-   paragraphs.push(`The evolution is shown by <strong>${name(d)}</strong>: ${read(d)}`);
-   paragraphs.push(`Finally, <strong>${name(e)}</strong> gives the synthesis: ${read(e)} ${preciseGeneralConclusion(cards,focus,true)}`);
+   paragraphs.push(`<strong>Starting point — ${name(a)}:</strong> ${sa}`);
+   paragraphs.push(`<strong>Obstacle — ${name(b)}:</strong> ${sb}`);
+   paragraphs.push(`<strong>Strength — ${name(c)}:</strong> ${sc}${focus==="sex"?" "+preciseSexResourceNote(c):""}`);
+   paragraphs.push(`<strong>Evolution — ${name(d)}:</strong> ${sd}`);
+   paragraphs.push(`<strong>Synthesis — ${name(e)}:</strong> ${se}`);
+   paragraphs.push(fiveCardThread(cards,focus,true));
   }else{
-   paragraphs.push(`Concernant ${subject}, le point de départ est <strong>${name(a)}</strong> : ${read(a)}`);
-   paragraphs.push(`Le principal obstacle est <strong>${name(b)}</strong> : ${read(b)}${focus==="sex"&&((b.name||"").toLowerCase()==="maîtrise")?" Autrement dit, le frein peut venir moins d’une absence de désir que d’un désir très contenu, contrôlé ou difficile à laisser s’exprimer.":""}`);
-   paragraphs.push(`La ressource du tirage est <strong>${name(c)}</strong> : ${read(c)} ${focus==="sex"?preciseSexResourceNote(c):"Placée ici, cette carte montre ce qui peut être mobilisé pour modifier concrètement la situation."}`);
-   paragraphs.push(`L’évolution est portée par <strong>${name(d)}</strong> : ${read(d)}${focus==="sex"&&((d.name||"").toLowerCase()==="patience")?" Cela indique une progression possible, mais sans passage à l’acte rapide ni pression sur le calendrier.":""}`);
-   paragraphs.push(`Enfin, <strong>${name(e)}</strong> rassemble le tirage : ${read(e)} ${preciseGeneralConclusion(cards,focus,false)}`);
+   paragraphs.push(`<strong>Point de départ — ${name(a)} :</strong> ${sa}`);
+   paragraphs.push(`<strong>Obstacle — ${name(b)} :</strong> ${sb}${focus==="sex"&&((b.name||"").toLowerCase()==="maîtrise")?" Autrement dit, le frein peut venir moins d’une absence de désir que d’un désir très contenu, contrôlé ou difficile à laisser s’exprimer.":""}`);
+   paragraphs.push(`<strong>Force — ${name(c)} :</strong> ${sc}${focus==="sex"?" "+preciseSexResourceNote(c):""}`);
+   paragraphs.push(`<strong>Évolution — ${name(d)} :</strong> ${sd}${focus==="sex"&&((d.name||"").toLowerCase()==="patience")?" Cela indique une progression possible, mais sans passage à l’acte rapide ni pression sur le calendrier.":""}`);
+   paragraphs.push(`<strong>Synthèse — ${name(e)} :</strong> ${se}`);
+   paragraphs.push(fiveCardThread(cards,focus,false));
   }
  }
  const question=state.question?`<p class="reading-question">${en?"Your question":"Votre question"} : « ${readingEscape(state.question)} »</p>`:"";
