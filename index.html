@@ -68,6 +68,15 @@ html[lang="en"] .home-fr{display:none}
 .card .body{flex:1}
 .card .num{overflow-wrap:anywhere}
 .catalog-tools{display:grid;grid-template-columns:1fr minmax(170px,240px);gap:12px;margin:20px 0}
+#catalogue .catalog-tools{grid-template-columns:repeat(3,minmax(0,1fr))}
+#catalogue .catalog-tools select,#catalogue .catalog-tools input{min-width:0;width:100%}
+#catalogue .embedded-game-catalog{margin:0;padding:0;border:0;box-shadow:none}
+#catalogue [hidden]{display:none!important}
+#catalogue .embedded-game-catalog .section-title,#catalogue .embedded-game-catalog input[type="search"]{display:none}
+#catalogue .embedded-game-catalog .catalog-tools{margin:0}
+#catalogue #tarot-divinatoire-catalog .catalog-tools{display:none}
+#catalogue .embedded-game-catalog .catalog-tools label[for$="Search"]{display:none}
+@media(max-width:800px){#catalogue .catalog-tools{grid-template-columns:1fr}}
 .catalog-grid{grid-template-columns:repeat(auto-fill,minmax(170px,1fr));align-items:start}
 .catalog-item{display:flex;flex-direction:column;align-items:stretch;min-width:0;padding:0;border:1px solid #d5dbe2;border-radius:14px;overflow:hidden;background:#fff;color:#172033;text-align:left;cursor:pointer;font:inherit}
 .catalog-item:hover,.catalog-item:focus-visible{border-color:#b58545;box-shadow:0 0 0 2px #e8d4b2;outline:none}
@@ -490,6 +499,7 @@ html{scroll-padding-top:130px}
 <p class="muted" data-i18n="s15">Cristariva réunit plusieurs jeux : deux oracles et un tarot divinatoire. Retrouvez ici leurs cartes, illustrations, définitions et significations.</p>
 <div class="catalog-tools"><label class="sr-only" data-i18n="s16" for="catalogSearch">Rechercher une carte…</label>
 <input autocomplete="off" data-i18n-placeholder="s65" id="catalogSearch" placeholder="Rechercher une carte…" type="search"/>
+<label class="sr-only" for="catalogGame">Jeu de cartes</label><select id="catalogGame" aria-label="Jeu de cartes"><option value="cristariva">Oracle CRISTARIVA</option><option value="amour">Oracle sentimental CRISTARIVA</option><option value="tarot">Tarot CRISTARIVA</option></select>
 <label class="sr-only" data-i18n="s17" for="catalogFilter">Catégorie</label>
 <select id="catalogFilter"><option data-i18n="s18" value="all">Toutes les cartes</option><option data-i18n="s19" value="main">Cartes principales</option><option data-i18n="s20" value="relation">Cartes Relation</option><option data-i18n="s21" value="dating">Cartes Datation</option></select></div>
 <p aria-live="polite" class="muted" id="catalogCount"></p>
@@ -1367,6 +1377,23 @@ function catalogRecord(c){
  return {...c,name:cardName(c),definition:cardField(c,'definition')};
 }
 function renderCatalog(){
+ const game=$('#catalogGame').value;
+ const en=state.lang==='en';
+ const gameNames=en?{cristariva:'CRISTARIVA Oracle',amour:'CRISTARIVA Love Oracle',tarot:'CRISTARIVA Tarot'}:{cristariva:'Oracle CRISTARIVA',amour:'Oracle sentimental CRISTARIVA',tarot:'Tarot CRISTARIVA'};
+ for(const option of $('#catalogGame').options)option.textContent=gameNames[option.value];
+ $('#catalogGame').setAttribute('aria-label',en?'Card deck':'Jeu de cartes');
+ $('#catalogFilter').hidden=game!=='cristariva';
+ $('#catalogGrid').hidden=game!=='cristariva';
+ $('#catalogCount').hidden=game!=='cristariva';
+ for(const [id,deck] of [['oracle-amour-catalog','amour'],['tarot-divinatoire-catalog','tarot']]){
+  const section=document.getElementById(id);
+  if(section)section.hidden=game!==deck;
+ }
+ if(game!=='cristariva'){
+  const search=document.querySelector(game==='amour'?'#loveCatalogSearch':'#tarotCatalogSearch');
+  if(search){search.value=$('#catalogSearch').value;search.dispatchEvent(new Event('input'));}
+  return;
+ }
  const group=$('#catalogFilter').value;
  const query=$('#catalogSearch').value.trim().toLocaleLowerCase();
  const filtered=CATALOG_ALL.filter(c=>(group==='all'||c.group===group)&&(!query||cardName(c).toLocaleLowerCase().includes(query)||c.name.toLocaleLowerCase().includes(query)||String(c.id).includes(query)));
@@ -1409,6 +1436,7 @@ function applyLanguage(){
  try{localStorage.setItem('cristariva-lang',state.lang);}catch(e){}
 }
 $('#catalogSearch').addEventListener('input',renderCatalog);
+$('#catalogGame').addEventListener('change',renderCatalog);
 $('#catalogFilter').addEventListener('change',renderCatalog);
 $('#catalogGrid').addEventListener('click',e=>{
  const button=e.target.closest('[data-card-key]');if(!button)return;
@@ -1470,5 +1498,24 @@ window.CRISTARIVA_GAMES=window.CRISTARIVA_GAMES||[
 function countOf(g){if(Number.isFinite(g.count))return g.count;if(g.id==='amour'&&typeof AMOUR_DATA!=='undefined'){if(Array.isArray(AMOUR_DATA))return AMOUR_DATA.length;if(AMOUR_DATA&&typeof AMOUR_DATA==='object')return Object.keys(AMOUR_DATA).length;}return '—';}
 function render(){const en=(document.documentElement.lang||'fr').toLowerCase().startsWith('en');CRISTARIVA_GAMES.forEach(g=>{const n=document.querySelector('[data-game-name="'+g.id+'"]'),k=document.querySelector('[data-game-count="'+g.id+'"]');if(n)n.textContent=en?(g.nameEn||g.nameFr):g.nameFr;if(k)k.textContent=countOf(g);});}
 window.renderCristarivaGamesPresentation=render;document.addEventListener('DOMContentLoaded',render);setTimeout(render,600);
+})();
+(function(){
+ const catalogue=document.querySelector('#catalogue'),main=document.querySelector('main');
+ if(!catalogue||!main)return;
+ const observer=new MutationObserver(()=>{
+  let found=0;
+  for(const id of ['oracle-amour-catalog','tarot-divinatoire-catalog']){
+   const section=document.getElementById(id);
+   if(!section)continue;
+   found++;
+   if(section.parentElement!==catalogue){
+    section.classList.add('embedded-game-catalog');
+    catalogue.appendChild(section);
+    renderCatalog();
+   }
+  }
+  if(found===2)observer.disconnect();
+ });
+ observer.observe(main,{childList:true,subtree:true});
 })();
 </script></body></html>
