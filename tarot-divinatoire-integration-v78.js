@@ -160,8 +160,7 @@ function renderTarotCatalog(){
   count.textContent=en?`${cards.length} / ${tarotCount} cards displayed`:`${cards.length} / ${tarotCount} cartes affichées`;
   grid.innerHTML=cards.map(card=>{
     const name=esc(en?(card.en?.name||card.name):card.name);
-    const family=card.arcana==='minor'?(en?(card.en?.name||'').split(' of ').pop():card.suit):'';
-    return `<button type="button" class="catalog-item" data-tarot-card-id="${card.id}" aria-label="${esc(en?'View card':'Voir la carte')} : ${name}"><span class="catalog-image"><img src="${esc(cardImage(card))}" alt="${name}" loading="lazy"></span><span class="catalog-name">${String(card.id).padStart(2,'0')} · ${name}${family?`<small style="display:block;color:#6d7580;margin-top:4px">${esc(family)}</small>`:''}</span></button>`;
+    return `<button type="button" class="catalog-item" data-tarot-card-id="${card.id}" aria-label="${esc(en?'View card':'Voir la carte')} : ${name}"><span class="catalog-image"><img src="${esc(cardImage(card))}" alt="${name}" loading="lazy"></span><span class="catalog-name">${String(card.id).padStart(2,'0')} · ${name}</span></button>`;
   }).join('')||(en?'<p class="muted">No card found.</p>':'<p class="muted">Aucune carte trouvée.</p>');
 }
 document.querySelector('#tarotCatalogSearch')?.addEventListener('input',renderTarotCatalog);
@@ -181,5 +180,5 @@ if(typeof applyLanguage==='function'){
 syncDomainDisplayLabels();
 updateContext();renderTarotCatalog();
 window.__CRISTARIVA_TAROT_READY__=true;
-window.CR_TAROT_INTEGRATION_VERSION='2026.09.24-tarot78-regression-fix';
+window.CR_TAROT_INTEGRATION_VERSION='2026.09.26-card-size-r2';
 })();
