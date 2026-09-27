@@ -1,4 +1,4 @@
-name: Audit marges Tarot temporaire
+name: Diagnostic bordures Tarot temporaire
 
 on:
   push:
@@ -13,12 +13,10 @@ jobs:
   audit:
     runs-on: ubuntu-latest
     steps:
-      - name: Récupérer le dépôt
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: main
-
-      - name: Détecter les bandes sombres en haut et en bas
+      - name: Comparer Cavalier et Valet de Bâtons
         shell: bash
         run: |
           set -euo pipefail
@@ -27,45 +25,20 @@ jobs:
           from pathlib import Path
           from PIL import Image
           import numpy as np
-
-          folder = Path("cards/tarot/cartes mineures HD")
-
-          def dark_uniform_band(arr, from_top=True):
-              # Analyse jusqu'à 18 % de la hauteur; une bande est retenue
-              # si toute la rangée est sombre et très peu variable.
-              rows = arr if from_top else arr[::-1]
-              max_rows = int(arr.shape[0] * 0.18)
-              n = 0
-              for row in rows[:max_rows]:
-                  mean = row.mean(axis=0)
-                  std = row.std(axis=0)
-                  brightness = mean.mean()
-                  # Tolérance pensée pour les aplats bleu nuit/noirs visibles
-                  # sans englober les bordures illustrées et dorées.
-                  if brightness < 85 and std.mean() < 18 and mean.max() < 115:
-                      n += 1
-                  else:
-                      break
-              return n
-
-          def edge_metrics(arr, n=48):
-              top = arr[:n]
-              bot = arr[-n:]
-              return (
-                  float(top.mean()), float(top.std()),
-                  float(bot.mean()), float(bot.std())
-              )
-
-          results=[]
-          for p in sorted(folder.glob("*.png")):
-              with Image.open(p) as im:
-                  a=np.asarray(im.convert("RGB"))
-              t=dark_uniform_band(a, True)
-              b=dark_uniform_band(a, False)
-              tm,ts,bm,bs=edge_metrics(a)
-              results.append((max(t,b),t,b,p.name,tm,ts,bm,bs))
-          results.sort(reverse=True)
-          for score,t,b,name,tm,ts,bm,bs in results:
-              flag="PROBLEME" if (t>=8 or b>=8) else "OK"
-              print(f"{flag}|top={t}|bottom={b}|{name}|top48_mean={tm:.1f}|top48_std={ts:.1f}|bottom48_mean={bm:.1f}|bottom48_std={bs:.1f}")
+          folder=Path("cards/tarot/cartes mineures HD")
+          names=[
+            "cavalier_de_bâtons_au_clair_de_lune.png",
+            "valet_de_bâtons_au_crépuscule.png",
+          ]
+          for name in names:
+              a=np.asarray(Image.open(folder/name).convert("RGB"),dtype=np.float32)
+              h,w,_=a.shape
+              x0,x1=int(w*.12),int(w*.88)
+              c=a[:,x0:x1]
+              lum=c.mean(axis=2)
+              print("IMAGE|"+name)
+              for y in list(range(0,81,5))+list(range(h-85,h,5)):
+                  yy=max(0,min(h-1,y))
+                  row=lum[yy]
+                  print(f"ROW|{name}|y={yy}|mean={row.mean():.1f}|std={row.std():.1f}|dark60={(row<60).mean():.3f}|dark90={(row<90).mean():.3f}|light180={(row>180).mean():.3f}")
           PY
