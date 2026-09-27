@@ -1,4 +1,4 @@
-name: Diagnostic bordures Tarot temporaire
+name: Audit transparence Tarot temporaire
 
 on:
   push:
@@ -16,29 +16,30 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: main
-      - name: Comparer Cavalier et Valet de Bâtons
+      - name: Mesurer les marges transparentes
         shell: bash
         run: |
           set -euo pipefail
-          python3 -m pip install --quiet pillow numpy
+          python3 -m pip install --quiet pillow
           python3 - <<'PY'
           from pathlib import Path
           from PIL import Image
-          import numpy as np
           folder=Path("cards/tarot/cartes mineures HD")
-          names=[
-            "cavalier_de_bâtons_au_clair_de_lune.png",
-            "valet_de_bâtons_au_crépuscule.png",
-          ]
-          for name in names:
-              a=np.asarray(Image.open(folder/name).convert("RGB"),dtype=np.float32)
-              h,w,_=a.shape
-              x0,x1=int(w*.12),int(w*.88)
-              c=a[:,x0:x1]
-              lum=c.mean(axis=2)
-              print("IMAGE|"+name)
-              for y in list(range(0,81,5))+list(range(h-85,h,5)):
-                  yy=max(0,min(h-1,y))
-                  row=lum[yy]
-                  print(f"ROW|{name}|y={yy}|mean={row.mean():.1f}|std={row.std():.1f}|dark60={(row<60).mean():.3f}|dark90={(row<90).mean():.3f}|light180={(row>180).mean():.3f}")
+          for p in sorted(folder.glob("*.png")):
+              with Image.open(p) as im:
+                  w,h=im.size
+                  if "A" in im.getbands():
+                      alpha=im.getchannel("A")
+                      bbox=alpha.getbbox()
+                      amin,amax=alpha.getextrema()
+                  else:
+                      bbox=(0,0,w,h)
+                      amin=amax=255
+              if bbox is None:
+                  margins=(w,h,w,h)
+              else:
+                  l,t,r,b=bbox
+                  margins=(l,t,w-r,h-b)
+              flag="PROBLEME" if any(v>0 for v in margins) else "OK"
+              print(f"{flag}|{p.name}|bbox={bbox}|margins=L{margins[0]},T{margins[1]},R{margins[2]},B{margins[3]}|alpha={amin}-{amax}")
           PY
