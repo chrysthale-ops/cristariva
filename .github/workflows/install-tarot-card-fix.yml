@@ -1,4 +1,4 @@
-name: Audit sources lot 1 Tarot temporaire
+name: Audit marges blanches Tarot temporaire
 
 on:
   push:
@@ -16,36 +16,39 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: main
-      - name: Comparer les sources originales du lot 1
+      - name: Détecter les marges blanches extérieures
         shell: bash
         run: |
           set -euo pipefail
-          python3 -m pip install --quiet pillow
+          python3 -m pip install --quiet pillow numpy
           python3 - <<'PY'
           from pathlib import Path
           from PIL import Image
-          dst=Path("cards/tarot/cartes mineures HD")
-          names=[
-              "as_d_épées_au_coucher_du_soleil.png",
-              "as_de_bâtons_au_crépuscule.png",
-              "as_de_coupes_au_lac_étoilé.png",
-              "as_de_deniers_au_manteau_cramoisi.png",
-              "cavalier_d_épées_au_coucher_du_soleil.png",
-              "cavalier_de_bâtons_au_clair_de_lune.png",
-              "cavalier_de_coupes_au_clair_de_lune.png",
-              "cavalier_de_deniers_au_coucher_du_soleil.png",
-              "cinq_d_épées_au_coucher_du_soleil.png",
-              "cinq_de_bâtons_au_crépuscule.png",
-          ]
-          for name in names:
-              src=Path(name)
-              out=dst/name
-              if not src.exists():
-                  print(f"MISSING|{name}")
-                  continue
-              with Image.open(src) as s:
-                  sw,sh=s.size
-              with Image.open(out) as d:
-                  dw,dh=d.size
-              print(f"SOURCE|{name}|{sw}x{sh}|ratio={sw/sh:.8f}|CURRENT={dw}x{dh}")
+          import numpy as np
+          folder=Path("cards/tarot/cartes mineures HD")
+
+          def white_run(a, top=True):
+              h,w,_=a.shape
+              x0,x1=int(w*.15),int(w*.85)
+              rows=a[:,x0:x1].mean(axis=2)
+              if not top:
+                  rows=rows[::-1]
+              n=0
+              for row in rows[:120]:
+                  if row.mean()>218 and row.std()<18 and (row>190).mean()>0.96:
+                      n+=1
+                  else:
+                      break
+              return n
+
+          vals=[]
+          for p in sorted(folder.glob("*.png")):
+              a=np.asarray(Image.open(p).convert("RGB"),dtype=np.float32)
+              t=white_run(a,True)
+              b=white_run(a,False)
+              vals.append((max(t,b),t,b,p.name))
+          vals.sort(reverse=True)
+          for score,t,b,name in vals:
+              flag="PROBLEME" if score>=8 else "OK"
+              print(f"{flag}|top={t}|bottom={b}|{name}")
           PY
