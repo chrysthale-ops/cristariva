@@ -1,8 +1,8 @@
 /* CRISTARIVA — service worker v30 — récit professionnel développé.
    Force 22 arcanes majeurs + 56 arcanes mineurs HD sur PC et Android
    et recharge la planche validée complète des arcanes mineurs. */
-const CACHE_NAME='cristariva-v36-20260927-batch1-r1';
-const APP_VERSION='2026.09.27-batch1-r1';
+const CACHE_NAME='cristariva-v37-20260927-all56-r2';
+const APP_VERSION='2026.09.27-all56-r2';
 const SHELL=[
   './',
   './index.html',
@@ -22,7 +22,7 @@ const SHELL=[
   './oracle-amour-compat.js?v=20260923-love-story6',
   './tarot-divinatoire-data.js?v=20260924-tarot78-base-r9',
   './tarot-divinatoire-integration.js?v=20260924-tarot78-r4-compat',
-  './tarot-title-image-hotfix.js?v=20260927-batch1-r1',
+  './tarot-title-image-hotfix.js?v=20260927-all56-r2',
   './tarot-divinatoire-integration-v78.js?v=20260924-tarot78-r9',
   './tarot-minor-sprite-loader.js?v=20260926-minor-hd-r1',
   './tarot-minors-data-batons.js?v=20260924-tarot78-r9',
@@ -99,6 +99,11 @@ self.addEventListener('fetch',event=>{
   }
 
   if(/\.(?:js|html|json|webmanifest)$/.test(url.pathname)||url.pathname.includes('.cristariva-tarot78-sprite/')){
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
+  if(url.pathname.includes('/cards/tarot/cartes%20mineures%20HD/') || url.pathname.includes('/cards/tarot/cartes mineures HD/')){
     event.respondWith(networkFirst(request));
     return;
   }
