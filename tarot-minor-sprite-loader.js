@@ -63,10 +63,10 @@ const FILES={
 };
 window.CR_TAROT_MINOR_IMAGES={};
 for(const [id,file] of Object.entries(FILES)){
-  window.CR_TAROT_MINOR_IMAGES[id]=BASE+file+'?v=20260926-minor-hd-r1';
+  window.CR_TAROT_MINOR_IMAGES[id]=BASE+file+'?v=20260927-batch1-r1';
 }
 const count=Object.keys(window.CR_TAROT_MINOR_IMAGES).filter(k=>Number(k)>=23&&Number(k)<=78).length;
 if(count!==56)throw new Error('CRISTARIVA Tarot : '+count+'/56 illustrations mineures HD référencées.');
-window.CR_TAROT_MINOR_SPRITE_INFO={count,source:'individual-hd-png',base:BASE,version:'2026.09.26-minor-hd-r1'};
+window.CR_TAROT_MINOR_SPRITE_INFO={count,source:'individual-hd-png',base:BASE,version:'2026.09.27-batch1-r1'};
 window.CR_TAROT_MINOR_IMAGES_READY=Promise.resolve(window.CR_TAROT_MINOR_IMAGES);
 })();
