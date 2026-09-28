@@ -87,18 +87,17 @@ html[lang="en"] .home-fr{display:none}
 .catalog-image img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
 .catalog-name{padding:12px;font:1rem/1.35 Georgia,serif;overflow-wrap:anywhere}
 #tarotCatalogGrid .catalog-image{
-  height:300px!important;
-  aspect-ratio:auto!important;
-  min-height:300px!important;
-  max-height:300px!important;
-  overflow:hidden!important;
+  aspect-ratio:2/3;
+  height:auto;
+  overflow:hidden;
 }
 #tarotCatalogGrid .catalog-image img{
-  position:static!important;
-  width:100%!important;
-  height:100%!important;
-  object-fit:contain!important;
-  display:block!important;
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:block;
 }
 #tarotCatalogGrid .catalog-name{
   min-height:54px;
@@ -106,11 +105,6 @@ html[lang="en"] .home-fr{display:none}
   align-items:center;
 }
 @media(max-width:800px){
-  #tarotCatalogGrid .catalog-image{
-    height:230px!important;
-    min-height:230px!important;
-    max-height:230px!important;
-  }
   #tarotCatalogGrid .catalog-name{min-height:50px}
 }
 .card-dialog{width:min(940px,94vw);max-height:90vh;overflow:auto;border:1px solid #c7a36b;border-radius:20px;padding:24px;background:#faf6ee;color:#172033;box-shadow:0 30px 90px #0005}
@@ -1501,7 +1495,7 @@ try{const saved=new URLSearchParams(location.search).get('lang')||localStorage.g
 applyLanguage();
 </script>
 <script>if('serviceWorker' in navigator){
-const CRISTARIVA_PWA_VERSION='2026.09.28-recadrage-r1';
+const CRISTARIVA_PWA_VERSION='2026.09.28-source-hd-r2';
 let cristarivaReloading=false;
 const cristarivaRefreshOnce=()=>{
  if(cristarivaReloading)return;
@@ -1515,7 +1509,7 @@ navigator.serviceWorker.addEventListener('message',event=>{
  if(event.data&&event.data.type==='CRISTARIVA_UPDATED')cristarivaRefreshOnce();
 });
 const cristarivaCheckUpdate=()=>navigator.serviceWorker.register(
- './service-worker.js?v=20260928-recadrage-r1',
+ './service-worker.js?v=20260928-source-hd-r2',
  {scope:'./',updateViaCache:'none'}
 ).then(reg=>{
  if(reg.waiting)reg.waiting.postMessage('SKIP_WAITING');
@@ -1531,7 +1525,7 @@ const cristarivaCheckUpdate=()=>navigator.serviceWorker.register(
 window.addEventListener('load',cristarivaCheckUpdate);
 window.addEventListener('pageshow',cristarivaCheckUpdate);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')cristarivaCheckUpdate();});
-}</script><script src="./interpretation-engine-v2.js?v=3.0.1"></script><script src="./natal-influences-v3.1.js?v=3.1"></script><script src="./period-overview-v3.2.js?v=3.2"></script><script src="./integrated-period-reading-v3.3.js?v=3.5.1"></script><script src="./natal-profile-v3.4.js?v=3.4.1"></script><script src="./natal-special-plain-v3.4.2.js?v=3.4.2"></script><script src="./synthesis-cleanup-v3.5.2.js?v=3.6.3"></script><script src="./synthesis-french-fix-v3.6.3.js?v=3.6.9"></script><script src="./story-conclusion-v3.6.js?v=3.6.2"></script><script src="./validated-card-titles-v3.6.3.js?v=20260922-tarot32"></script><script src="./story-narrative-v4.js?v=5.0"></script><script src="./story-fluid-v5.1.js?v=5.31"></script><script src="./question-context-story-v5.2.js?v=5.2.2"></script><script src="./question-intent-story-v5.3.js?v=5.6"></script><script src="./question-project-story-v5.5.js?v=5.21"></script><script src="./universal-fluid-story-v6.3.js?v=6.6"></script><script src="./period-windows-v3.7.js?v=3.7"></script><script src="./period-window-limit-v3.8.js?v=3.9.1"></script><script src="./peak-label-fix-v3.9.2.js?v=3.9.4"></script><script src="./trigger-date-guard-v3.9.7.js?v=3.9.7"></script><script src="./unique-peak-dates-v3.9.8.js?v=4.0"></script><script src="./oracle-selection.js?v=20260926-story-fluid66"></script><script src="./relation-astrology.js?v=20260926-cross-summary"></script><script src="./tarot-title-image-hotfix.js?v=20260928-recadrage-r1"></script><script>
+}</script><script src="./interpretation-engine-v2.js?v=3.0.1"></script><script src="./natal-influences-v3.1.js?v=3.1"></script><script src="./period-overview-v3.2.js?v=3.2"></script><script src="./integrated-period-reading-v3.3.js?v=3.5.1"></script><script src="./natal-profile-v3.4.js?v=3.4.1"></script><script src="./natal-special-plain-v3.4.2.js?v=3.4.2"></script><script src="./synthesis-cleanup-v3.5.2.js?v=3.6.3"></script><script src="./synthesis-french-fix-v3.6.3.js?v=3.6.9"></script><script src="./story-conclusion-v3.6.js?v=3.6.2"></script><script src="./validated-card-titles-v3.6.3.js?v=20260922-tarot32"></script><script src="./story-narrative-v4.js?v=5.0"></script><script src="./story-fluid-v5.1.js?v=5.31"></script><script src="./question-context-story-v5.2.js?v=5.2.2"></script><script src="./question-intent-story-v5.3.js?v=5.6"></script><script src="./question-project-story-v5.5.js?v=5.21"></script><script src="./universal-fluid-story-v6.3.js?v=6.6"></script><script src="./period-windows-v3.7.js?v=3.7"></script><script src="./period-window-limit-v3.8.js?v=3.9.1"></script><script src="./peak-label-fix-v3.9.2.js?v=3.9.4"></script><script src="./trigger-date-guard-v3.9.7.js?v=3.9.7"></script><script src="./unique-peak-dates-v3.9.8.js?v=4.0"></script><script src="./oracle-selection.js?v=20260926-story-fluid66"></script><script src="./relation-astrology.js?v=20260926-cross-summary"></script><script src="./tarot-title-image-hotfix.js?v=20260928-source-hd-r2"></script><script>
 /* Registre évolutif des jeux : modifier/ajouter ici un nom ou un nombre suffit pour la présentation. */
 window.CRISTARIVA_GAMES=window.CRISTARIVA_GAMES||[
 {id:'cristariva',nameFr:'Oracle CRISTARIVA',nameEn:'CRISTARIVA Oracle',count:130},
