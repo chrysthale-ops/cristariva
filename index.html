@@ -341,7 +341,7 @@ html{scroll-padding-top:130px}
 <a data-i18n="s7" href="#deepening">Tirage complémentaire</a>
 <a data-i18n="restore-cards" href="#catalogue">Les jeux de cartes</a>
 <a data-i18n="restore-planets" href="#deepening">Que disent les planètes</a>
-<a href="#numerologie">Numérologie</a>
+<a href="#numerologie" data-num-fr="Numérologie" data-num-en="Numerology">Numérologie</a>
 </nav><div class="brand"><div class="seal">C</div><div><b>CRISTARIVA</b><small data-i18n="s0">Les Reflets du Soir</small></div></div>
 <button aria-label="Changer de langue" class="lang" data-i18n-aria-label="s62" id="langBtn" type="button">EN</button>
 </div></header>
@@ -463,7 +463,7 @@ html{scroll-padding-top:130px}
 <a class="home-link" href="#tirage"><b data-i18n="s1">Tirages</b><small data-i18n="s2">Obtenez des réponses à vos questions</small></a>
 <a class="home-link" href="#deepening"><b data-i18n="s7">Tirages complémentaires</b><small data-i18n="s8">Relation et datation</small></a>
 <a class="home-link" href="#deepening"><b data-i18n="s3">Que disent les planètes me concernant</b><small data-i18n="s4">Votre thème astral et le ciel du moment</small></a>
-<a class="home-link" href="#numerologie"><b>Numérologie</b><small>Les nombres et votre histoire</small></a>
+<a class="home-link" href="#numerologie"><b data-num-fr="Numérologie" data-num-en="Numerology">Numérologie</b><small data-num-fr="Les nombres et votre histoire" data-num-en="Numbers and your story">Les nombres et votre histoire</small></a>
 <a class="home-link" href="#catalogue"><b data-i18n="s5">Les jeux Cristariva</b><small data-i18n="s6">2 oracles et 1 tarot divinatoire</small></a>
 </nav>
 <section class="shell stats games-overview" id="gamesOverview"><div class="stat"><strong data-game-count="cristariva">130</strong><span data-game-name="cristariva">Oracle CRISTARIVA</span></div><div class="stat"><strong data-game-count="amour">—</strong><span data-game-name="amour">Oracle sentimental CRISTARIVA</span></div><div class="stat"><strong data-game-count="tarot">78</strong><span data-game-name="tarot">Tarot CRISTARIVA</span></div></section>
@@ -527,22 +527,22 @@ html{scroll-padding-top:130px}
 </div>
 </section>
 </div>
-<div class="actions"><button class="btn ghost" id="numFromDraw" type="button">Que disent mes nombres pour ce tirage ?</button><button class="btn primary" data-i18n="s60" id="synthesisBtn">Créer la synthèse finale</button></div>
+<div class="actions"><button class="btn ghost" id="numFromDraw" type="button" data-num-fr="Que disent mes nombres pour ce tirage ?" data-num-en="What do my numbers say about this reading?">Que disent mes nombres pour ce tirage ?</button><button class="btn primary" data-i18n="s60" id="synthesisBtn">Créer la synthèse finale</button></div>
 <div class="reading hidden" id="synthesis"></div>
 </section>
 <section class="shell panel numerologie" id="numerologie" aria-labelledby="numTitle">
-<h2 id="numTitle">Numérologie · Les nombres et votre histoire</h2>
-<p>Votre date de naissance et votre nom dessinent une trame symbolique. Découvrez les nombres qui accompagnent votre chemin, vos cycles et vos relations.</p>
+<h2 id="numTitle" data-num-fr="Numérologie · Les nombres et votre histoire" data-num-en="Numerology · Numbers and your story">Numérologie · Les nombres et votre histoire</h2>
+<p data-num-fr="Votre date de naissance et votre nom dessinent une trame symbolique. Découvrez les nombres qui accompagnent votre chemin, vos cycles et vos relations." data-num-en="Your birth date and name form a symbolic pattern. Explore the numbers connected with your path, cycles and relationships.">Votre date de naissance et votre nom dessinent une trame symbolique. Découvrez les nombres qui accompagnent votre chemin, vos cycles et vos relations.</p>
 <form id="numForm" autocomplete="off">
 <div class="grid g2">
-<div><label for="numMode">Votre lecture</label><select id="numMode"><option value="chemin">Mon chemin de vie</option><option value="annee">Mon année personnelle</option><option value="relation">Nos nombres</option><option value="tirage">Les nombres de mon tirage</option></select></div>
-<div><label for="numDate">Votre date de naissance</label><input id="numDate" type="date" required min="1900-01-01" max="2100-12-31"/><button id="numUseBirth" class="num-link" type="button">Reprendre la date du profil astral</button></div>
-<div><label for="numName">Prénom(s) et nom de naissance</label><input id="numName" type="text" maxlength="120" placeholder="Utilisé pour le portrait complet"/></div>
-<div id="numYearField" hidden><label for="numYear">Année à explorer</label><input id="numYear" type="number" min="1900" max="2100"/></div>
-<div id="numOtherFields" hidden><label for="numOtherDate">Date de naissance de l’autre personne</label><input id="numOtherDate" type="date"/><label for="numOtherName">Son nom de naissance (facultatif)</label><input id="numOtherName" maxlength="120"/></div>
-</div><button class="btn primary" type="submit">Découvrir mes nombres</button></form>
+<div><label for="numMode" data-num-fr="Votre lecture" data-num-en="Your reading">Votre lecture</label><select id="numMode"><option value="chemin" data-num-fr="Mon chemin de vie" data-num-en="My life path">Mon chemin de vie</option><option value="annee" data-num-fr="Mon année personnelle" data-num-en="My personal year">Mon année personnelle</option><option value="relation" data-num-fr="Nos nombres" data-num-en="Our numbers">Nos nombres</option><option value="tirage" data-num-fr="Les nombres de mon tirage" data-num-en="The numbers in my reading">Les nombres de mon tirage</option></select></div>
+<div><label for="numDate" data-num-fr="Votre date de naissance" data-num-en="Your date of birth">Votre date de naissance</label><input id="numDate" type="date" required min="1900-01-01" max="2100-12-31"/><button id="numUseBirth" class="num-link" type="button" data-num-fr="Reprendre la date du profil astral" data-num-en="Use the birth date from your astrology profile">Reprendre la date du profil astral</button></div>
+<div><label for="numName" data-num-fr="Prénom(s) et nom de naissance" data-num-en="Birth names">Prénom(s) et nom de naissance</label><input id="numName" type="text" maxlength="120" data-num-placeholder-fr="Utilisé pour le portrait complet" data-num-placeholder-en="Used for your full portrait" placeholder="Utilisé pour le portrait complet"/></div>
+<div id="numYearField" hidden><label for="numYear" data-num-fr="Année à explorer" data-num-en="Year to explore">Année à explorer</label><input id="numYear" type="number" min="1900" max="2100"/></div>
+<div id="numOtherFields" hidden><label for="numOtherDate" data-num-fr="Date de naissance de l’autre personne" data-num-en="Other person’s date of birth">Date de naissance de l’autre personne</label><input id="numOtherDate" type="date"/><label for="numOtherName" data-num-fr="Son nom de naissance (facultatif)" data-num-en="Their birth name (optional)">Son nom de naissance (facultatif)</label><input id="numOtherName" maxlength="120"/></div>
+</div><button class="btn primary" type="submit" data-num-fr="Découvrir mes nombres" data-num-en="Explore my numbers">Découvrir mes nombres</button></form>
 <div id="numResult" class="reading" aria-live="polite" hidden></div>
-<p class="muted">Convention pythagoricienne : A=1 à I=9, puis répétition ; accents et ponctuation ignorés, Y compté comme voyelle. Les sommes conservent 11, 22 et 33 pour le chemin et le nom ; les périodes se réduisent de 1 à 9. Calcul local dans votre navigateur, sans enregistrement des noms et dates.</p>
+<p class="muted" data-num-fr="Convention pythagoricienne : A=1 à I=9, puis répétition ; accents et ponctuation ignorés, Y compté comme voyelle. Les sommes conservent 11, 22 et 33 pour le chemin et le nom ; les périodes se réduisent de 1 à 9. Calcul local dans votre navigateur, sans enregistrement des noms et dates." data-num-en="Pythagorean convention: A=1 through I=9, then repeated; accents and punctuation are ignored and Y counts as a vowel. Name and life path retain 11, 22 and 33; periods reduce to 1–9. Calculations run locally in your browser, without saving names or dates.">Convention pythagoricienne : A=1 à I=9, puis répétition ; accents et ponctuation ignorés, Y compté comme voyelle. Les sommes conservent 11, 22 et 33 pour le chemin et le nom ; les périodes se réduisent de 1 à 9. Calcul local dans votre navigateur, sans enregistrement des noms et dates.</p>
 </section><section class="shell panel" id="catalogue">
 <h2 data-i18n="s14">Explorer les jeux Cristariva</h2>
 <p class="muted" data-i18n="s15">Cristariva réunit plusieurs jeux : deux oracles et un tarot divinatoire. Retrouvez ici leurs cartes, illustrations, définitions et significations.</p>
@@ -1511,7 +1511,7 @@ function renderAstroError(message){const box=$('#astroResult');box.style.display
 try{const saved=new URLSearchParams(location.search).get('lang')||localStorage.getItem('cristariva-lang');if(saved==='en'||saved==='fr')state.lang=saved;}catch(e){}
 applyLanguage();
 </script>
-<script src="./numerologie.js?v=1"></script>
+<script src="./numerologie.js?v=2"></script>
 <script>if('serviceWorker' in navigator){
 const CRISTARIVA_PWA_VERSION='2026.09.28-minor19-r4';
 let cristarivaReloading=false;
