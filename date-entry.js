@@ -31,6 +31,7 @@
    const required=id==='numDate'||id==='relationBirthdate';
    if(required)input.required=true;
    const sync=()=>{
+    if(!input.value.trim()&&original.value){input.value=displayDate(original.value);return !!input.value;}
     const iso=parseDate(input.value);
     original.value=iso||'';
     input.setCustomValidity(input.value.trim()&&!iso?(document.documentElement.lang==='en'?'Enter a valid date as DD/MM/YYYY.':'Saisissez une date valide au format JJ/MM/AAAA.'):(''));
