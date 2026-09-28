@@ -83,3 +83,28 @@ test('every deck, domain and spread format uses the shared narrative without a s
         if(length===5)assert.match(text,/possibilité concrète|possibilité se présente/i);
       }
 });
+test('the reported Tarot cross spread develops all five card positions and its news question',()=>{
+  const cards=[
+    {name:'Trois d’Épées',category:'Blessure',keywords:'peine, séparation, vérité douloureuse, blessure',definition:'Une douleur affective ou une vérité difficile demande à être regardée.'},
+    {name:'Dix de Bâtons',category:'Charge',keywords:'responsabilité, surcharge, effort, poids',definition:'Le poids devient excessif si tout repose sur une seule personne.'},
+    {name:'Valet de Coupes',category:'Sensibilité',keywords:'message, intuition, tendresse, nouveauté',definition:'Un message sensible et une intuition nouvelle invitent à ouvrir le cœur.'},
+    {name:'Roi de Coupes',category:'Maîtrise',keywords:'maturité émotionnelle, calme, compassion, équilibre',definition:'Il maîtrise ses émotions sans les nier.'},
+    {name:'Le Chariot',category:'Mouvement',keywords:'avancée, volonté, direction, maîtrise',definition:'La situation gagne en vitesse lorsqu’une direction nette est choisie.'}
+  ];
+  const story=prose(reading(cards,'Général / spirituel',"ouverture de cristariva à l'actualité",'fr','tarot'));
+  assert.ok(story.split(/\s+/).length>=170,'the cross spread should develop the five distinct positions');
+  for(const phrase of ['blessure','tout porter','regard sensible','attitude stable','ligne éditoriale','direction précise'])assert.match(story,new RegExp(phrase,'i'));
+  assert.ok(story.indexOf('blessure')<story.indexOf('tout porter'));
+  assert.ok(story.indexOf('tout porter')<story.indexOf('regard sensible'));
+  assert.ok(story.indexOf('attitude stable')<story.indexOf('direction précise'));
+  assert.doesNotMatch(story,/Une prise de conscience a commencé|Une attente trop longue|mise au clair des faits et des attentes|La suite reste ouverte et devrait se préciser/);
+  assert.doesNotMatch(story,/Trois d’Épées|Dix de Bâtons|Valet de Coupes|Roi de Coupes|Le Chariot/);
+});
+test('a five-card spread with a shared theme varies its implications without a grammar break',()=>{
+  const cards=Array.from({length:5},(_,i)=>({name:`Voile ${i}`,category:'Ambiguïté',keywords:'incertitude'}));
+  const story=prose(reading(cards,'Spiritualité','Quel chemin choisir ?'));
+  assert.ok(story.split(/\s+/).length>=140);
+  assert.match(story,/demander les précisions/);
+  assert.match(story,/vérifier les informations nouvelles/);
+  assert.doesNotMatch(story,/de éclaircir|de identifier|de accueillir|de éviter/);
+});

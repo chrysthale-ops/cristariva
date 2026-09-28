@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.7';
+const VERSION='6.8';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -23,6 +23,7 @@ function scope(){
   const d=norm(state?.domain||''),q=norm(state?.question||'');
   if(/profession|travail|emploi|carriere|projet|business|work|career|job|money|argent|finance/.test(d+' '+q))return 'work';
   if(/relation|amour|couple|sentiment|romant|intimit|rencontr|love|partner|retour|recontact/.test(d+' '+q))return 'relation';
+  if(/site|cristariva|plateforme|entreprise/.test(q)&&/actualite|ouverture|fonctionnalite|creation|developpement|integrer|connecter|relier/.test(q))return 'work';
   return 'life';
 }
 function theme(card,en=false){
@@ -68,7 +69,13 @@ function pick(arr,card,i){
 function motif(card,enMode){
   const local=enMode?(card?.en||card):card;
   const name=norm(local?.name||card?.name);
-  const k=norm([local?.category,local?.keywords,local?.definition||local?.meaning].filter(Boolean).join(' '));
+  const k=norm([local?.category,local?.keywords].filter(Boolean).join(' '));
+  const details=norm(local?.definition||local?.meaning||'');
+  if(/trois d.?epees|three of swords/.test(name))return 'heartbreak';
+  if(/dix de batons|ten of wands/.test(name))return 'burden';
+  if(/valet de coupes|page of cups/.test(name))return 'sensitivity';
+  if(/roi de coupes|king of cups/.test(name))return 'composure';
+  if(/le chariot|the chariot/.test(name))return 'direction';
   if(/huit de coupes|eight of cups/.test(name))return 'departure';
   if(/neuf de coupes|nine of cups/.test(name))return 'contentment';
   if(/neuf d.?epees|nine of swords/.test(name))return 'anxiety';
@@ -76,7 +83,12 @@ function motif(card,enMode){
   if(/as de deniers|ace of pentacles/.test(name))return 'tangible';
   if(/quatre de coupes|lassitude|insatisfaction|desenchant/.test(name+' '+k))return 'disenchantment';
   if(/sept de coupes|illusion|projection|fantasm/.test(name+' '+k))return 'illusion';
-  if(/pause|suspension|lacher.prise|renversement|recul|repos/.test(k))return 'pause';
+  if(/blessure|peine|chagrin|heartbreak|hurt/.test(k))return 'heartbreak';
+  if(/surcharge|responsabilite|fardeau|poids|overload|burden/.test(k))return 'burden';
+  if(/maturite emotionnelle|compassion|maitrise des emotions|emotional maturity/.test(k))return 'composure';
+  if(/tendresse|message sensible|intuition nouvelle|tenderness/.test(k))return 'sensitivity';
+  if(/volonte|direction|avancee|willpower|forward motion/.test(k))return 'direction';
+  if(/\bpause\b|suspension|lacher.prise|renversement|recul|\brepos\b/.test(k))return 'pause';
   if(/rumination|angoiss|anxiet|insomn|pensee.*boucle/.test(k))return 'anxiety';
   if(/quitter|eloignement|depart|detachement|prendre de la distance/.test(k))return 'departure';
   if(/satisfaction|plaisir|desir.*concret|accomplissement/.test(k))return 'contentment';
@@ -87,10 +99,97 @@ function motif(card,enMode){
   if(/cooperation|soutien|entraide|equipe|partage/.test(k))return 'cooperation';
   if(/verite|clarte|lucidite|discernement|communication|dialogue/.test(k))return 'insight';
   if(/liberte|autonomie|independance/.test(k))return 'freedom';
-  if(/elan|passion|rapidite|mouvement|impulsion/.test(k))return 'movement';
+  if(/\belan\b|passion|rapidite|mouvement|impulsion/.test(k))return 'movement';
   if(/transformation|mutation|renouveau|transition/.test(k))return 'change';
   if(/stabilite|securite|ancrage|structure/.test(k))return 'ground';
+  /* Older oracle cards sometimes have no category or keywords. Read the
+     definition only in that case; its incidental words must not override a
+     more precise label such as "surcharge" or "sensibilité". */
+  if(!k&&details){
+    if(/blessure|douleur affective/.test(details))return 'heartbreak';
+    if(/surcharge|accumulation de responsabilites/.test(details))return 'burden';
+    if(/maturite emotionnelle|maitrise ses emotions/.test(details))return 'composure';
+    if(/message sensible|geste tendre/.test(details))return 'sensitivity';
+    if(/direction nette|conduire.*objectif/.test(details))return 'direction';
+  }
   return '';
+}
+function distinctiveFr(card,role,sc){
+  const m=motif(card,false);
+  const project=sc==='work';
+  const stages={
+    heartbreak:{
+      origin:'Une blessure ou une vérité douloureuse marque le point de départ. Elle mérite d’être regardée sans détour, car l’ignorer rendrait la suite moins juste et moins lisible.',
+      obstacle:'La douleur peut devenir un frein si elle pousse à éviter les faits ou à interpréter chaque geste à travers la blessure passée. Il faut lui donner une place sans la laisser décider de tout.',
+      resource:'Reconnaître ce qui a blessé permet de distinguer la réalité présente de la peur de revivre la même chose. Cette lucidité aide à poser une limite plus claire.',
+      evolution:'La situation évolue lorsque cette vérité difficile est enfin nommée. Il devient alors possible de répondre autrement au lieu de rester prisonnier de la blessure.',
+      outcome:'La suite demande de reconnaître la blessure et de choisir ce qui peut réellement être réparé. Cette étape ouvre un chemin plus honnête, sans promettre l’effacement immédiat de la douleur.'
+    },
+    burden:{
+      origin:'La situation part d’un cumul de responsabilités qui a progressivement absorbé l’énergie disponible. Ce qui semblait encore tenable mérite maintenant d’être simplifié.',
+      obstacle:'Le principal risque est de vouloir tout porter à la fois. Même une direction prometteuse peut s’épuiser si les tâches, les attentes ou les décisions reposent sur une seule personne.',
+      resource:'La charge déjà assumée montre une capacité réelle à tenir l’effort. Cette force devient plus utile lorsque les priorités sont hiérarchisées et que le poids peut être partagé.',
+      evolution:'La progression exige de réduire la surcharge, de répartir les responsabilités ou de renoncer à certaines tâches. Sans cet allègement, l’élan risque de s’user.',
+      outcome:'La suite reste possible, mais elle devra être soutenable. Choisir ce qui compte et alléger le reste donnera plus de portée aux efforts déjà engagés.'
+    },
+    sensitivity:{
+      origin:'Une intuition, un message ou un geste sensible a ouvert la situation. Cet élan mérite d’être entendu, tout en laissant aux faits le temps de confirmer son importance.',
+      obstacle:'Un signe touchant peut être interprété trop vite comme une certitude. La prudence consiste à accueillir ce qu’il éveille sans lui attribuer une portée qu’il n’a pas encore.',
+      resource:'Un regard sensible, une intuition nouvelle ou un échange sincère constitue ici un point d’appui. Cette attention rend la réponse plus humaine, si elle reste liée aux intentions réelles.',
+      evolution:'Une parole plus douce ou une intuition fraîche modifie progressivement le climat. Ce mouvement gagne à être suivi de gestes cohérents pour prendre corps.',
+      outcome:'La suite peut commencer par un message, une invitation ou un geste d’ouverture. Sa valeur se mesurera à la manière dont cet élan sensible sera accueilli et prolongé.'
+    },
+    composure:{
+      origin:'Une attitude calme a permis de contenir des émotions intenses sans les étouffer. Cette maîtrise offre un point de départ plus stable pour comprendre ce qui se joue.',
+      obstacle:'La recherche de calme peut devenir un frein si elle empêche d’exprimer ce qui compte vraiment. Garder la maîtrise ne devrait pas conduire à taire les besoins.',
+      resource:'La capacité à accueillir les émotions sans être dirigé par elles peut soutenir la décision. Elle permet de répondre avec bienveillance tout en gardant les faits en vue.',
+      evolution:'L’étape suivante consiste à garder une attitude stable et bienveillante malgré l’intensité des émotions. Ce recul aide à choisir une réponse mesurée plutôt qu’à réagir dans l’urgence.',
+      outcome:'La direction la plus solide passe par une parole calme et une attention réelle aux émotions en présence. Elle permet de décider sans nier ce qui est ressenti.'
+    },
+    direction:{
+      origin:'Une volonté d’avancer donne son impulsion à la situation. Encore faut-il définir le cap pour que les énergies disponibles ne partent pas dans plusieurs directions.',
+      obstacle:'La précipitation ou la dispersion peut affaiblir un mouvement pourtant réel. Un choix de direction est nécessaire avant d’accélérer.',
+      resource:'La capacité à rassembler plusieurs forces autour d’un objectif précis peut devenir décisive. Elle transforme l’élan en mouvement coordonné.',
+      evolution:'La situation prend de la vitesse lorsqu’un cap clair est choisi. Les initiatives gagnent alors à rester cohérentes avec cet objectif plutôt qu’à se multiplier sans lien.',
+      outcome:project?'La synthèse ouvre sur une avancée possible, à condition de choisir une direction précise et de concentrer les moyens sur une première étape réalisable. L’élan devient utile lorsqu’il sert un cap tenu dans la durée.':'La synthèse invite à choisir une direction nette, puis à conduire les forces disponibles vers ce même objectif. Une avancée est possible si la volonté s’accompagne d’actes coordonnés.'
+    }
+  };
+  return stages[m]?.[role]||'';
+}
+function developFr(card,role){
+  const actions={
+    departure:'nommer ce qui ne nourrit plus la situation',contentment:'vérifier ce qui apporte une satisfaction durable',
+    anxiety:'séparer les inquiétudes des faits établis',pause:'utiliser le recul pour revoir les hypothèses',
+    tangible:'donner une forme concrète à la possibilité entrevue',disenchantment:'réévaluer ce qui existe avant de le quitter',
+    illusion:'faire le tri entre désir et possibilité réelle',loss:'reconnaître la perte sans négliger ce qui reste',
+    conflict:'traiter le désaccord dans des termes précis',ambiguity:'éclaircir ce qui demeure incertain',
+    cooperation:'définir comment chacun peut contribuer',insight:'mettre les faits et les attentes en mots',
+    freedom:'définir la place nécessaire à l’autonomie',movement:'transformer l’élan en actions cohérentes',
+    change:'identifier ce qui doit effectivement changer',ground:'consolider les bases avant de poursuivre',
+    heartbreak:'reconnaître la douleur sans la laisser tout gouverner',burden:'alléger et répartir la charge',
+    sensitivity:'écouter les émotions et vérifier les intentions',composure:'garder une réponse calme et lucide',
+    direction:'choisir un cap avant d’accélérer',
+    triangle:'clarifier la place et les attentes de chacun',commitment:'traduire la promesse en actes durables',
+    tension:'identifier le frein exact',bond:'vérifier la qualité du lien et du soutien',
+    opening:'choisir une première possibilité réaliste',effort:'poursuivre un travail régulier et vérifiable',
+    neutral:'préciser ce qui change réellement dans la situation'
+  };
+  const key=motif(card,false)||theme(card,false);
+  const byRole={
+    ambiguity:{origin:'repérer ce qui manque encore à la compréhension',obstacle:'demander les précisions qui font défaut',resource:'poser une question simple et vérifiable',evolution:'vérifier les informations nouvelles',outcome:'éviter de conclure avant d’avoir les faits essentiels'},
+    tension:{origin:'reconnaître la cause du ralentissement',obstacle:'traiter ce qui bloque concrètement',resource:'définir une marge de manœuvre',evolution:'modifier la réponse apportée à la difficulté',outcome:'résoudre le point qui demeure ouvert'},
+    change:{origin:'comprendre pourquoi l’ancien cadre ne convient plus',obstacle:'laisser de la place à un fonctionnement nouveau',resource:'utiliser les acquis dans un cadre différent',evolution:'mettre en pratique le changement envisagé',outcome:'choisir ce qui mérite de durer dans la nouvelle étape'}
+  };
+  const action=byRole[key]?.[role]||actions[key];
+  if(!action)return '';
+  const de=/^[aeiouyàâäéèêëîïôöùûü]/i.test(action)?'d’':'de ';
+  return {
+    origin:`Ce point de départ explique pourquoi il faudra ${action} avant d’aller plus loin.`,
+    obstacle:`Le mouvement risque de rester freiné tant qu’il n’est pas possible ${de}${action}.`,
+    resource:`Cet appui prend tout son sens s’il permet ${de}${action}.`,
+    evolution:`Le changement se vérifiera dans la capacité à ${action}.`,
+    outcome:`La prochaine étape consisterait à ${action}.`
+  }[role]||'';
 }
 function preciseFr(card,role){
   const m=motif(card,false);
@@ -168,8 +267,20 @@ function preciseFr(card,role){
 function questionLead(q,sc){
   if(sc==='relation'||!q||q.length>125)return '';
   const action=q.replace(/[?.!]+$/,'').trim();
-  if(!/^(connecter|relier|integrer|intégrer|ouvrir|developper|développer|créer|creer|lancer|construire|faire évoluer)\s+\S/i.test(action))return '';
-  return `Pour ${action.charAt(0).toLowerCase()+action.slice(1)}, `;
+  if(/^(connecter|relier|integrer|intégrer|ouvrir|developper|développer|créer|creer|lancer|construire|faire évoluer)\s+\S/i.test(action))
+    return `Pour ${action.charAt(0).toLowerCase()+action.slice(1)}, `;
+  const noun=norm(action);
+  if(/^(ouverture|evolution|integration|creation)\s+(de|du|des|d')/.test(noun))return `Pour l’${action.charAt(0).toLowerCase()+action.slice(1)}, `;
+  if(/^developpement\s+(de|du|des|d')/.test(noun))return `Pour le ${action.charAt(0).toLowerCase()+action.slice(1)}, `;
+  return '';
+}
+function contextFr(q,sc,cards){
+  const focus=norm(q);
+  const motifs=cards.map(c=>motif(c,false));
+  if(sc==='work'&&/cristariva|site|plateforme/.test(focus)&&/actualite|evenements du monde/.test(focus)
+    &&motifs.includes('burden')&&motifs.includes('direction'))
+    return 'Pour intégrer l’actualité, une ligne éditoriale choisie aiderait à traiter les faits avec sensibilité, à limiter le nombre de sujets suivis et à tenir un rythme que le site peut soutenir dans la durée.';
+  return '';
 }
 function fr(card,role,sc,i){
   const t=theme(card,false);
@@ -338,7 +449,17 @@ function build(cards){
   ]:[
     'Une difficulté ancienne semble avoir épuisé la voie suivie jusqu’ici. Ce qui coince aujourd’hui n’est peut-être pas un simple manque d’efforts : certaines attentes ou façons d’avancer ne s’accordent plus, et insister risque de demander trop de renoncements.',
     'La suite invite à nommer clairement le désaccord, à distinguer ce qui peut se négocier de ce qui compte vraiment pour vous, puis à regarder si une autre voie est possible. Le tirage suggère une mise au clair et un choix, sans promettre une issue précise.'
-  ]):chosen.map((c,i)=>enMode?en(c,r[i]||'evolution',sc,i):preciseFr(c,r[i]||'evolution')||fr(c,r[i]||'evolution',sc,i)).filter(Boolean);
+  ]):chosen.map((c,i)=>{
+    const role=r[i]||'evolution';
+    if(enMode)return en(c,role,sc,i);
+    const part=distinctiveFr(c,role,sc)||preciseFr(c,role)||fr(c,role,sc,i);
+    const detail=developFr(c,role);
+    return detail&&part.split(/\s+/).length<(chosen.length===1?50:27)?part+' '+detail:part;
+  }).filter(Boolean);
+  if(!enMode&&chosen.length>=5&&!clarifyingCommitment&&!stuckThenClarity){
+    const context=contextFr(q,sc,chosen);
+    if(context)parts.splice(3,0,context);
+  }
   const lead=!enMode?questionLead(q,sc):'';
   if(lead&&parts.length){
     const first=parts[0].replace(/^Au départ, /,'');
