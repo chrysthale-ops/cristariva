@@ -1,8 +1,8 @@
 /* CRISTARIVA — service worker v30 — récit professionnel développé.
    Force 22 arcanes majeurs + 56 arcanes mineurs HD sur PC et Android
    et recharge la planche validée complète des arcanes mineurs. */
-const CACHE_NAME='cristariva-v38-20260928-source-hd-r2';
-const APP_VERSION='2026.09.28-source-hd-r2';
+const CACHE_NAME='cristariva-v39-20260928-swords-frame-r3';
+const APP_VERSION='2026.09.28-swords-frame-r3';
 const SHELL=[
   './',
   './index.html',

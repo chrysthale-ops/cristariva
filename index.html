@@ -90,6 +90,7 @@ html[lang="en"] .home-fr{display:none}
   aspect-ratio:2/3;
   height:auto;
   overflow:hidden;
+  background:#f5f2ec;
 }
 #tarotCatalogGrid .catalog-image img{
   position:absolute;
@@ -1495,7 +1496,7 @@ try{const saved=new URLSearchParams(location.search).get('lang')||localStorage.g
 applyLanguage();
 </script>
 <script>if('serviceWorker' in navigator){
-const CRISTARIVA_PWA_VERSION='2026.09.28-source-hd-r2';
+const CRISTARIVA_PWA_VERSION='2026.09.28-swords-frame-r3';
 let cristarivaReloading=false;
 const cristarivaRefreshOnce=()=>{
  if(cristarivaReloading)return;
@@ -1509,7 +1510,7 @@ navigator.serviceWorker.addEventListener('message',event=>{
  if(event.data&&event.data.type==='CRISTARIVA_UPDATED')cristarivaRefreshOnce();
 });
 const cristarivaCheckUpdate=()=>navigator.serviceWorker.register(
- './service-worker.js?v=20260928-source-hd-r2',
+ './service-worker.js?v=20260928-swords-frame-r3',
  {scope:'./',updateViaCache:'none'}
 ).then(reg=>{
  if(reg.waiting)reg.waiting.postMessage('SKIP_WAITING');
