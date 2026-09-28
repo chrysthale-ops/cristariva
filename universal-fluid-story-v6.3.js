@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.6';
+const VERSION='6.7';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -15,8 +15,7 @@ function norm(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/
 function hay(card,en=false){
   const l=en?(card?.en||{}):(card||{});
   return norm([
-    l.category, l.keywords, l.definition, l.meaning,
-    l.reading_professionnel, l.reading_relationnel, l.reading_spirituel,
+    l.category, l.keywords, l.definition||l.meaning,
     card?.category, card?.keywords
   ].filter(Boolean).join(' '));
 }
@@ -61,6 +60,116 @@ function pick(arr,card,i){
   if(!arr?.length)return '';
   const seed=(Number(card?.id)||0)+i*7;
   return arr[Math.abs(seed)%arr.length];
+}
+/* Read the distinctive idea of a card before falling back to broad themes.
+   The minor arcana's domain readings are formulaic, so use their actual
+   definition/keywords; otherwise a generic word such as "relation" would
+   drown out the card's own meaning. */
+function motif(card,enMode){
+  const local=enMode?(card?.en||card):card;
+  const name=norm(local?.name||card?.name);
+  const k=norm([local?.category,local?.keywords,local?.definition||local?.meaning].filter(Boolean).join(' '));
+  if(/huit de coupes|eight of cups/.test(name))return 'departure';
+  if(/neuf de coupes|nine of cups/.test(name))return 'contentment';
+  if(/neuf d.?epees|nine of swords/.test(name))return 'anxiety';
+  if(/le pendu|the hanged man/.test(name))return 'pause';
+  if(/as de deniers|ace of pentacles/.test(name))return 'tangible';
+  if(/quatre de coupes|lassitude|insatisfaction|desenchant/.test(name+' '+k))return 'disenchantment';
+  if(/sept de coupes|illusion|projection|fantasm/.test(name+' '+k))return 'illusion';
+  if(/pause|suspension|lacher.prise|renversement|recul|repos/.test(k))return 'pause';
+  if(/rumination|angoiss|anxiet|insomn|pensee.*boucle/.test(k))return 'anxiety';
+  if(/quitter|eloignement|depart|detachement|prendre de la distance/.test(k))return 'departure';
+  if(/satisfaction|plaisir|desir.*concret|accomplissement/.test(k))return 'contentment';
+  if(/opportunite|ressource.*concret|base materielle|commencement/.test(k))return 'tangible';
+  if(/deuil|perte|regret|deception/.test(k))return 'loss';
+  if(/conflit|dispute|desaccord|querelle/.test(k))return 'conflict';
+  if(/secret|ambiguite|non.dit|incertitude/.test(k))return 'ambiguity';
+  if(/cooperation|soutien|entraide|equipe|partage/.test(k))return 'cooperation';
+  if(/verite|clarte|lucidite|discernement|communication|dialogue/.test(k))return 'insight';
+  if(/liberte|autonomie|independance/.test(k))return 'freedom';
+  if(/elan|passion|rapidite|mouvement|impulsion/.test(k))return 'movement';
+  if(/transformation|mutation|renouveau|transition/.test(k))return 'change';
+  if(/stabilite|securite|ancrage|structure/.test(k))return 'ground';
+  return '';
+}
+function preciseFr(card,role){
+  const m=motif(card,false);
+  const stages={
+    origin:{
+      departure:'Au départ, quelque chose ne répond plus assez aux attentes pour continuer exactement comme avant. Prendre de la distance permet de chercher une direction plus juste.',
+      contentment:'Une satisfaction réelle constitue le point de départ, même si elle ne répond peut-être pas à tous les besoins.',
+      anxiety:'La situation prend racine dans des inquiétudes qui ont fini par peser davantage que les faits établis.',
+      pause:'Un temps d’arrêt a déjà modifié la façon de regarder la situation.',
+      tangible:'Une possibilité concrète existe dès le départ, mais elle reste à développer.',
+      disenchantment:'Une insatisfaction ancienne montre que poursuivre par habitude ne suffit plus.',
+      loss:'Une déception passée continue de peser, sans effacer toutes les possibilités encore présentes.',
+      illusion:'Plusieurs pistes séduisantes ont ouvert la réflexion, sans qu’un choix ferme ait encore été fait.',
+      conflict:'Un désaccord ou une tension ancienne a placé la situation sur un terrain fragile.',
+      ambiguity:'La situation s’est développée dans un manque de clarté qui rend encore les intentions difficiles à lire.',
+      cooperation:'Un soutien ou un travail partagé a donné une première assise à la situation.',
+      insight:'Une prise de conscience a commencé à modifier la manière de comprendre la situation.'
+    },
+    obstacle:{
+      contentment:'Le confort d’une solution séduisante peut toutefois masquer ce qui manque en profondeur. Il faut vérifier qu’elle répond au besoin réel.',
+      departure:'Le risque est de s’éloigner sans avoir défini ce que l’on cherche à retrouver ailleurs.',
+      anxiety:'Les inquiétudes peuvent donner à chaque difficulté une ampleur qu’elle n’a pas encore dans les faits.',
+      pause:'Une attente trop longue pourrait devenir une manière de repousser la décision nécessaire.',
+      tangible:'Les moyens matériels ou pratiques restent à réunir pour que l’idée puisse prendre forme.',
+      disenchantment:'La lassitude peut faire écarter trop vite une possibilité qui mérite encore d’être examinée.',
+      illusion:'L’attrait de plusieurs options complique le choix de celle qui peut réellement aboutir.',
+      cooperation:'Compter sur une coopération agréable ne suffit pas si les rôles et les attentes restent flous.',
+      conflict:'Un désaccord persistant absorbe l’énergie qui pourrait faire avancer la situation.',
+      ambiguity:'Ce qui reste tu ou incertain empêche de choisir une direction en connaissance de cause.',
+      ground:'Le besoin de tout sécuriser peut figer une situation qui demande encore de la souplesse.'
+    },
+    resource:{
+      anxiety:'Les inquiétudes deviennent utiles lorsqu’elles aident à nommer les risques précis et à distinguer les faits des scénarios redoutés.',
+      departure:'La prise de distance aide à reconnaître ce qui ne convient plus et à choisir une autre voie.',
+      contentment:'Le désir de mieux vivre la situation donne une raison concrète de poursuivre, à condition d’en préciser les besoins.',
+      pause:'Un peu de recul permet de revoir les hypothèses avant de décider.',
+      tangible:'Une ressource déjà disponible peut servir de premier appui concret.',
+      illusion:'Faire le tri entre les envies et les possibilités réelles aide à retrouver une direction.',
+      conflict:'Le désaccord peut révéler le point précis qui demande à être traité.',
+      loss:'Reconnaître ce qui a été perdu permet aussi de voir ce qui reste disponible.',
+      cooperation:'Un soutien précis ou des compétences complémentaires peuvent aider à franchir l’étape suivante.',
+      insight:'Une mise au clair des faits et des attentes fournit le meilleur point d’appui.',
+      ambiguity:'Nommer ce qui reste incertain permet de poser les bonnes questions avant de décider.'
+    },
+    evolution:{
+      pause:'La suite demande un temps d’observation et un changement de perspective. Forcer l’issue maintenant risquerait de faire manquer ce que cette pause révèle.',
+      anxiety:'Le mouvement ralentit tant que les craintes occupent toute la place ; vérifier les faits permet de retrouver une marge de choix.',
+      departure:'Une prise de distance se dessine, afin de laisser place à une direction qui corresponde mieux aux attentes.',
+      contentment:'La satisfaction recherchée devient plus accessible si elle répond aussi aux besoins profonds.',
+      tangible:'L’idée commence à trouver une forme concrète grâce à une première ressource ou à une action réalisable.',
+      illusion:'Le moment vient de réduire les options et d’éprouver la piste la plus réaliste.',
+      disenchantment:'Le recul aide à distinguer une vraie impasse d’une fatigue passagère.',
+      cooperation:'Les échanges ou les compétences partagées peuvent désormais faire avancer la situation.',
+      conflict:'Le désaccord doit être traité directement pour que la situation retrouve du mouvement.',
+      ambiguity:'Une partie de la situation se précise, mais les éléments encore incertains demandent à être vérifiés.',
+      insight:'Une parole plus claire ou un fait nouveau aide à choisir la direction suivante.'
+    },
+    outcome:{
+      tangible:'Une possibilité concrète se présente finalement. Elle pourrait prendre la forme d’une ressource, d’un projet ou d’une première réalisation, à condition d’être réellement mise en œuvre.',
+      pause:'La prochaine étape consiste à changer de point de vue avant de relancer l’action.',
+      anxiety:'La suite dépend de la capacité à confronter les craintes aux faits avant d’en tirer une conclusion.',
+      departure:'Une nouvelle direction devient possible en acceptant de quitter ce qui ne nourrit plus la situation.',
+      contentment:'Une satisfaction est envisageable si elle correspond aux attentes profondes et se confirme dans les faits.',
+      illusion:'La suite demande de choisir une possibilité réalisable parmi celles qui séduisent.',
+      disenchantment:'La réponse passe par une réévaluation de ce qui existe déjà, avant de chercher ailleurs.',
+      loss:'La suite commence par reconnaître la perte, puis par utiliser ce qui reste encore accessible.',
+      cooperation:'La suite prend davantage de consistance si le soutien disponible devient une collaboration effective.',
+      insight:'Une clarification rend possible une décision plus nette ; sa portée dépendra de ce qui sera fait ensuite.',
+      conflict:'La suite exige de résoudre le désaccord plutôt que de poursuivre en l’ignorant.',
+      ambiguity:'La direction reste ouverte tant que les intentions ou les faits essentiels n’ont pas été éclaircis.'
+    }
+  };
+  return stages[role]?.[m]||'';
+}
+function questionLead(q,sc){
+  if(sc==='relation'||!q||q.length>125)return '';
+  const action=q.replace(/[?.!]+$/,'').trim();
+  if(!/^(connecter|relier|integrer|intégrer|ouvrir|developper|développer|créer|creer|lancer|construire|faire évoluer)\s+\S/i.test(action))return '';
+  return `Pour ${action.charAt(0).toLowerCase()+action.slice(1)}, `;
 }
 function fr(card,role,sc,i){
   const t=theme(card,false);
@@ -208,45 +317,6 @@ function en(card,role,sc,i){
   };
   return pick(bank?.[role]?.[t]||bank?.[role]?.neutral||[],card,i);
 }
-function conclusion(cards,sc,enMode){
-  const themes=cards.map(c=>theme(c,enMode));
-  const last=themes[themes.length-1];
-  if(enMode){
-    if(last==='ambiguity')return "Overall, the reading describes a real evolution, but some clarity is still needed before the direction can be fully understood.";
-    if(last==='tension')return "Overall, progress remains possible, but it depends on changing what is still creating resistance.";
-    return "Overall, the reading describes a gradual evolution rather than a series of separate meanings, with each stage preparing the next.";
-  }
-  if(sc==='relation'){
-    if(last==='ambiguity')return "Dans l’ensemble, le tirage raconte une évolution affective réelle, mais une part de clarté manque encore pour comprendre pleinement la direction du lien.";
-    if(last==='tension')return "Dans l’ensemble, une évolution reste possible, mais elle dépend d’un changement concret dans ce qui entretient encore la distance ou la tension.";
-    return "Dans l’ensemble, le récit montre une progression affective : ce qui semblait figé peut évoluer, à condition que la suite se confirme dans les faits et respecte l’équilibre de chacun.";
-  }
-  if(sc==='work'){
-    if(last==='tension')return "Dans l’ensemble, le projet peut continuer d’avancer, mais la prochaine étape consiste d’abord à résoudre le point qui limite encore sa progression.";
-    return "Dans l’ensemble, le tirage décrit une progression qui se construit étape après étape, en consolidant ce qui fonctionne avant d’engager la suite.";
-  }
-  if(last==='ambiguity')return "Dans l’ensemble, la situation évolue réellement, même si tout n’est pas encore suffisamment clair pour en tirer une conclusion définitive.";
-  if(last==='tension')return "Dans l’ensemble, le prochain mouvement utile consiste surtout à transformer ce qui freine encore la situation.";
-  return "Dans l’ensemble, le tirage raconte une progression continue plutôt qu’une succession de significations isolées : chaque étape éclaire la suivante et donne peu à peu sa cohérence au récit.";
-}
-function workExpansion(cards,enMode=false){
-  if(!Array.isArray(cards)||cards.length<5)return '';
-  const th=cards.slice(0,5).map(c=>theme(c,enMode));
-  if(enMode){
-    let s="For the next decisions, it is useful to separate three things: what still belongs to the previous difficulty, what can genuinely support progress now, and what must be abandoned because it no longer matches reality.";
-    if(th[0]==='tension'||th[1]==='tension')s+=" The reading therefore discourages decisions made under pressure and favors a more deliberate pace.";
-    if(th[2]==='tension')s+=" Even a refusal or limitation can become useful when it helps eliminate an unsuitable option and sharpen the direction.";
-    if(th[3]==='change'||th[3]==='insight')s+=" The evolution becomes constructive when the lesson is converted into a practical adjustment rather than remaining only an observation.";
-    if(th[4]==='ground')s+=" The final movement favors stabilization and a calmer environment in which choices can be made with more confidence.";
-    return s;
-  }
-  let s="Pour les prochaines décisions, il est utile de distinguer trois choses : ce qui appartient encore à la difficulté précédente, ce qui peut réellement soutenir l’avancée maintenant, et ce qu’il faut accepter d’abandonner parce que cela ne correspond plus à la réalité.";
-  if(th[0]==='tension'||th[1]==='tension')s+=" Le tirage déconseille donc les choix pris sous pression et invite à retrouver un rythme plus posé avant de trancher.";
-  if(th[2]==='tension')s+=" Même un refus ou une limite peut devenir utile s’il permet d’écarter une option mal adaptée et de rendre la direction plus nette.";
-  if(th[3]==='change'||th[3]==='insight')s+=" L’évolution devient constructive lorsque ce qui a été compris se transforme en ajustement concret, plutôt qu’en simple constat.";
-  if(th[4]==='ground')s+=" Le mouvement final favorise la stabilisation et un cadre plus calme, dans lequel les choix peuvent être faits avec davantage de confiance.";
-  return s;
-}
 function build(cards){
   if(!Array.isArray(cards)||!cards.length)return '';
   const chosen=cards.slice(0,12), r=roles(chosen.length), sc=scope(), enMode=state?.lang==='en';
@@ -268,11 +338,11 @@ function build(cards){
   ]:[
     'Une difficulté ancienne semble avoir épuisé la voie suivie jusqu’ici. Ce qui coince aujourd’hui n’est peut-être pas un simple manque d’efforts : certaines attentes ou façons d’avancer ne s’accordent plus, et insister risque de demander trop de renoncements.',
     'La suite invite à nommer clairement le désaccord, à distinguer ce qui peut se négocier de ce qui compte vraiment pour vous, puis à regarder si une autre voie est possible. Le tirage suggère une mise au clair et un choix, sans promettre une issue précise.'
-  ]):chosen.map((c,i)=>enMode?en(c,r[i]||'evolution',sc,i):fr(c,r[i]||'evolution',sc,i)).filter(Boolean);
-  if(chosen.length>1&&!stuckThenClarity&&!clarifyingCommitment)parts.push(conclusion(chosen,sc,enMode));
-  if(sc==='work'&&chosen.length>=5){
-    const extra=workExpansion(chosen,enMode);
-    if(extra)parts.push(extra);
+  ]):chosen.map((c,i)=>enMode?en(c,r[i]||'evolution',sc,i):preciseFr(c,r[i]||'evolution')||fr(c,r[i]||'evolution',sc,i)).filter(Boolean);
+  const lead=!enMode?questionLead(q,sc):'';
+  if(lead&&parts.length){
+    const first=parts[0].replace(/^Au départ, /,'');
+    parts[0]=lead+(first===parts[0]?'':'il faut d’abord reconnaître que ')+first.charAt(0).toLowerCase()+first.slice(1);
   }
   const question=q?`<p class="reading-question">${enMode?'Your question':'Votre question'} : « ${esc(q)} »</p>`:'';
   return `<div class="story-reading" data-story-engine="universal-fluid-${VERSION}"><h3>${enMode?'The story told by your cards':'L’histoire racontée par vos cartes'}</h3>${question}<p class="story-continuous">${esc(parts.join(' ').replace(/\s+/g,' ').trim())}</p></div>`;
