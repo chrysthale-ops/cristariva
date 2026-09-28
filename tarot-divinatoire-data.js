@@ -17,8 +17,8 @@ const cards=[
     "reading_spirituel": "L’évolution intérieure passe par la confiance dans le mouvement et l’acceptation de ne pas tout contrôler à l’avance.",
     "group": "main",
     "oracle": "tarot",
-    "image": "./cards/tarot/major-001.webp?v=20260922-tarot32",
-    "imageEn": "./cards/tarot/major-001.webp?v=20260922-tarot32",
+    "image": "./cards/tarot/major-001.png?v=20260928-tarot78-png-r1",
+    "imageEn": "./cards/tarot/major-001.png?v=20260928-tarot78-png-r1",
     "en": {
       "name": "The Fool",
       "category": "Opening",
@@ -48,8 +48,8 @@ const cards=[
     "reading_spirituel": "Vous disposez déjà d’outils intérieurs utiles. L’enjeu est moins d’attendre un signe supplémentaire que d’expérimenter consciemment.",
     "group": "main",
     "oracle": "tarot",
-    "image": "./cards/tarot/major-002.webp?v=20260922-tarot32",
-    "imageEn": "./cards/tarot/major-002.webp?v=20260922-tarot32",
+    "image": "./cards/tarot/major-002.png?v=20260928-tarot78-png-r1",
+    "imageEn": "./cards/tarot/major-002.png?v=20260928-tarot78-png-r1",
     "en": {
       "name": "The Magician",
       "category": "Initiation",
@@ -79,8 +79,8 @@ const cards=[
     "reading_spirituel": "L’intuition devient utile lorsqu’elle s’accompagne de calme, de discernement et d’une capacité à laisser une question ouverte.",
     "group": "main",
     "oracle": "tarot",
-    "image": "./cards/tarot/major-003.webp?v=20260922-tarot32",
-    "imageEn": "./cards/tarot/major-003.webp?v=20260922-tarot32",
+    "image": "./cards/tarot/major-003.png?v=20260928-tarot78-png-r1",
+    "imageEn": "./cards/tarot/major-003.png?v=20260928-tarot78-png-r1",
     "en": {
       "name": "The High Priestess",
       "category": "Intuition",
@@ -110,8 +110,8 @@ const cards=[
     "reading_spirituel": "Votre évolution passe par la capacité à donner forme à ce qui vous inspire plutôt qu’à le garder à l’état d’intuition.",
     "group": "main",
     "oracle": "tarot",
-    "image": "./cards/tarot/major-004.webp?v=20260922-tarot32",
-    "imageEn": "./cards/tarot/major-004.webp?v=20260922-tarot32",
+    "image": "./cards/tarot/major-004.png?v=20260928-tarot78-png-r1",
+    "imageEn": "./cards/tarot/major-004.png?v=20260928-tarot78-png-r1",
     "en": {
       "name": "The Empress",
       "category": "Expansion",
@@ -141,8 +141,8 @@ const cards=[
     "reading_spirituel": "Le travail intérieur consiste à établir une base stable sans transformer le besoin de sécurité en rigidité.",
     "group": "main",
     "oracle": "tarot",
-    "image": "./cards/tarot/major-005.webp?v=20260922-tarot32",
-    "imageEn": "./cards/tarot/major-005.webp?v=20260922-tarot32",
+    "image": "./cards/tarot/major-005.png?v=20260928-tarot78-png-r1",
+    "imageEn": "./cards/tarot/major-005.png?v=20260928-tarot78-png-r1",
     "en": {
       "name": "The Emperor",
       "category": "Structure",
@@ -172,8 +172,8 @@ const cards=[
     "reading_spirituel": "Votre évolution bénéficie d’un enseignement ou d’une pratique qui relie intuition et sens éthique.",
     "group": "main",
     "oracle": "tarot",
-    "image": "./cards/tarot/major-006.webp?v=20260922-tarot32",
-    "imageEn": "./cards/tarot/major-006.webp?v=20260922-tarot32",
+    "image": "./cards/tarot/major-006.png?v=20260928-tarot78-png-r1",
+    "imageEn": "./cards/tarot/major-006.png?v=20260928-tarot78-png-r1",
     "en": {
       "name": "The Hierophant",
       "category": "Transmission",
@@ -203,8 +203,8 @@ const cards=[
     "reading_spirituel": "L’enjeu intérieur est d’accorder désir et valeurs afin de choisir sans se diviser.",
     "group": "main",
     "oracle": "tarot",
-    "image": "./cards/tarot/major-007.webp?v=20260922-tarot32",
-    "imageEn": "./cards/tarot/major-007.webp?v=20260922-tarot32",
+    "image": "./cards/tarot/major-007.png?v=20260928-tarot78-png-r1",
+    "imageEn": "./cards/tarot/major-007.png?v=20260928-tarot78-png-r1",
     "en": {
       "name": "The Lovers",
       "category": "Choice",
@@ -234,8 +234,8 @@ const cards=[
     "reading_spirituel": "Canalisez votre énergie vers une direction plutôt que de la disperser entre plusieurs impulsions.",
     "group": "main",
     "oracle": "tarot",
-    "image": "./cards/tarot/major-008.webp?v=20260922-tarot32",
-    "imageEn": "./cards/tarot/major-008.webp?v=20260922-tarot32",
+    "image": "./cards/tarot/major-008.png?v=20260928-tarot78-png-r1",
+    "imageEn": "./cards/tarot/major-008.png?v=20260928-tarot78-png-r1",
     "en": {
       "name": "The Chariot",
       "category": "Movement",
@@ -265,8 +265,8 @@ const cards=[
     "reading_spirituel": "Le discernement consiste à regarder les faits sans les arranger pour qu’ils confirment ce que l’on souhaite.",
     "group": "main",
     "oracle": "tarot",
-    "image": "./cards/tarot/major-009.webp?v=20260922-tarot32",
-    "imageEn": "./cards/tarot/major-009.webp?v=20260922-tarot32",
+    "image": "./cards/tarot/major-009.png?v=20260928-tarot78-png-r1",
+    "imageEn": "./cards/tarot/major-009.png?v=20260928-tarot78-png-r1",
     "en": {
       "name": "Justice",
       "category": "Balance",
@@ -296,8 +296,8 @@ const cards=[
     "reading_spirituel": "La réponse se précise par l’introspection, l’expérience et la capacité à rester seul avec une question sans la forcer.",
     "group": "main",
     "oracle": "tarot",
-    "image": "./cards/tarot/major-010.webp?v=20260922-tarot32",
-    "imageEn": "./cards/tarot/major-010.webp?v=20260922-tarot32",
+    "image": "./cards/tarot/major-010.png?v=20260928-tarot78-png-r1",
+    "imageEn": "./cards/tarot/major-010.png?v=20260928-tarot78-png-r1",
     "en": {
       "name": "The Hermit",
       "category": "Introspection",
@@ -327,8 +327,8 @@ const cards=[
     "reading_spirituel": "Acceptez que certaines phases se ferment et que d’autres s’ouvrent. La conscience du cycle permet de mieux choisir son mouvement.",
     "group": "main",
     "oracle": "tarot",
-    "image": "./cards/tarot/major-011.webp?v=20260922-tarot32",
-    "imageEn": "./cards/tarot/major-011.webp?v=20260922-tarot32",
+    "image": "./cards/tarot/major-011.png?v=20260928-tarot78-png-r1",
+    "imageEn": "./cards/tarot/major-011.png?v=20260928-tarot78-png-r1",
     "en": {
       "name": "Wheel of Fortune",
       "category": "Change",
@@ -358,8 +358,8 @@ const cards=[
     "reading_spirituel": "Vous apprenez à accueillir une énergie puissante sans la réprimer ni la laisser vous gouverner.",
     "group": "main",
     "oracle": "tarot",
-    "image": "./cards/tarot/major-012.webp?v=20260922-tarot32",
-    "imageEn": "./cards/tarot/major-012.webp?v=20260922-tarot32",
+    "image": "./cards/tarot/major-012.png?v=20260928-tarot78-png-r1",
+    "imageEn": "./cards/tarot/major-012.png?v=20260928-tarot78-png-r1",
     "en": {
       "name": "Strength",
       "category": "Mastery",
@@ -389,8 +389,8 @@ const cards=[
     "reading_spirituel": "Lâcher une ancienne manière de voir ouvre une compréhension plus vaste de la situation.",
     "group": "main",
     "oracle": "tarot",
-    "image": "./cards/tarot/major-013.webp?v=20260922-tarot32",
-    "imageEn": "./cards/tarot/major-013.webp?v=20260922-tarot32",
+    "image": "./cards/tarot/major-013.png?v=20260928-tarot78-png-r1",
+    "imageEn": "./cards/tarot/major-013.png?v=20260928-tarot78-png-r1",
     "en": {
       "name": "The Hanged Man",
       "category": "Suspension",
@@ -420,8 +420,8 @@ const cards=[
     "reading_spirituel": "Le dépouillement intérieur permet de quitter une identité ou une croyance devenue trop étroite.",
     "group": "main",
     "oracle": "tarot",
-    "image": "./cards/tarot/major-014.webp?v=20260922-tarot32",
-    "imageEn": "./cards/tarot/major-014.webp?v=20260922-tarot32",
+    "image": "./cards/tarot/major-014.png?v=20260928-tarot78-png-r1",
+    "imageEn": "./cards/tarot/major-014.png?v=20260928-tarot78-png-r1",
     "en": {
       "name": "The Nameless Arcana",
       "category": "Transformation",
@@ -451,8 +451,8 @@ const cards=[
     "reading_spirituel": "Votre équilibre se restaure lorsque vous cessez d’opposer des parts de vous qui peuvent apprendre à coopérer.",
     "group": "main",
     "oracle": "tarot",
-    "image": "./cards/tarot/major-015.webp?v=20260922-tarot32",
-    "imageEn": "./cards/tarot/major-015.webp?v=20260922-tarot32",
+    "image": "./cards/tarot/major-015.png?v=20260928-tarot78-png-r1",
+    "imageEn": "./cards/tarot/major-015.png?v=20260928-tarot78-png-r1",
     "en": {
       "name": "Temperance",
       "category": "Harmonisation",
@@ -482,8 +482,8 @@ const cards=[
     "reading_spirituel": "Regardez sans jugement ce qui exerce une emprise sur vous afin de retrouver une marge de choix.",
     "group": "main",
     "oracle": "tarot",
-    "image": "./cards/tarot/major-016.webp?v=20260922-tarot32",
-    "imageEn": "./cards/tarot/major-016.webp?v=20260922-tarot32",
+    "image": "./cards/tarot/major-016.png?v=20260928-tarot78-png-r1",
+    "imageEn": "./cards/tarot/major-016.png?v=20260928-tarot78-png-r1",
     "en": {
       "name": "The Devil",
       "category": "Attachment",
@@ -513,8 +513,8 @@ const cards=[
     "reading_spirituel": "Une croyance ou une certitude tombe et ouvre un espace de lucidité nouvelle.",
     "group": "main",
     "oracle": "tarot",
-    "image": "./cards/tarot/major-017.webp?v=20260922-tarot32",
-    "imageEn": "./cards/tarot/major-017.webp?v=20260922-tarot32",
+    "image": "./cards/tarot/major-017.png?v=20260928-tarot78-png-r1",
+    "imageEn": "./cards/tarot/major-017.png?v=20260928-tarot78-png-r1",
     "en": {
       "name": "The Tower",
       "category": "Disruption",
@@ -544,8 +544,8 @@ const cards=[
     "reading_spirituel": "Vous retrouvez une confiance plus paisible, fondée sur ce qui vous inspire réellement plutôt que sur la peur.",
     "group": "main",
     "oracle": "tarot",
-    "image": "./cards/tarot/major-018.webp?v=20260922-tarot32",
-    "imageEn": "./cards/tarot/major-018.webp?v=20260922-tarot32",
+    "image": "./cards/tarot/major-018.png?v=20260928-tarot78-png-r1",
+    "imageEn": "./cards/tarot/major-018.png?v=20260928-tarot78-png-r1",
     "en": {
       "name": "The Star",
       "category": "Hope",
@@ -575,8 +575,8 @@ const cards=[
     "reading_spirituel": "Les rêves, symboles et émotions profondes peuvent éclairer une question, à condition d’être interprétés avec discernement.",
     "group": "main",
     "oracle": "tarot",
-    "image": "./cards/tarot/major-019.webp?v=20260922-tarot32",
-    "imageEn": "./cards/tarot/major-019.webp?v=20260922-tarot32",
+    "image": "./cards/tarot/major-019.png?v=20260928-tarot78-png-r1",
+    "imageEn": "./cards/tarot/major-019.png?v=20260928-tarot78-png-r1",
     "en": {
       "name": "The Moon",
       "category": "Uncertainty",
@@ -619,8 +619,8 @@ const cards=[
     },
     "meaning": "La situation gagne en clarté, en vitalité et en chaleur. Le Soleil favorise ce qui peut être vu au grand jour, partagé et développé avec confiance.",
     "reading_tarot": "La situation gagne en clarté, en vitalité et en chaleur. Le Soleil favorise ce qui peut être vu au grand jour, partagé et développé avec confiance.",
-    "image": "./cards/tarot/major-020.webp?v=20260922-tarot32",
-    "imageEn": "./cards/tarot/major-020.webp?v=20260922-tarot32"
+    "image": "./cards/tarot/major-020.png?v=20260928-tarot78-png-r1",
+    "imageEn": "./cards/tarot/major-020.png?v=20260928-tarot78-png-r1"
   },
   {
     "category": "Révélation",
@@ -650,8 +650,8 @@ const cards=[
     },
     "meaning": "Un appel, une nouvelle ou une prise de conscience remet une situation en perspective. Le Jugement invite à faire le bilan du passé pour répondre autrement à ce qui se présente.",
     "reading_tarot": "Un appel, une nouvelle ou une prise de conscience remet une situation en perspective. Le Jugement invite à faire le bilan du passé pour répondre autrement à ce qui se présente.",
-    "image": "./cards/tarot/major-021.webp?v=20260922-tarot32",
-    "imageEn": "./cards/tarot/major-021.webp?v=20260922-tarot32"
+    "image": "./cards/tarot/major-021.png?v=20260928-tarot78-png-r1",
+    "imageEn": "./cards/tarot/major-021.png?v=20260928-tarot78-png-r1"
   },
   {
     "category": "Accomplissement",
@@ -681,8 +681,8 @@ const cards=[
     },
     "meaning": "Un cycle trouve son accomplissement et ses différentes étapes prennent sens ensemble. Le Monde évoque une réalisation, une place trouvée ou une ouverture vers un horizon plus vaste.",
     "reading_tarot": "Un cycle trouve son accomplissement et ses différentes étapes prennent sens ensemble. Le Monde évoque une réalisation, une place trouvée ou une ouverture vers un horizon plus vaste.",
-    "image": "./cards/tarot/major-022.webp?v=20260922-tarot32",
-    "imageEn": "./cards/tarot/major-022.webp?v=20260922-tarot32"
+    "image": "./cards/tarot/major-022.png?v=20260928-tarot78-png-r1",
+    "imageEn": "./cards/tarot/major-022.png?v=20260928-tarot78-png-r1"
   },
   {
     "id": 23,

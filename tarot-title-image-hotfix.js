@@ -2,7 +2,7 @@
 (function(){
   'use strict';
 
-  const VERSION='20260928-minor19-r4';
+  const VERSION='20260928-tarot78-png-r1';
 
   function appendScript(src){
     return new Promise((resolve,reject)=>{
