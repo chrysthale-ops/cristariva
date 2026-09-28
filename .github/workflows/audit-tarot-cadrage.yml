@@ -1,4 +1,4 @@
-name: Audit visuel cadrage Tarot
+name: Comparaison cadrage Tarot
 
 on:
   push:
@@ -10,14 +10,13 @@ permissions:
   contents: read
 
 jobs:
-  contact-sheets:
+  compare:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: main
-
-      - name: Construire les planches de contrôle
+      - name: Construire les comparaisons
         shell: bash
         run: |
           set -euo pipefail
@@ -26,77 +25,38 @@ jobs:
           from pathlib import Path
           from PIL import Image, ImageOps, ImageDraw, ImageFont
 
-          base = Path("cards/tarot/cartes mineures HD")
-          files = {
-            23:"as_de_bâtons_au_crépuscule.png", 24:"deux_de_bâtons_au_clair_de_lune.png",
-            25:"trois_de_bâtons_au_crépuscule.png", 26:"quatre_de_bâtons_au_crépuscule.png",
-            27:"cinq_de_bâtons_au_crépuscule.png", 28:"six_de_bâtons_au_bord_du_lac.png",
-            29:"sept_de_bâtons_au_crépuscule.png", 30:"huit_de_bâtons_au_crépuscule.png",
-            31:"neuf_de_bâtons_au_clair_de_lune.png", 32:"dix_de_bâtons_au_coucher_du_soleil.png",
-            33:"valet_de_bâtons_au_crépuscule.png", 34:"cavalier_de_bâtons_au_clair_de_lune.png",
-            35:"reine_de_bâtons_au_crépuscule.png", 36:"roi_de_bâtons_au_crépuscule.png",
-            37:"as_de_coupes_au_lac_étoilé.png", 38:"deux_de_coupes_au_crépuscule.png",
-            39:"trois_de_coupes_au_coucher_du_soleil.png", 40:"quatre_de_coupes_au_crépuscule.png",
-            41:"cinq_de_coupes_au_crépuscule.png", 42:"six_de_coupes_au_lac_d_or.png",
-            43:"sept_de_coupes_célestes.png", 44:"huit_de_coupes_sous_la_lune.png",
-            45:"neuf_de_coupes_au_crépuscule.png", 46:"dix_de_coupes_famille_sous_l_arc_doré.png",
-            47:"valet_de_coupes_au_crépuscule.png", 48:"cavalier_de_coupes_au_clair_de_lune.png",
-            49:"reine_de_coupes_au_crépuscule.png", 50:"roi_de_coupes_au_crépuscule.png",
-            51:"as_d_épées_au_coucher_du_soleil.png", 52:"deux_d_épées_au_crépuscule.png",
-            53:"trois_d_épées_au_coucher_du_soleil.png", 54:"quatre_d_épées_au_coucher_du_soleil.png",
-            55:"cinq_d_épées_au_coucher_du_soleil.png", 56:"six_d_épées_au_coucher_du_soleil.png",
-            57:"sept_d_épées_au_crépuscule.png", 58:"huit_d_épées_au_crépuscule_lacustre.png",
-            59:"neuf_d_épées_au_crépuscule.png", 60:"dix_d_épées_au_crépuscule.png",
-            61:"valet_d_épées_au_crépuscule.png", 62:"cavalier_d_épées_au_coucher_du_soleil.png",
-            63:"reine_d_épées_au_crépuscule.png", 64:"roi_d_épées_au_coucher_du_soleil.png",
-            65:"as_de_deniers_au_manteau_cramoisi.png", 66:"deux_de_deniers_au_crépuscule.png",
-            67:"trois_de_deniers_au_coucher_du_soleil.png", 68:"quatre_de_deniers_au_coucher_du_soleil.png",
-            69:"cinq_de_deniers_au_coucher_du_soleil.png", 70:"six_de_deniers_en_rouge_cramoisi.png",
-            71:"sept_de_deniers_au_coucher_du_soleil.png", 72:"huit_de_deniers_au_coucher_du_soleil.png",
-            73:"neuf_de_deniers_cramoisi.png", 74:"dix_de_deniers_en_rouge_cramoisi.png",
-            75:"valet_de_deniers_au_coucher_du_soleil.png", 76:"cavalier_de_deniers_au_coucher_du_soleil.png",
-            77:"reine_de_deniers_au_coucher_du_soleil.png", 78:"roi_de_deniers_au_coucher_du_soleil.png"
+          cur=Path("cards/tarot/cartes mineures HD")
+          bak=Path("cards/tarot/SAUVEGARDE cartes mineures HD avant lot 2 - 2026-09-27")
+          files={
+            25:"trois_de_bâtons_au_crépuscule.png",
+            28:"six_de_bâtons_au_bord_du_lac.png",
+            29:"sept_de_bâtons_au_crépuscule.png",
+            33:"valet_de_bâtons_au_crépuscule.png",
+            35:"reine_de_bâtons_au_crépuscule.png",
+            36:"roi_de_bâtons_au_crépuscule.png",
+            39:"trois_de_coupes_au_coucher_du_soleil.png",
+            40:"quatre_de_coupes_au_crépuscule.png",
+            53:"trois_d_épées_au_coucher_du_soleil.png",
+            56:"six_d_épées_au_coucher_du_soleil.png",
           }
-
-          out = Path("tarot-audit")
-          out.mkdir(exist_ok=True)
-          font = ImageFont.load_default()
-          cols, rows = 4, 4
-          cell_w, cell_h = 280, 450
-          img_box = (250, 375)
-          ids = list(range(23,79))
-          for sheet_idx, start in enumerate(range(0,len(ids),16), start=1):
-              subset = ids[start:start+16]
-              sheet = Image.new("RGB",(cols*cell_w,rows*cell_h),"white")
-              d = ImageDraw.Draw(sheet)
-              for j, card_id in enumerate(subset):
-                  r,c = divmod(j,cols)
-                  x,y = c*cell_w, r*cell_h
-                  p = base/files[card_id]
-                  im = Image.open(p).convert("RGB")
-                  thumb = ImageOps.contain(im,img_box)
-                  tx = x+(cell_w-thumb.width)//2
-                  ty = y+28
-                  sheet.paste(thumb,(tx,ty))
-                  label = f"{card_id}  {files[card_id]}"
-                  d.text((x+6,y+6),label,fill="black",font=font)
-              sheet.save(out/f"planche_{sheet_idx}_{subset[0]}-{subset[-1]}.jpg",quality=92)
-
-          # Planche spéciale : seulement l'intérieur des images, sans réduction trop forte
-          focus_ids=[25,28,29,34]
-          sheet=Image.new("RGB",(4*420,660),"white")
+          out=Path("tarot-compare");out.mkdir(exist_ok=True)
+          font=ImageFont.load_default()
+          card_w,card_h=300,450
+          sheet=Image.new("RGB",(4*340,5*500),"white")
           d=ImageDraw.Draw(sheet)
-          for i,card_id in enumerate(focus_ids):
-              im=Image.open(base/files[card_id]).convert("RGB")
-              thumb=ImageOps.contain(im,(390,585))
-              x=i*420+(420-thumb.width)//2
-              sheet.paste(thumb,(x,40))
-              d.text((i*420+8,10),f"{card_id} {files[card_id]}",fill="black",font=font)
-          sheet.save(out/"focus_exemples.jpg",quality=94)
+          for idx,(cid,name) in enumerate(files.items()):
+              row=idx//2
+              col=(idx%2)*2
+              for side,(folder,label) in enumerate([(cur,"ACTUEL"),(bak,"SAUVEGARDE")]):
+                  im=Image.open(folder/name).convert("RGB")
+                  thumb=ImageOps.contain(im,(card_w,card_h))
+                  x=(col+side)*340+(340-thumb.width)//2
+                  y=row*500+36
+                  sheet.paste(thumb,(x,y))
+                  d.text(((col+side)*340+8,row*500+8),f"{cid} {label} {im.width}x{im.height}",fill="black",font=font)
+          sheet.save(out/"comparaison_suspects.jpg",quality=94)
           PY
-
       - uses: actions/upload-artifact@v4
         with:
-          name: tarot-contact-sheets
-          path: tarot-audit/
-          if-no-files-found: error
+          name: tarot-compare
+          path: tarot-compare/
