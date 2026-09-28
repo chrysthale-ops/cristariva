@@ -331,6 +331,7 @@ html{scroll-padding-top:130px}
   .hero-cartouche-arrow{font-size:20px!important}
 }
 .numerologie{background:linear-gradient(160deg,rgba(249,243,232,.97),rgba(226,235,239,.96));border:1px solid #ab864e}.numerologie h2{font-family:Cinzel,Georgia,serif;color:#70532b}.numerologie form{margin:22px 0}.numerologie form .btn{margin-top:16px}.num-link{display:block;border:0;background:none;color:#6b4d21;text-decoration:underline;cursor:pointer;margin-top:7px}.num-grid,.num-months{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin:16px 0}.num-grid>div,.num-months>div{padding:12px;border:1px solid #d5bc8e;border-radius:12px;background:#fff;text-align:center}.num-grid strong{display:block;font:2.2rem Cinzel,serif;color:#80612b}.num-grid span,.num-months span{display:block}.num-months strong{color:#80612b;font:1.4rem Cinzel,serif}.numerologie [hidden]{display:none}
+.date-entry-help{display:block;margin:5px 0 11px;color:#526177;line-height:1.4}.date-entry-help.date-entry-error{color:#a02931;font-weight:700}
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Allura&family=Bodoni+Moda:opsz,wght@6..96,500;6..96,600&family=Cinzel:wght@500;600&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Cormorant+SC:wght@500;600&display=swap" rel="stylesheet"/>
 </head>
@@ -1511,7 +1512,7 @@ function renderAstroError(message){const box=$('#astroResult');box.style.display
 try{const saved=new URLSearchParams(location.search).get('lang')||localStorage.getItem('cristariva-lang');if(saved==='en'||saved==='fr')state.lang=saved;}catch(e){}
 applyLanguage();
 </script>
-<script src="./date-entry.js?v=1"></script>
+<script src="./date-entry.js?v=2"></script>
 <script src="./numerologie.js?v=2"></script>
 <script>if('serviceWorker' in navigator){
 const CRISTARIVA_PWA_VERSION='2026.09.28-minor19-r4';
