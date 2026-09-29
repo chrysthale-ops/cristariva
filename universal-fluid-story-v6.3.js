@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.14';
+const VERSION='6.15';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -495,6 +495,9 @@ function tarotMixedPart(card,role,sc,i,enMode){
   if(id===28)return enMode
     ?'An effort can become visible and receive recognition. The praise has value when it reflects work actually done, while leaving room to see what still needs care.'
     :'Un effort peut devenir visible et recevoir une reconnaissance méritée. Celle-ci a d’autant plus de valeur qu’elle reflète un travail accompli, sans faire oublier ce qui demande encore de l’attention.';
+  if(id===29)return enMode
+    ?'An established position needs protection without turning every exchange into a fight. Outside pressure is real, but choosing which boundaries matter helps preserve energy for what is essential.'
+    :'Une position acquise demande à être défendue sans faire de chaque échange un combat. La pression extérieure existe, mais choisir les limites qui comptent évite de disperser ses forces.';
   if(id===50)return enMode
     ?'Emotional steadiness makes it possible to stay present without denying what is felt. A calm conversation can then hold even intense feelings without letting them make every decision.'
     :'La maîtrise des émotions permet de rester présent sans nier ce qui est ressenti. Une parole calme peut accueillir des sentiments intenses sans leur laisser décider seuls de la suite.';
@@ -563,6 +566,7 @@ function tarotUprightObstacle(card,enMode){
   const t=theme(card,enMode);
   if(['tension','ambiguity','conflict','heartbreak','loss'].includes(t))return '';
   const id=Number(card.id);
+  if(id<=22)return '';
   if(id>=65)return enMode
     ?'Protecting what already works can also leave too little room to try another way forward.'
     :'Préserver ce qui fonctionne déjà peut aussi laisser trop peu de place à une autre manière d’avancer.';
@@ -575,9 +579,7 @@ function tarotUprightObstacle(card,enMode){
   if(id>=23)return enMode
     ?'An encouraging impulse can still scatter the effort if it has no clear direction.'
     :'Un élan encourageant peut néanmoins disperser les efforts s’il ne trouve pas de direction claire.';
-  return enMode
-    ?'Even this strength may become restrictive if there is no room left for change.'
-    :'Même cette force peut devenir une limite si elle ne laisse plus de place au changement.';
+  return '';
 }
 function tarotPairLink(previous,current,enMode){
   const family=card=>card.id<=22?'major':card.id<=36?'wands':card.id<=50?'cups':card.id<=64?'swords':'pentacles';
