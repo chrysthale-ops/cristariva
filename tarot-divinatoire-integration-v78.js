@@ -40,9 +40,10 @@ function syncDomainDisplayLabels(){
 function syncCardDetailDisplayLabels(root=document){
   if(state?.lang==='en')return;
   root.querySelectorAll?.('.card-detail-row h4').forEach(node=>{
-    node.textContent=node.textContent
+    const next=node.textContent
       .replace(/Relations/g,'Relationnel')
       .replace(/Professionnelle\s*\/\s*Projet/g,'Professionnel / projet');
+    if(next!==node.textContent)node.textContent=next;
   });
 }
 const cardDialogBody=document.querySelector('#cardDialogBody');
@@ -93,6 +94,14 @@ function ensureContext(){
 }
 function updateContext(){
   syncDomainDisplayLabels();
+  const reversalOption=document.querySelector('#tarotReversalOption');
+  if(reversalOption){
+    reversalOption.hidden=!isTarot();
+    document.querySelector('#tarotReversalLabel').textContent=state?.lang==='en'?'Allow reversed cards':'Autoriser les cartes renversées';
+    document.querySelector('#tarotReversalHint').textContent=state?.lang==='en'
+      ?'Each card has an equal chance of being upright or reversed. Its orientation changes the interpretation.'
+      :'Chaque carte peut sortir à l’endroit ou renversée, avec une chance sur deux. L’interprétation tient compte de son orientation.';
+  }
   const c=ensureContext();if(!c)return;
   c.hidden=!isTarot();
   c.innerHTML=state?.lang==='en'
@@ -128,11 +137,10 @@ drawBtn?.addEventListener('click',event=>{
   state.question=document.querySelector('#question')?.value.trim()||'';
   const count=parseInt(state.format||1,10);
   state.draw=rand(window.TAROT_DATA.main,count).map(fixTarotCard);
+  const allowReversals=document.querySelector('#tarotAllowReversals')?.checked===true;
+  state.tarotReversed=state.draw.map(()=>allowReversals&&Math.random()<0.5);
   clearComplementaryCards();
-  const positions=(state.lang==='en'?POSITIONS_EN:POSITIONS_FR)[count].map(x=>x[0]);
-  const drawCards=document.querySelector('#drawCards');
-  if(drawCards)drawCards.innerHTML=state.draw.map((card,i)=>cardHTML(card,positions[i])).join('');
-  const reading=document.querySelector('#reading');if(reading)reading.innerHTML=interpretation(state.draw);
+  renderCards();
   document.querySelector('#results')?.classList.remove('hidden');
   document.querySelector('#deepening')?.classList.remove('hidden');
   updateContext();document.querySelector('#results')?.scrollIntoView({behavior:'smooth',block:'start'});
@@ -177,8 +185,19 @@ if(typeof applyLanguage==='function'){
   const old=applyLanguage;
   applyLanguage=function(){old();(window.TAROT_DATA.main||[]).forEach(fixTarotCard);syncDomainDisplayLabels();syncCardDetailDisplayLabels(cardDialogBody||document);updateContext();renderTarotCatalog();};
 }
+if(typeof renderSynthesis==='function'){
+  const previousSynthesis=renderSynthesis;
+  renderSynthesis=function(){
+    if(isTarot()&&state.draw?.length&&state.tarotReversed?.some(Boolean)){
+      const box=document.querySelector('#synthesis');
+      if(box){box.innerHTML=literaryFinalSynthesis();box.classList.remove('hidden');}
+      return;
+    }
+    return previousSynthesis.apply(this,arguments);
+  };
+}
 syncDomainDisplayLabels();
 updateContext();renderTarotCatalog();
 window.__CRISTARIVA_TAROT_READY__=true;
-window.CR_TAROT_INTEGRATION_VERSION='2026.09.26-card-size-r2';
+window.CR_TAROT_INTEGRATION_VERSION='2026.09.29-tarot78-reversals-r1';
 })();

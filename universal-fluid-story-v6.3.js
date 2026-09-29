@@ -431,10 +431,12 @@ function en(card,role,sc,i){
 function build(cards){
   if(!Array.isArray(cards)||!cards.length)return '';
   const chosen=cards.slice(0,12), r=roles(chosen.length), sc=scope(), enMode=state?.lang==='en';
+  const reversedAt=i=>state?.oracle==='tarot'&&state?.draw?.[i]===chosen[i]&&state?.tarotReversed?.[i]===true;
+  const hasReversal=chosen.some((_,i)=>reversedAt(i));
   const q=String(state?.question||'').replace(/\s+/g,' ').trim();
   const themes=chosen.map(c=>theme(c,enMode));
-  const clarifyingCommitment=chosen.length===3&&sc==='relation'&&themes[0]==='triangle'&&themes[1]==='conflict'&&themes[2]==='commitment';
-  const stuckThenClarity=chosen.length===3&&themes[0]==='tension'&&themes[1]==='tension'&&themes[2]==='insight';
+  const clarifyingCommitment=!hasReversal&&chosen.length===3&&sc==='relation'&&themes[0]==='triangle'&&themes[1]==='conflict'&&themes[2]==='commitment';
+  const stuckThenClarity=!hasReversal&&chosen.length===3&&themes[0]==='tension'&&themes[1]==='tension'&&themes[2]==='insight';
   const parts=clarifyingCommitment?(enMode?[
     'The situation begins with uncertainty about where each person stands. Several ties or competing wishes may be making it difficult to choose a clear direction.',
     'That uncertainty is now bringing tension into the open. An honest conversation could clarify what each person wants, even if it is uncomfortable.',
@@ -451,16 +453,17 @@ function build(cards){
     'La suite invite à nommer clairement le désaccord, à distinguer ce qui peut se négocier de ce qui compte vraiment pour vous, puis à regarder si une autre voie est possible. Le tirage suggère une mise au clair et un choix, sans promettre une issue précise.'
   ]):chosen.map((c,i)=>{
     const role=r[i]||'evolution';
+    if(reversedAt(i)&&window.crTarotReversedSentence)return window.crTarotReversedSentence(c,role,enMode);
     if(enMode)return en(c,role,sc,i);
     const part=distinctiveFr(c,role,sc)||preciseFr(c,role)||fr(c,role,sc,i);
     const detail=developFr(c,role);
     return detail&&part.split(/\s+/).length<(chosen.length===1?50:27)?part+' '+detail:part;
   }).filter(Boolean);
-  if(!enMode&&chosen.length>=5&&!clarifyingCommitment&&!stuckThenClarity){
+  if(!enMode&&chosen.length>=5&&!hasReversal&&!clarifyingCommitment&&!stuckThenClarity){
     const context=contextFr(q,sc,chosen);
     if(context)parts.splice(3,0,context);
   }
-  const lead=!enMode?questionLead(q,sc):'';
+  const lead=!enMode&&!hasReversal?questionLead(q,sc):'';
   if(lead&&parts.length){
     const first=parts[0].replace(/^Au départ, /,'');
     parts[0]=lead+(first===parts[0]?'':'il faut d’abord reconnaître que ')+first.charAt(0).toLowerCase()+first.slice(1);

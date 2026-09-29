@@ -1,8 +1,8 @@
 /* CRISTARIVA — service worker v30 — récit professionnel développé.
    Force 22 arcanes majeurs + 56 arcanes mineurs HD sur PC et Android
    et recharge la planche validée complète des arcanes mineurs. */
-const CACHE_NAME='cristariva-v43-20260928-tarot78-png-r1';
-const APP_VERSION='2026.09.28-tarot78-png-r1';
+const CACHE_NAME='cristariva-v44-20260929-tarot-reversals-r1';
+const APP_VERSION='2026.09.29-tarot-reversals-r1';
 const SHELL=[
   './',
   './index.html',
@@ -11,11 +11,12 @@ const SHELL=[
   './icon-192.png',
   './icon-512.png',
   './story-fluid-v5.1.js?v=5.30',
-  './universal-fluid-story-v6.3.js?v=6.8',
+  './tarot-reversals.js?v=20260929-r1',
+  './universal-fluid-story-v6.3.js?v=6.9-reversals',
   './question-context-story-v5.2.js?v=5.2.2',
   './question-intent-story-v5.3.js?v=5.6',
   './question-project-story-v5.5.js?v=5.21',
-  './oracle-selection.js?v=20260926-story-fluid66',
+  './oracle-selection.js?v=20260929-reversals-r1',
   './oracle-amour-data.js?v=20260923-love-story6',
   './oracle-amour-card62-fix.js?v=20260923-love-story6',
   './oracle-amour-integration.js?v=20260923-love-story6',
@@ -23,7 +24,7 @@ const SHELL=[
   './tarot-divinatoire-data.js?v=20260924-tarot78-base-r9',
   './tarot-divinatoire-integration.js?v=20260924-tarot78-r4-compat',
   './tarot-title-image-hotfix.js?v=20260928-tarot78-png-r1',
-  './tarot-divinatoire-integration-v78.js?v=20260924-tarot78-r9',
+  './tarot-divinatoire-integration-v78.js?v=20260928-tarot78-png-r1-reversals-r1',
   './tarot-minor-sprite-loader.js?v=20260926-minor-hd-r1',
   './tarot-minors-data-batons.js?v=20260924-tarot78-r9',
   './tarot-minors-data-coupes.js?v=20260924-tarot78-r9',

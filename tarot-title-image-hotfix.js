@@ -51,7 +51,7 @@
       }
 
       delete window.__CRISTARIVA_TAROT_READY__;
-      await appendScript('./tarot-divinatoire-integration-v78.js?v='+VERSION);
+      await appendScript('./tarot-divinatoire-integration-v78.js?v='+VERSION+'-reversals-r1');
       await appendScript('./tarot-story-fluid-v6.2.js?v=6.6-'+VERSION);
 
       window.CR_TAROT_HOTFIX_VERSION='2026.09.28-minor19-r4';

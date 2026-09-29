@@ -200,7 +200,7 @@
   }
 
   function clearReading(){
-    state.draw=[];state.relation=null;state.date=null;
+    state.draw=[];state.tarotReversed=[];state.relation=null;state.date=null;
     for(const id of ['drawCards','reading','relationResult','dateResult']){
       const node=document.getElementById(id);if(node)node.innerHTML='';
     }
