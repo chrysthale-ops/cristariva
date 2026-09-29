@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.10';
+const VERSION='6.11';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -428,6 +428,66 @@ function en(card,role,sc,i){
   };
   return pick(bank?.[role]?.[t]||bank?.[role]?.neutral||[],card,i);
 }
+/* Ouvertures narratives des mineurs : leur définition commence souvent par
+   le nom de la carte. Le récit exprime le même sens sans le citer. */
+const tarotOpeners=Object.fromEntries([
+  [23,'Une énergie créative cherche une forme concrète avant que son élan ne s’épuise.','Creative energy is seeking a practical form before its momentum fades.'],
+  [24,'Un horizon plus vaste oblige à choisir entre le connu et une expansion préparée avec soin.','A wider horizon calls for a choice between the familiar and carefully prepared expansion.'],
+  [25,'Ce qui a été entrepris commence à produire des effets hors du contrôle immédiat.','What has been set in motion is beginning to bear fruit beyond immediate control.'],
+  [26,'Une étape déjà construite offre un espace de stabilité et de réussite partagée.','A step already built offers room for stability and shared achievement.'],
+  [27,'Des volontés différentes se confrontent et peuvent stimuler le mouvement ou disperser les forces.','Different aims are meeting and may spur progress or scatter the available energy.'],
+  [28,'Un effort devient visible et peut recevoir la reconnaissance qu’il mérite.','An effort is becoming visible and may receive deserved recognition.'],
+  [29,'Une position acquise demande à être défendue sans faire de chaque échange un combat.','An established position needs protection without turning every exchange into a battle.'],
+  [30,'L’immobilité commence à céder et demande de se préparer à un rythme plus vif.','The standstill begins to give way and calls for readiness for a quicker pace.'],
+  [31,'Une fatigue réelle coexiste avec la capacité de tenir encore une limite importante.','Real fatigue coexists with the strength to protect an important boundary.'],
+  [32,'Les responsabilités accumulées commencent à peser sur la direction poursuivie.','Accumulated responsibilities are beginning to weigh on the chosen direction.'],
+  [33,'Une curiosité vive ouvre la voie à un essai ou à une nouvelle stimulante.','Lively curiosity opens the way to an experiment or encouraging news.'],
+  [34,'Une passion pousse à agir vite, avec le risque de perdre le cap en chemin.','Passion urges swift action, with a risk of losing direction along the way.'],
+  [35,'Une assurance chaleureuse rend l’initiative plus visible et plus communicative.','Warm confidence makes initiative more visible and easier to share.'],
+  [36,'Une vision assumée peut entraîner d’autres personnes si elle laisse aussi une place à leur contribution.','A clear vision can bring others along when it leaves room for their contribution.'],
+  [37,'Une émotion nouvelle cherche à circuler et à ouvrir une disponibilité plus grande.','A new feeling is looking for room to move and greater openness.'],
+  [38,'Deux sensibilités cherchent un accord dans lequel chacune puisse être reconnue.','Two people or perspectives seek an agreement in which both can be acknowledged.'],
+  [39,'La joie partagée et le soutien de proches redonnent de l’élan au lien.','Shared joy and support from others bring fresh energy to the connection.'],
+  [40,'Une lassitude passagère rend moins visible une possibilité pourtant encore présente.','Passing weariness is obscuring a possibility that is still there.'],
+  [41,'Une perte retient l’attention, mais elle n’efface pas les liens qui demeurent.','A loss commands attention without erasing the ties that remain.'],
+  [42,'Un souvenir, une personne ou une ancienne habitude revient dans le présent.','A memory, a person, or an old habit returns to the present.'],
+  [43,'Plusieurs possibilités séduisantes se présentent sans offrir encore de choix vérifié.','Several appealing possibilities appear before any one has been tested.'],
+  [44,'Ce qui retenait autrefois ne nourrit plus assez pour justifier de rester sans questionner la suite.','What once held things together no longer nourishes them enough to stay without question.'],
+  [45,'Un désir peut se réaliser et procurer une satisfaction réelle, sans résoudre tous les autres besoins.','A wish may come true and bring real satisfaction without meeting every other need.'],
+  [46,'Une harmonie affective peut trouver une place durable dans un groupe, un foyer ou un lien choisi.','Emotional harmony may find a lasting place in a group, a home, or a chosen bond.'],
+  [47,'Un message sensible, un geste tendre ou une intuition nouvelle cherche à être accueilli.','A sensitive message, a tender gesture, or a new intuition seeks a response.'],
+  [48,'Une proposition ou une invitation avance avec un élan qui mérite d’être éprouvé dans les actes.','An offer or invitation moves forward with an impulse that still needs to be tested in action.'],
+  [49,'Une écoute profonde rend les émotions des autres plus lisibles, sans devoir les porter à leur place.','Deep attention makes others’ feelings easier to understand without carrying them in their place.'],
+  [50,'La maîtrise des émotions permet de rester présent sans nier ce qui est ressenti.','Emotional steadiness allows one to remain present without denying what is felt.'],
+  [51,'Une vérité devient plus nette et rend possible une parole ou une décision claire.','A truth comes into sharper focus, allowing a clear word or decision.'],
+  [52,'Une décision reste suspendue tant que deux positions semblent impossibles à départager.','A decision remains suspended while two positions seem impossible to reconcile.'],
+  [53,'Une douleur affective ou une vérité difficile demande à être regardée sans détour.','Emotional pain or a difficult truth needs to be faced directly.'],
+  [54,'Une pause utile protège la clarté d’esprit après une période de tension.','A necessary pause protects clarity after a period of strain.'],
+  [55,'Un conflit peut coûter plus cher que la victoire qu’il semblait promettre.','A conflict may cost more than the victory it seemed to promise.'],
+  [56,'Un passage hors d’une période difficile commence même si toutes les réponses ne sont pas encore là.','A passage out of a difficult period begins before every answer is known.'],
+  [57,'La discrétion ou la stratégie devient utile si elle ne sert pas à éviter la vérité.','Discretion or strategy helps when it does not become a way to avoid the truth.'],
+  [58,'Des contraintes ou des peurs donnent l’impression d’être enfermé dans une seule lecture possible.','Constraints or fears make one narrow reading of events feel inescapable.'],
+  [59,'Une pensée répétée amplifie l’inquiétude au-delà de ce que les faits établissent.','A recurring thought magnifies worry beyond what the facts establish.'],
+  [60,'Une manière de poursuivre arrive à sa limite et demande qu’une fin soit reconnue.','One way of carrying on has reached its limit and calls for an ending to be acknowledged.'],
+  [61,'Une vigilance curieuse cherche des faits avant de tirer des conclusions.','Curious vigilance looks for facts before drawing conclusions.'],
+  [62,'Une décision franche accélère les échanges, mais doit encore laisser de la place à l’écoute.','A direct decision quickens the exchange while still needing to leave room to listen.'],
+  [63,'Une lucidité indépendante permet de poser des limites sans perdre la dimension humaine.','Independent clarity makes it possible to set boundaries without losing humanity.'],
+  [64,'Une pensée structurée soutient une décision qui résiste mieux à l’impulsion du moment.','Structured thought supports a decision that can outlast the impulse of the moment.'],
+  [65,'Une possibilité concrète apparaît dans les ressources, le travail ou la vie matérielle.','A tangible opportunity appears among resources, work, or material circumstances.'],
+  [66,'Plusieurs priorités réclament le même temps et appellent une organisation soutenable.','Several priorities compete for the same time and call for a sustainable plan.'],
+  [67,'Un savoir-faire partagé et une coopération réelle donnent forme à ce qui se construit.','Shared skill and genuine cooperation give shape to what is being built.'],
+  [68,'Le désir de préserver ses acquis crée une base sûre, à condition de ne pas tout figer.','The wish to protect what has been gained creates security if it does not freeze everything in place.'],
+  [69,'Un manque matériel ou un sentiment d’exclusion rend l’aide disponible plus difficile à voir.','Material scarcity or a feeling of exclusion makes available help harder to see.'],
+  [70,'Les ressources circulent mieux lorsque donner et recevoir préservent la dignité de chacun.','Resources move more freely when giving and receiving preserve everyone’s dignity.'],
+  [71,'Un investissement demande du temps avant de montrer pleinement ce qu’il peut produire.','An investment needs time before its full results can be seen.'],
+  [72,'Un travail régulier affine peu à peu le geste, la méthode et la confiance.','Regular work gradually refines skill, method, and confidence.'],
+  [73,'Une autonomie s’est construite avec le temps, l’effort et des choix tenus.','Independence has grown through time, effort, and sustained choices.'],
+  [74,'Une stabilité dépasse l’individu et touche la famille, la transmission ou une structure durable.','Stability extends beyond one person into family, continuity, or a lasting structure.'],
+  [75,'Une occasion modeste invite à apprendre et à poser les bases d’une réalisation future.','A modest opportunity invites learning and the foundations of a future achievement.'],
+  [76,'Une progression lente mais régulière donne sa force à une démarche fiable.','Slow but steady progress lends strength to a dependable approach.'],
+  [77,'Le soin du quotidien et le sens pratique peuvent rendre les ressources plus solides.','Daily care and practical judgment can make resources more secure.'],
+  [78,'Une réussite matérielle fondée sur l’expérience demande une gestion responsable.','Material success grounded in experience calls for responsible stewardship.']
+].map(([id,fr,en])=>[id,{fr,en}]));
 function tarotMixedPart(card,role,sc,i,enMode,reversed){
   const id=Number(card.id);
   const editorial={
@@ -460,6 +520,19 @@ function tarotMixedPart(card,role,sc,i,enMode,reversed){
   if(id===50&&role==='outcome')return enMode
     ?'A calm conversation and genuine attention to feelings offer a steadier way forward than a reaction driven by intensity. What is felt can be heard without being denied or allowed to decide everything. The consistency of later actions will show which possibilities deserve to last.'
     :'Une parole calme et une attention réelle aux émotions offrent une issue plus solide qu’une réaction guidée par l’intensité du moment. Accueillir ce qui est ressenti sans le nier, puis vérifier la cohérence des actes, permet de choisir ce qui mérite d’être prolongé.';
+  const local=enMode?(card.en||{}):card;
+  const definition=String(local.definition||local.meaning||'');
+  const title=String(local.name||card.name||'');
+  const sentences=definition.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[];
+  const opening=tarotOpeners[Number(card.id)]?.[enMode?'en':'fr'];
+  if(opening){
+    const tail=sentences.slice(1).join(' ').trim();
+    return [opening,tail&&!tail.includes(title)?tail:''].filter(Boolean).join(' ');
+  }
+  if(sentences.length){
+    const clean=sentences.filter(sentence=>!sentence.includes(title)).join(' ').trim();
+    if(clean)return clean;
+  }
   let part=enMode?en(card,role,sc,i):distinctiveFr(card,role,sc)||preciseFr(card,role)||fr(card,role,sc,i);
   part=part.replace(/^(?:Au départ,?\s*|At first,?\s*)/i,'')
     .replace(/^Le récit (?:commence|s’ouvre) (?:sur|dans) /i,'')

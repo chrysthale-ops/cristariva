@@ -175,3 +175,24 @@ test('a mixed Tarot cross spread tells the reported story at length without posi
   assert.doesNotMatch(fragment.textContent,/Au départ|La difficulté actuelle|Un appui reste possible|Pour la suite/);
   assert.deepEqual(errors,[]);
 });
+
+test('every upright Tarot card keeps its own subject in a mixed reading without naming the card',()=>{
+  setDeck('tarot');
+  state.domain='Général / spirituel';
+  state.question='Comment avancer ?';
+  const reversed=w.TAROT_DATA.main.find(card=>card.id===48);
+  const closing=w.TAROT_DATA.main.find(card=>card.id===66);
+  state.tarotReversed=[true,false,true];
+  const fragment=w.document.createElement('div');
+  for(const card of w.TAROT_DATA.main){
+    state.draw=[reversed,card,closing];
+    for(const lang of ['fr','en']){
+      state.lang=lang;
+      fragment.innerHTML=w.CR_UNIVERSAL_FLUID_STORY(state.draw).match(/<p class="story-continuous">([\s\S]*?)<\/p>/)[1];
+      const prose=fragment.textContent;
+      assert.ok(prose.length>230,`${card.id} ${lang}`);
+      assert.ok(!prose.includes(lang==='en'?card.en.name:card.name),`${card.id} ${lang}: ${prose}`);
+      assert.doesNotMatch(prose,/Au départ|At the outset|Un appui reste possible|A useful point of support appears here/);
+    }
+  }
+});
