@@ -120,3 +120,19 @@ test('language preserves orientations and switching back to an oracle clears the
   assert.equal(w.document.querySelectorAll('#drawCards .tarot-reversed').length,0);
   assert.deepEqual(errors,[]);
 });
+
+test('final synthesis opens for a three-card draw with an upright middle card',()=>{
+  setDeck('tarot');
+  state.lang='fr';w.applyLanguage();
+  w.document.querySelector('#tarotAllowReversals').checked=true;
+  draw(3,()=>0);
+  state.tarotReversed=[true,false,true];
+  const synthesis=w.document.querySelector('#synthesis');
+  synthesis.classList.add('hidden');
+  synthesis.textContent='';
+  w.document.querySelector('#synthesisBtn').click();
+  assert.equal(synthesis.classList.contains('hidden'),false);
+  assert.ok(synthesis.textContent.toLowerCase().includes(w.CR_TAROT_REVERSED[state.draw[0].id].fr.toLowerCase()));
+  assert.ok(synthesis.textContent.toLowerCase().includes(w.CR_TAROT_REVERSED[state.draw[2].id].fr.toLowerCase()));
+  assert.deepEqual(errors,[]);
+});

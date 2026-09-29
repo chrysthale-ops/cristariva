@@ -1329,6 +1329,7 @@ function finalSemanticKey(c){
 function finalRoleSentence(c,role,en){
  if(c?.oracle==='tarot'&&state.tarotReversed?.[state.draw.indexOf(c)]===true&&window.crTarotReversedSentence)
   return window.crTarotReversedSentence(c,role,en);
+ const semanticRole=role==='evolution'?'movement':role;
  const k=finalSemanticKey(c),ctx=finalContext();
  const fr={
   origin:{
@@ -1355,8 +1356,8 @@ function finalRoleSentence(c,role,en){
   bond:{origin:'The bond remains present.',obstacle:'The bond alone is not enough to solve the underlying difficulty.',resource:'Reciprocal actions can strengthen the connection.',movement:'A gradual rapprochement can develop.',outcome:'The overall direction favours greater closeness or a clearer definition of the bond.'},
   neutral:{origin:'The situation is still taking shape.',obstacle:'One point remains too unclear.',resource:'A simpler and more concrete exchange can help.',movement:'The situation can evolve gradually.',outcome:'Concrete facts are still needed to confirm the direction.'}
  };
- if(en){const m=enMap[k]||enMap.neutral;return m[role]||enMap.neutral[role];}
- return (fr[role]&&fr[role][k])||fr[role].neutral;
+ if(en){const m=enMap[k]||enMap.neutral;return m[semanticRole]||enMap.neutral[semanticRole];}
+ return (fr[semanticRole]&&fr[semanticRole][k])||fr[semanticRole].neutral;
 }
 function finalRelationDetail(en){
  if(!state.relation)return '';
