@@ -153,10 +153,13 @@ test('a mixed Tarot cross spread tells the reported story at length without posi
   fragment.innerHTML=story.match(/<p class="story-continuous">([\s\S]*?)<\/p>/)[1];
   const prose=fragment.textContent;
   assert.ok(prose.split(/\s+/).length>=170,prose);
-  assert.ok(prose.indexOf('Une invitation a réveillé')<prose.indexOf('Cette incertitude'));
-  assert.ok(prose.indexOf('Cette incertitude')<prose.indexOf('L’envie de prendre'));
+  assert.ok(prose.indexOf('Une invitation séduit')<prose.indexOf('Plusieurs priorités'));
+  assert.ok(prose.indexOf('Plusieurs priorités')<prose.indexOf('L\'élan vers l\'inconnu'));
+  assert.ok(prose.indexOf('L\'élan vers l\'inconnu')<prose.indexOf('Un effort peut devenir visible'));
+  assert.ok(prose.indexOf('Un effort peut devenir visible')<prose.indexOf('La maîtrise des émotions'));
+  assert.match(prose,/Ce qui se ressent doit aussi trouver une place dans les contraintes concrètes/);
   assert.match(prose,/reconnaissance méritée/);
-  assert.match(prose,/attention réelle aux émotions/);
+  assert.match(prose,/Une parole calme peut accueillir/);
   assert.doesNotMatch(prose,/Au départ|La difficulté actuelle apparaît ici|Un appui reste possible|Pour la suite|Le changement se vérifiera/);
   for(const card of cards)assert.ok(!prose.includes(card.name),card.name);
 
@@ -164,7 +167,7 @@ test('a mixed Tarot cross spread tells the reported story at length without posi
   fragment.innerHTML=w.CR_UNIVERSAL_FLUID_STORY(cards).match(/<p class="story-continuous">([\s\S]*?)<\/p>/)[1];
   const english=fragment.textContent;
   assert.ok(english.split(/\s+/).length>=160,english);
-  assert.match(english,/lasting place|later actions/);
+  assert.match(english,/everyday demands|actions actually taken/);
   assert.doesNotMatch(english,/At the outset|The present difficulty is this|For what comes next|Au départ/);
 
   state.lang='fr';
@@ -173,6 +176,14 @@ test('a mixed Tarot cross spread tells the reported story at length without posi
   fragment.innerHTML=w.CR_UNIVERSAL_FLUID_STORY(state.draw).match(/<p class="story-continuous">([\s\S]*?)<\/p>/)[1];
   assert.ok(fragment.textContent.split(/\s+/).length>=135,fragment.textContent);
   assert.doesNotMatch(fragment.textContent,/Au départ|La difficulté actuelle|Un appui reste possible|Pour la suite/);
+  state.draw=[10,23,37,48,70].map(id=>w.TAROT_DATA.main.find(card=>card.id===id));
+  state.tarotReversed=[true,true,true,true,false];
+  fragment.innerHTML=w.CR_UNIVERSAL_FLUID_STORY(state.draw).match(/<p class="story-continuous">([\s\S]*?)<\/p>/)[1];
+  const varied=fragment.textContent;
+  assert.ok(varied.split(/\s+/).length>=145,varied);
+  assert.match(varied,/Une direction intérieure se précise au contact des gestes/);
+  assert.match(varied,/Ce qui se ressent doit aussi trouver une place/);
+  assert.equal((varied.match(/La solitude cesse d'éclairer/g)||[]).length,1);
   assert.deepEqual(errors,[]);
 });
 

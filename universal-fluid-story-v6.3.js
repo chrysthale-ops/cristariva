@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.12';
+const VERSION='6.13';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -488,38 +488,16 @@ const tarotOpeners=Object.fromEntries([
   [77,'Le soin du quotidien et le sens pratique peuvent rendre les ressources plus solides.','Daily care and practical judgment can make resources more secure.'],
   [78,'Une réussite matérielle fondée sur l’expérience demande une gestion responsable.','Material success grounded in experience calls for responsible stewardship.']
 ].map(([id,fr,en])=>[id,{fr,en}]));
-function tarotMixedPart(card,role,sc,i,enMode,reversed){
+function tarotMixedPart(card,role,sc,i,enMode){
   const id=Number(card.id);
-  const editorial={
-    origin:{48:{
-      fr:'Une invitation a réveillé l’envie d’y croire, mais elle n’est pas encore suivie des gestes qui lui donneraient une place durable. L’intérêt ressenti mérite d’être accueilli sans devenir une promesse que les faits n’ont pas confirmée.',
-      en:'An invitation has stirred the wish to believe in it, yet the actions that would give it a lasting place have not followed. That interest can be welcomed without turning it into a promise the facts have not confirmed.'
-    }},
-    obstacle:{66:{
-      fr:'Cette incertitude se mêle à des priorités qui se disputent le même temps et la même énergie. À vouloir leur répondre toutes à la fois, une possibilité attirante risque de rester suspendue ; alléger ce qui peut l’être permettrait de voir ce qui compte vraiment.',
-      en:'That uncertainty meets priorities competing for the same time and energy. Trying to answer all of them at once may leave an appealing possibility suspended; easing the load would reveal what actually matters.'
-    }},
-    resource:{1:{
-      fr:'L’envie de prendre une autre direction existe, mais elle devient un appui seulement si elle ne sert pas à fuir la pression précédente. Choisir un premier pas modeste redonne des repères à la liberté recherchée, sans exiger de trancher toute sa vie d’un seul geste.',
-      en:'The wish to take a different direction is real, but it becomes a resource only if it does not merely escape the earlier pressure. A modest first step gives that freedom a bearing without demanding that an entire life be decided at once.'
-    }}
-  };
-  const tailored=editorial[role]?.[id]?.[enMode?'en':'fr'];
-  if(reversed&&tailored)return tailored;
-  if(reversed){
-    const key=enMode?'en':'fr';
-    const meaning=window.CR_TAROT_REVERSED?.[card.id]?.[key]||'';
-    const note=window.CR_TAROT_REVERSED_NOTES?.[card.id]?.[key]||'';
-    return [meaning,note].filter(Boolean).join(' ');
-  }
-  /* L'évolution du Six de Bâtons est la reconnaissance d'un effort : ses
-     mots-clés ne doivent pas le transformer en simple quête de satisfaction. */
-  if(id===28&&role==='evolution')return enMode
-    ?'An effort may now become visible and receive recognition. That progress will mean more if it grows from a clear direction rather than from trying to prove oneself to everyone at once. Being noticed will not resolve the earlier imbalance on its own; the achievement matters when it remains consistent with the choices that made it possible.'
-    :'Un effort peut maintenant devenir visible et recevoir une reconnaissance méritée. Cette avancée aura davantage de portée si elle naît d’une direction choisie, plutôt que du besoin de prouver sa valeur à tout prix. Être remarqué ne résout pas à soi seul les déséquilibres précédents : le progrès prend son sens dans la cohérence des choix qui l’ont rendu possible.';
-  if(id===50&&role==='outcome')return enMode
-    ?'A calm conversation and genuine attention to feelings offer a steadier way forward than a reaction driven by intensity. What is felt can be heard without being denied or allowed to decide everything. The consistency of later actions will show which possibilities deserve to last.'
-    :'Une parole calme et une attention réelle aux émotions offrent une issue plus solide qu’une réaction guidée par l’intensité du moment. Accueillir ce qui est ressenti sans le nier, puis vérifier la cohérence des actes, permet de choisir ce qui mérite d’être prolongé.';
+  /* Ces deux arcanes ont un second énoncé de catalogue qui répète le premier.
+     Leur prolongement conserve le sens sans répéter sujet et verbe. */
+  if(id===28)return enMode
+    ?'An effort can become visible and receive recognition. The praise has value when it reflects work actually done, while leaving room to see what still needs care.'
+    :'Un effort peut devenir visible et recevoir une reconnaissance méritée. Celle-ci a d’autant plus de valeur qu’elle reflète un travail accompli, sans faire oublier ce qui demande encore de l’attention.';
+  if(id===50)return enMode
+    ?'Emotional steadiness makes it possible to stay present without denying what is felt. A calm conversation can then hold even intense feelings without letting them make every decision.'
+    :'La maîtrise des émotions permet de rester présent sans nier ce qui est ressenti. Une parole calme peut accueillir des sentiments intenses sans leur laisser décider seuls de la suite.';
   const local=enMode?(card.en||{}):card;
   const definition=String(local.definition||local.meaning||'');
   const title=String(local.name||card.name||'');
@@ -542,6 +520,87 @@ function tarotMixedPart(card,role,sc,i,enMode,reversed){
     .replace(/^The story (?:begins|opens) with /i,'');
   return part?part.charAt(0).toLocaleUpperCase(enMode?'en':'fr')+part.slice(1):'';
 }
+/* Les cartouches restent des sens autonomes. Le récit prend dans chaque carte
+   une tension et une piste de réponse, puis relie les positions entre elles. */
+function tarotMixedNarrative(cards,cardRoles,enMode,reversedAt,sc){
+  const key=enMode?'en':'fr';
+  const details=cards.map((card,i)=>{
+    if(!reversedAt(i))return {card,reversed:false,body:tarotMixedPart(card,cardRoles[i]||'evolution',sc,i,enMode)};
+    const meaning=window.CR_TAROT_REVERSED?.[card.id]?.[key]||'';
+    const note=window.CR_TAROT_REVERSED_NOTES?.[card.id]?.[key]||'';
+    const halves=meaning.split(/\s*;\s*/);
+    return {card,reversed:true,observation:halves[0],response:halves.slice(1).join('; '),note};
+  });
+  const full=d=>d.reversed?[d.observation,d.response].filter(Boolean).join(enMode?'; ':' ; ').replace(/\.?$/,'.'):d.body;
+  if(details.length===1){
+    const d=details[0];
+    return [full(d),d.reversed?d.note:''].filter(Boolean);
+  }
+  const out=[];
+  const first=details[0];
+  out.push(full(first));
+  if(first.reversed&&first.note&&Number(first.card.id)!==10)out.push(first.note);
+  for(let i=1;i<details.length;i++){
+    const d=details[i],role=cardRoles[i]||'evolution';
+    if(i===1||i===details.length-1||(role==='evolution'&&details.length>=5)){
+      const link=tarotPairLink(details[i-1].card,d.card,enMode);
+      if(link)out.push(link);
+    }
+    out.push(full(d));
+    if(d.reversed&&d.note&&(i<details.length-1||details.length>=5)&&Number(d.card.id)!==10)out.push(d.note);
+  }
+  return out;
+}
+function tarotPairLink(previous,current,enMode){
+  const family=card=>card.id<=22?'major':card.id<=36?'wands':card.id<=50?'cups':card.id<=64?'swords':'pentacles';
+  const a=family(previous),b=family(current);
+  if(a===b)return '';
+  const fr={
+    'cups:pentacles':'Ce qui se ressent doit aussi trouver une place dans les contraintes concrètes.',
+    'pentacles:cups':'Les contraintes concrètes finissent par peser sur ce qui peut être vécu et partagé.',
+    'major:wands':'Une direction intérieure se précise au contact des gestes réellement posés.',
+    'wands:major':'L’élan d’agir soulève une question qui dépasse le seul résultat immédiat.',
+    'wands:cups':'Une avancée visible ne dit pas encore comment les émotions pourront être accueillies.',
+    'cups:wands':'Ce qui touche demande maintenant à se traduire dans les actes.',
+    'swords:pentacles':'Une décision claire doit également tenir compte des moyens disponibles.',
+    'pentacles:swords':'Les faits du quotidien rendent plus urgente la mise au clair des choix.',
+    'swords:cups':'Une parole juste doit aussi laisser de la place à ce qui est ressenti.',
+    'cups:swords':'Ce qui est ressenti gagnerait à être nommé avec précision.',
+    'major:cups':'Cette question plus profonde rejoint aussi la manière de vivre les émotions.',
+    'cups:major':'L’émotion présente ouvre sur une question plus large de direction.',
+    'major:pentacles':'Une direction personnelle se mesure aussi à ce qu’elle permet dans le quotidien.',
+    'pentacles:major':'Les limites du quotidien invitent à revoir la direction prise.',
+    'wands:pentacles':'L’énergie du moment a besoin d’une place réelle dans le quotidien.',
+    'pentacles:wands':'Une base concrète peut donner une portée nouvelle à l’initiative.',
+    'major:swords':'Ce qui se joue en profondeur demande aussi des mots et des choix clairs.',
+    'swords:major':'La décision visible engage également une orientation plus personnelle.',
+    'wands:swords':'L’envie d’agir demande encore à être éclairée par les faits.',
+    'swords:wands':'Une pensée claire ne portera ses fruits que si elle trouve un geste juste.'
+  };
+  const en={
+    'cups:pentacles':'What is felt also needs a real place among everyday demands.',
+    'pentacles:cups':'Practical demands shape what can actually be felt and shared.',
+    'major:wands':'An inner direction becomes clearer through actions actually taken.',
+    'wands:major':'The urge to act raises a question larger than an immediate result.',
+    'wands:cups':'Visible progress does not yet say how feelings will be received.',
+    'cups:wands':'What matters emotionally now needs to find expression in action.',
+    'swords:pentacles':'A clear decision must also account for the resources available.',
+    'pentacles:swords':'Everyday facts make it more urgent to clarify the choice.',
+    'swords:cups':'Clear words must also make room for what is felt.',
+    'cups:swords':'What is felt would benefit from being named more precisely.',
+    'major:cups':'The deeper question also reaches into how feelings are lived.',
+    'cups:major':'The present feeling opens onto a larger question of direction.',
+    'major:pentacles':'A personal direction also needs to work in everyday life.',
+    'pentacles:major':'Everyday limits invite a closer look at the direction taken.',
+    'wands:pentacles':'The current energy needs a real place in daily life.',
+    'pentacles:wands':'A practical foundation can give new reach to an initiative.',
+    'major:swords':'What runs deeper also calls for clear words and choices.',
+    'swords:major':'The visible decision also carries a more personal direction.',
+    'wands:swords':'The wish to act still needs to be informed by facts.',
+    'swords:wands':'Clear thought bears fruit when it finds a fitting action.'
+  };
+  return (enMode?en:fr)[a+':'+b]||'';
+}
 function build(cards){
   if(!Array.isArray(cards)||!cards.length)return '';
   const chosen=cards.slice(0,12), r=roles(chosen.length), sc=scope(), enMode=state?.lang==='en';
@@ -551,7 +610,7 @@ function build(cards){
   const themes=chosen.map(c=>theme(c,enMode));
   const clarifyingCommitment=!hasReversal&&chosen.length===3&&sc==='relation'&&themes[0]==='triangle'&&themes[1]==='conflict'&&themes[2]==='commitment';
   const stuckThenClarity=!hasReversal&&chosen.length===3&&themes[0]==='tension'&&themes[1]==='tension'&&themes[2]==='insight';
-  const parts=hasReversal&&state?.oracle==='tarot'?chosen.map((c,i)=>tarotMixedPart(c,r[i]||'evolution',sc,i,enMode,reversedAt(i))).filter(Boolean):clarifyingCommitment?(enMode?[
+  const parts=hasReversal&&state?.oracle==='tarot'?tarotMixedNarrative(chosen,r,enMode,reversedAt,sc):clarifyingCommitment?(enMode?[
     'The situation begins with uncertainty about where each person stands. Several ties or competing wishes may be making it difficult to choose a clear direction.',
     'That uncertainty is now bringing tension into the open. An honest conversation could clarify what each person wants, even if it is uncomfortable.',
     'If the positions become clear, a more concrete commitment may become possible. Its strength will depend on shared decisions and lasting actions, not on promises alone.'
