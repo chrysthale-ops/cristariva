@@ -60,9 +60,12 @@ test('the tarot option is deck-specific and all 78 cards have distinct bilingual
   assert.equal(w.document.querySelector('#tarotReversalOption').hidden,false);
   const entries=w.CR_TAROT_REVERSED;
   assert.equal(Object.keys(entries).length,78);
+  assert.equal(Object.keys(w.CR_TAROT_REVERSED_NOTES).length,78);
   for(const card of w.TAROT_DATA.main){
     assert.ok(entries[card.id].fr.length>35,card.name);
     assert.ok(entries[card.id].en.length>35,card.en.name);
+    assert.ok(w.CR_TAROT_REVERSED_NOTES[card.id].fr.length>45,card.name);
+    assert.ok(w.CR_TAROT_REVERSED_NOTES[card.id].en.length>45,card.en.name);
   }
   assert.notEqual(entries[23].fr,entries[24].fr);
   assert.match(entries[44].fr,/départ nécessaire/);
@@ -134,5 +137,41 @@ test('final synthesis opens for a three-card draw with an upright middle card',(
   assert.equal(synthesis.classList.contains('hidden'),false);
   assert.ok(synthesis.textContent.toLowerCase().includes(w.CR_TAROT_REVERSED[state.draw[0].id].fr.toLowerCase()));
   assert.ok(synthesis.textContent.toLowerCase().includes(w.CR_TAROT_REVERSED[state.draw[2].id].fr.toLowerCase()));
+  assert.deepEqual(errors,[]);
+});
+
+test('a mixed Tarot cross spread tells the reported story at length without position formulas',()=>{
+  setDeck('tarot');
+  state.domain='Général / spirituel';
+  state.question='tarot inversé';
+  state.lang='fr';
+  const cards=[48,66,1,28,50].map(id=>w.TAROT_DATA.main.find(card=>card.id===id));
+  state.draw=cards;
+  state.tarotReversed=[true,true,true,false,false];
+  const story=w.CR_UNIVERSAL_FLUID_STORY(cards);
+  const fragment=w.document.createElement('div');
+  fragment.innerHTML=story.match(/<p class="story-continuous">([\s\S]*?)<\/p>/)[1];
+  const prose=fragment.textContent;
+  assert.ok(prose.split(/\s+/).length>=170,prose);
+  assert.ok(prose.indexOf('Une invitation a réveillé')<prose.indexOf('Cette incertitude'));
+  assert.ok(prose.indexOf('Cette incertitude')<prose.indexOf('L’envie de prendre'));
+  assert.match(prose,/reconnaissance méritée/);
+  assert.match(prose,/attention réelle aux émotions/);
+  assert.doesNotMatch(prose,/Au départ|La difficulté actuelle apparaît ici|Un appui reste possible|Pour la suite|Le changement se vérifiera/);
+  for(const card of cards)assert.ok(!prose.includes(card.name),card.name);
+
+  state.lang='en';
+  fragment.innerHTML=w.CR_UNIVERSAL_FLUID_STORY(cards).match(/<p class="story-continuous">([\s\S]*?)<\/p>/)[1];
+  const english=fragment.textContent;
+  assert.ok(english.split(/\s+/).length>=160,english);
+  assert.match(english,/lasting place|later actions/);
+  assert.doesNotMatch(english,/At the outset|The present difficulty is this|For what comes next|Au départ/);
+
+  state.lang='fr';
+  state.draw=[31,58,53,70,75].map(id=>w.TAROT_DATA.main.find(card=>card.id===id));
+  state.tarotReversed=[true,true,true,true,true];
+  fragment.innerHTML=w.CR_UNIVERSAL_FLUID_STORY(state.draw).match(/<p class="story-continuous">([\s\S]*?)<\/p>/)[1];
+  assert.ok(fragment.textContent.split(/\s+/).length>=135,fragment.textContent);
+  assert.doesNotMatch(fragment.textContent,/Au départ|La difficulté actuelle|Un appui reste possible|Pour la suite/);
   assert.deepEqual(errors,[]);
 });

@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.8';
+const VERSION='6.10';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -428,6 +428,44 @@ function en(card,role,sc,i){
   };
   return pick(bank?.[role]?.[t]||bank?.[role]?.neutral||[],card,i);
 }
+function tarotMixedPart(card,role,sc,i,enMode,reversed){
+  const id=Number(card.id);
+  const editorial={
+    origin:{48:{
+      fr:'Une invitation a réveillé l’envie d’y croire, mais elle n’est pas encore suivie des gestes qui lui donneraient une place durable. L’intérêt ressenti mérite d’être accueilli sans devenir une promesse que les faits n’ont pas confirmée.',
+      en:'An invitation has stirred the wish to believe in it, yet the actions that would give it a lasting place have not followed. That interest can be welcomed without turning it into a promise the facts have not confirmed.'
+    }},
+    obstacle:{66:{
+      fr:'Cette incertitude se mêle à des priorités qui se disputent le même temps et la même énergie. À vouloir leur répondre toutes à la fois, une possibilité attirante risque de rester suspendue ; alléger ce qui peut l’être permettrait de voir ce qui compte vraiment.',
+      en:'That uncertainty meets priorities competing for the same time and energy. Trying to answer all of them at once may leave an appealing possibility suspended; easing the load would reveal what actually matters.'
+    }},
+    resource:{1:{
+      fr:'L’envie de prendre une autre direction existe, mais elle devient un appui seulement si elle ne sert pas à fuir la pression précédente. Choisir un premier pas modeste redonne des repères à la liberté recherchée, sans exiger de trancher toute sa vie d’un seul geste.',
+      en:'The wish to take a different direction is real, but it becomes a resource only if it does not merely escape the earlier pressure. A modest first step gives that freedom a bearing without demanding that an entire life be decided at once.'
+    }}
+  };
+  const tailored=editorial[role]?.[id]?.[enMode?'en':'fr'];
+  if(reversed&&tailored)return tailored;
+  if(reversed){
+    const key=enMode?'en':'fr';
+    const meaning=window.CR_TAROT_REVERSED?.[card.id]?.[key]||'';
+    const note=window.CR_TAROT_REVERSED_NOTES?.[card.id]?.[key]||'';
+    return [meaning,note].filter(Boolean).join(' ');
+  }
+  /* L'évolution du Six de Bâtons est la reconnaissance d'un effort : ses
+     mots-clés ne doivent pas le transformer en simple quête de satisfaction. */
+  if(id===28&&role==='evolution')return enMode
+    ?'An effort may now become visible and receive recognition. That progress will mean more if it grows from a clear direction rather than from trying to prove oneself to everyone at once. Being noticed will not resolve the earlier imbalance on its own; the achievement matters when it remains consistent with the choices that made it possible.'
+    :'Un effort peut maintenant devenir visible et recevoir une reconnaissance méritée. Cette avancée aura davantage de portée si elle naît d’une direction choisie, plutôt que du besoin de prouver sa valeur à tout prix. Être remarqué ne résout pas à soi seul les déséquilibres précédents : le progrès prend son sens dans la cohérence des choix qui l’ont rendu possible.';
+  if(id===50&&role==='outcome')return enMode
+    ?'A calm conversation and genuine attention to feelings offer a steadier way forward than a reaction driven by intensity. What is felt can be heard without being denied or allowed to decide everything. The consistency of later actions will show which possibilities deserve to last.'
+    :'Une parole calme et une attention réelle aux émotions offrent une issue plus solide qu’une réaction guidée par l’intensité du moment. Accueillir ce qui est ressenti sans le nier, puis vérifier la cohérence des actes, permet de choisir ce qui mérite d’être prolongé.';
+  let part=enMode?en(card,role,sc,i):distinctiveFr(card,role,sc)||preciseFr(card,role)||fr(card,role,sc,i);
+  part=part.replace(/^(?:Au départ,?\s*|At first,?\s*)/i,'')
+    .replace(/^Le récit (?:commence|s’ouvre) (?:sur|dans) /i,'')
+    .replace(/^The story (?:begins|opens) with /i,'');
+  return part?part.charAt(0).toLocaleUpperCase(enMode?'en':'fr')+part.slice(1):'';
+}
 function build(cards){
   if(!Array.isArray(cards)||!cards.length)return '';
   const chosen=cards.slice(0,12), r=roles(chosen.length), sc=scope(), enMode=state?.lang==='en';
@@ -437,7 +475,7 @@ function build(cards){
   const themes=chosen.map(c=>theme(c,enMode));
   const clarifyingCommitment=!hasReversal&&chosen.length===3&&sc==='relation'&&themes[0]==='triangle'&&themes[1]==='conflict'&&themes[2]==='commitment';
   const stuckThenClarity=!hasReversal&&chosen.length===3&&themes[0]==='tension'&&themes[1]==='tension'&&themes[2]==='insight';
-  const parts=clarifyingCommitment?(enMode?[
+  const parts=hasReversal&&state?.oracle==='tarot'?chosen.map((c,i)=>tarotMixedPart(c,r[i]||'evolution',sc,i,enMode,reversedAt(i))).filter(Boolean):clarifyingCommitment?(enMode?[
     'The situation begins with uncertainty about where each person stands. Several ties or competing wishes may be making it difficult to choose a clear direction.',
     'That uncertainty is now bringing tension into the open. An honest conversation could clarify what each person wants, even if it is uncomfortable.',
     'If the positions become clear, a more concrete commitment may become possible. Its strength will depend on shared decisions and lasting actions, not on promises alone.'

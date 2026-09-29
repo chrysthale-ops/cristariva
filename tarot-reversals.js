@@ -85,16 +85,92 @@
   const meanings=Object.fromEntries(rows.map(([id,fr,en])=>[id,Object.freeze({fr,en})]));
   if(rows.length!==78||Object.keys(meanings).length!==78)throw new Error('78 sens renversés requis');
   window.CR_TAROT_REVERSED=Object.freeze(meanings);
+  /* Une seconde idée par arcane nourrit le récit sans répéter son cartouche. */
+  const narrativeRows=[
+    [1,"La liberté retrouve sa valeur lorsqu'un premier pas choisi remplace le désir de tout quitter d'un coup.","Freedom regains its value when a chosen first step replaces the urge to leave everything at once."],
+    [2,"Une capacité encore inutilisée peut devenir tangible dès qu'une seule intention reçoit l'attention nécessaire.","An unused ability can become tangible when one intention receives enough attention."],
+    [3,"Une parole prudente et vérifiable aiderait à distinguer une intuition juste d'une inquiétude entretenue par le silence.","A careful, verifiable conversation can separate genuine intuition from unease sustained by silence."],
+    [4,"Prendre sa propre fatigue au sérieux rend la générosité plus libre et moins dépendante d'une reconnaissance extérieure.","Taking one's own fatigue seriously makes generosity freer and less dependent on outside recognition."],
+    [5,"Un accord durable a plus de chances d'émerger si les personnes concernées peuvent modifier les règles ensemble.","A lasting agreement is more likely when those involved can adjust the rules together."],
+    [6,"Ce qui a été transmis reste utile comme repère, mais la décision actuelle doit répondre aux faits d'aujourd'hui.","What was passed down remains a guide, but today's decision must answer today's facts."],
+    [7,"La clarté ne viendra pas d'un signe supplémentaire si le vrai choix porte sur ce que l'on souhaite préserver.","Another sign will not bring clarity if the real choice concerns what one wants to preserve."],
+    [8,"Réduire les fronts ouverts permet de retrouver une direction sans gaspiller la volonté déjà disponible.","Reducing the number of open fronts helps recover direction without wasting the will already available."],
+    [9,"La nuance revient lorsque chacun peut être entendu sans que la première impression décide à sa place.","Nuance returns when each side can be heard without the first impression deciding the outcome."],
+    [10,"Une présence choisie peut éclairer davantage qu'un retrait prolongé, sans retirer le temps nécessaire à la réflexion.","Chosen company may bring more light than prolonged withdrawal while still leaving room to reflect."],
+    [11,"Attendre que le cycle se retourne seul prolongerait l'impression de subir; une décision limitée peut déjà modifier la suite.","Waiting for the cycle to turn by itself prolongs helplessness; even a limited decision can alter what follows."],
+    [12,"Il devient possible de tenir bon sans chercher à maîtriser chaque réaction ni chaque délai.","It becomes possible to persevere without trying to control every reaction or delay."],
+    [13,"Une perspective nouvelle ne prend corps que lorsque l'on cesse de demander à l'attente de décider à sa place.","A new perspective takes shape only when waiting is no longer asked to make the decision."],
+    [14,"Le passage peut rester douloureux tout en libérant l'énergie retenue dans une forme qui ne convient plus.","The passage may still hurt while releasing energy held in a form that no longer fits."],
+    [15,"Le rythme juste se cherche dans de petits échanges réciproques, plutôt que dans une correction brutale de l'excès.","A better rhythm grows through small reciprocal exchanges rather than a sudden correction of excess."],
+    [16,"Voir ce que cette habitude promet et ce qu'elle coûte permet de retrouver une véritable marge de décision.","Seeing both what the habit promises and what it costs restores real room to choose."],
+    [17,"Nommer la fissure ne provoque pas la rupture; cela donne une chance de savoir ce qui peut être réparé.","Naming the crack does not cause the break; it gives a chance to see what can be repaired."],
+    [18,"La confiance peut revenir par des preuves modestes et répétées, sans exiger une assurance immédiate.","Trust can return through modest, repeated evidence without demanding instant certainty."],
+    [19,"Une impression forte mérite d'être accueillie, puis mise à l'épreuve avant de devenir une conclusion.","A strong impression deserves attention, then a check against reality before becoming a conclusion."],
+    [20,"Recevoir ce qui va bien sans le comparer à une image idéale rend l'élan plus simple à partager.","Receiving what is going well without comparing it with an ideal picture makes joy easier to share."],
+    [21,"Le bilan n'a pas à condamner le passé; il peut montrer ce qui doit cesser pour répondre enfin à l'appel.","The review need not condemn the past; it can show what must end before the call can be answered."],
+    [22,"Finir avec soin ce qui reste ouvert évite de transporter la même incomplétude dans l'étape suivante.","Carefully finishing what remains open keeps the same unfinished business out of the next stage."],
+    [23,"Une idée moins spectaculaire mais réellement menée aurait plus de portée qu'une succession de nouveaux départs.","One modest idea carried through would matter more than a succession of fresh starts."],
+    [24,"Un choix plus étroit aujourd'hui peut ouvrir un horizon plus vaste demain, parce qu'il concentre enfin les moyens.","A narrower choice today may open a wider horizon tomorrow by finally focusing available resources."],
+    [25,"La lenteur n'annule pas l'effort; elle demande de regarder ce qui pousse réellement et ce qui manque encore.","Slow progress does not erase the effort; it calls for seeing what is growing and what is still missing."],
+    [26,"Reconnaître l'étape accomplie aide à voir ce qu'il faut protéger avant d'inviter les autres à y prendre place.","Acknowledging the step already achieved helps reveal what needs care before others can share it."],
+    [27,"L'énergie dépensée à répondre à chaque opposition serait plus utile au service d'un objectif commun.","Energy spent answering every challenge could serve a shared objective more effectively."],
+    [28,"L'estime gagnée de l'extérieur ne remplace pas la satisfaction de savoir pourquoi l'effort a été fourni.","Outside praise cannot replace the satisfaction of knowing why the effort was made."],
+    [29,"Toute résistance n'est pas une menace; préserver quelques limites essentielles rend le dialogue moins épuisant.","Not every disagreement is a threat; protecting a few essential boundaries makes dialogue less draining."],
+    [30,"Une information vérifiée et transmise au bon moment évite que la vitesse ne se substitue à la compréhension.","Verified information shared at the right time keeps speed from replacing understanding."],
+    [31,"Le repos et la vérification des faits peuvent rendre à la vigilance sa fonction protectrice.","Rest and a check of the facts can restore vigilance to its protective role."],
+    [32,"Renoncer à une part de la charge n'efface pas le chemin parcouru; cela le rend encore soutenable.","Releasing part of the burden does not erase the progress made; it makes further progress sustainable."],
+    [33,"La valeur de cette idée apparaîtra dans ce qui peut être essayé, corrigé et répété.","The value of this idea will show in what can be tried, adjusted, and repeated."],
+    [34,"Une énergie vive peut redevenir créative si elle accepte une direction et un temps de préparation.","Strong energy can become creative again when it accepts a direction and time to prepare."],
+    [35,"L'expression personnelle gagne en force lorsqu'elle ne cherche plus à mesurer chaque geste à celui des autres.","Personal expression grows stronger when it stops measuring every gesture against others."],
+    [36,"Une vision partagée peut durer plus longtemps qu'un projet tenu par la volonté d'une seule personne.","A shared vision can last longer than a project held up by one person's will alone."],
+    [37,"Accueillir une émotion sans devoir tout de suite l'expliquer lui laisse une place plus juste.","Allowing a feeling without immediately explaining it gives it a more honest place."],
+    [38,"La qualité du lien se révèle dans ce qui circule réellement des deux côtés, au-delà de l'attirance initiale.","The quality of the bond appears in what truly moves both ways beyond initial attraction."],
+    [39,"Une joie commune ne peut être portée durablement par une seule personne; le partage doit aussi se voir dans les actes.","Shared joy cannot be carried by one person indefinitely; mutual care must show in actions too."],
+    [40,"Une possibilité peut être examinée sans obligation de l'accepter, ce qui rend le regard moins défensif.","An opportunity can be considered without an obligation to accept it, making the outlook less defensive."],
+    [41,"La peine reconnue cesse peu à peu d'effacer les présences et les ressources qui demeurent.","Once acknowledged, grief gradually stops obscuring the people and resources that remain."],
+    [42,"Le souvenir devient fécond lorsqu'il éclaire un besoin présent au lieu de dicter une répétition.","Memory becomes useful when it illuminates a present need instead of demanding repetition."],
+    [43,"Une seule piste éprouvée dans le réel peut en dire davantage que beaucoup de scénarios séduisants.","One possibility tested in reality can reveal more than many appealing scenarios."],
+    [44,"Comprendre ce que l'on attend encore de l'ancien chemin rend un départ moins réactif et plus choisi.","Understanding what one still expects from the old path makes leaving less reactive and more deliberate."],
+    [45,"Les acquis peuvent être appréciés sans nier le désir d'autre chose; les deux sentiments méritent d'être distingués.","Achievements can be appreciated without denying the wish for something else; both feelings deserve distinction."],
+    [46,"Une image harmonieuse ne vaut que si chacun peut aussi exprimer ce qui lui manque vraiment.","A harmonious picture matters only if everyone can also voice what is truly missing."],
+    [47,"Une parole imparfaite mais sincère peut ouvrir davantage qu'un message sans cesse retenu pour être parfait.","An imperfect but sincere word may open more than a message endlessly withheld to make it perfect."],
+    [48,"L'intérêt suscité ne devient un repère fiable que lorsque l'invitation trouve une place dans la durée et dans les gestes.","The interest sparked becomes a reliable sign only when the invitation finds a place in lasting actions."],
+    [49,"Rester sensible à l'autre n'oblige pas à porter ce qu'il ou elle doit traverser par soi-même.","Being sensitive to another person does not require carrying what they must work through themselves."],
+    [50,"La mesure émotionnelle n'est pas le silence; une parole assumée peut préserver la stabilité sans se fermer.","Emotional balance is not silence; an honest word can preserve steadiness without closing off."],
+    [51,"Une décision prématurée risquerait de donner à une première information plus de poids qu'elle n'en mérite.","A rushed decision would give one early piece of information more weight than it deserves."],
+    [52,"Dire ce qui est réellement en jeu peut être inconfortable, mais évite que l'attente fasse le choix à la place de chacun.","Naming what is truly at stake may be uncomfortable, but keeps delay from choosing for everyone."],
+    [53,"La réparation ne se commande pas; elle commence quand la peine peut être reconnue sans devenir toute l'histoire.","Healing cannot be ordered into being; it begins when pain is acknowledged without becoming the whole story."],
+    [54,"Une vraie pause peut rendre à une décision la clarté qui manque lorsqu'on avance à bout de forces.","A real pause can return clarity to a decision made while running on empty."],
+    [55,"Quitter la logique de victoire permet de vérifier ce qui a réellement besoin d'être défendu.","Leaving the need to win makes it possible to see what truly needs defending."],
+    [56,"Chaque pas vérifiable réduit le pouvoir de l'ancienne crainte sans exiger qu'elle disparaisse d'un coup.","Each verifiable step weakens the old fear without demanding that it disappear at once."],
+    [57,"La simplicité d'un fait dit clairement vaut parfois mieux qu'une habileté qui finit par brouiller la confiance.","A plainly stated fact may do more than cleverness that eventually blurs trust."],
+    [58,"La liberté retrouvée peut sembler fragile; une décision modeste permet d'en éprouver la réalité.","Newly recovered freedom may feel fragile; a modest decision helps test whether it is real."],
+    [59,"Partager une inquiétude précise permet de la mesurer, là où le silence laisse les scénarios grandir.","Sharing a specific worry makes it measurable where silence lets imagined outcomes grow."],
+    [60,"La page peut se tourner sans minimiser la fatigue ni nier ce qui a été traversé.","A page can turn without minimizing exhaustion or denying what has been endured."],
+    [61,"Une attention lucide peut protéger sans transformer chaque indice en preuve contre quelqu'un.","Clear attention can protect without turning every clue into evidence against someone."],
+    [62,"Une parole plus lente a souvent davantage de portée qu'une réaction juste mais envoyée trop tôt.","A slower word often carries further than a fair reaction delivered too soon."],
+    [63,"La précision du jugement reste utile si elle laisse encore une possibilité d'échange.","Sharp judgment remains useful when it still leaves room for conversation."],
+    [64,"Écouter une objection solide peut enrichir la pensée sans lui retirer sa rigueur.","Listening to a sound objection can strengthen thought without weakening its rigor."],
+    [65,"Le potentiel deviendra plus lisible lorsqu'il rencontrera les moyens disponibles et une première action concrète.","The potential will become clearer once it meets available means and one practical action."],
+    [66,"Quand tout réclame la même énergie, même une proposition attirante peine à trouver une place réelle dans le quotidien.","When everything asks for the same energy, even an appealing offer struggles to find a real place in daily life."],
+    [67,"Une contribution reconnue et un rôle compréhensible peuvent ramener l'envie de construire ensemble.","A recognized contribution and a clear role can restore the wish to build together."],
+    [68,"Une sécurité plus souple laisse à chacun la possibilité d'agir sans se sentir surveillé.","A more flexible sense of security lets people act without feeling watched."],
+    [69,"Une aide précise peut changer la situation sans effacer la dignité ni l'autonomie de la personne qui la reçoit.","Specific help can change the situation without erasing the recipient's dignity or independence."],
+    [70,"Un échange libre retrouve sa valeur lorsque donner ne sert plus à obtenir silencieusement quelque chose en retour.","A free exchange regains its value when giving no longer silently demands something in return."],
+    [71,"Le temps déjà investi mérite un bilan honnête, capable de reconnaître les progrès et les limites.","Time already invested deserves an honest review of both progress and limits."],
+    [72,"Une méthode revue avec lucidité peut rendre au travail son utilité, sans demander un effort toujours plus grand.","A method revised with care can make work useful again without always demanding more effort."],
+    [73,"La compétence n'a rien à perdre à laisser entrer une autre présence ou un autre regard.","Competence loses nothing by welcoming another presence or perspective."],
+    [74,"Ce qui a été construit demande une attention vivante, pas seulement la certitude d'être acquis.","What has been built needs active care rather than the assumption that it is secure."],
+    [75,"Une petite réalisation vaut ici davantage qu'un projet parfaitement pensé mais jamais commencé.","One small accomplishment matters more here than a perfectly planned project never begun."],
+    [76,"La constance peut garder sa force tout en changeant de rythme ou de méthode.","Consistency can remain a strength while the pace or method changes."],
+    [77,"Prendre soin de ses propres ressources rend le soutien offert aux autres plus durable et plus libre.","Caring for one's own resources makes support for others more sustainable and freely given."],
+    [78,"Les acquis gardent leur sens lorsqu'ils peuvent soutenir aussi une confiance et une responsabilité partagées.","Achievements keep their meaning when they also support shared trust and responsibility."]
+  ];
+  if(narrativeRows.length!==78)throw new Error('78 prolongements narratifs requis');
+  window.CR_TAROT_REVERSED_NOTES=Object.freeze(Object.fromEntries(narrativeRows.map(([id,fr,en])=>[id,Object.freeze({fr,en})])));
   window.crTarotReversedSentence=function(card,role,en){
     const meaning=meanings[Number(card?.id)]?.[en?'en':'fr'];
     if(!meaning)return '';
-    const lead=(en?{
-      origin:'At the outset, ',obstacle:'The present difficulty is this: ',resource:'A useful point of support appears here: ',
-      evolution:'The situation is now shifting: ',movement:'The situation is now shifting: ',outcome:'For what comes next, '
-    }:{
-      origin:'Au départ, ',obstacle:'La difficulté actuelle apparaît ici : ',resource:'Un appui reste possible : ',
-      evolution:'La situation évolue ainsi : ',movement:'La situation évolue ainsi : ',outcome:'Pour la suite, '
-    })[role]||'';
-    return lead+meaning.charAt(0).toLocaleLowerCase(en?'en':'fr')+meaning.slice(1);
+    return meaning;
   };
 })();
