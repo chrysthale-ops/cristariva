@@ -195,4 +195,8 @@ test('every upright Tarot card keeps its own subject in a mixed reading without 
       assert.doesNotMatch(prose,/Au départ|At the outset|Un appui reste possible|A useful point of support appears here/);
     }
   }
+  state.lang='fr';
+  state.draw=[reversed,w.TAROT_DATA.main.find(card=>card.id===37),closing];
+  fragment.innerHTML=w.CR_UNIVERSAL_FLUID_STORY(state.draw).match(/<p class="story-continuous">([\s\S]*?)<\/p>/)[1];
+  assert.match(fragment.textContent,/Une émotion nouvelle cherche à circuler.*Cela peut signaler un sentiment/s);
 });

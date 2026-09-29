@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.11';
+const VERSION='6.12';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -526,7 +526,10 @@ function tarotMixedPart(card,role,sc,i,enMode,reversed){
   const sentences=definition.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[];
   const opening=tarotOpeners[Number(card.id)]?.[enMode?'en':'fr'];
   if(opening){
-    const tail=sentences.slice(1).join(' ').trim();
+    let tail=sentences.slice(1).join(' ').trim();
+    const court=/^(?:Valet|Cavalier|Reine|Roi|Page|Knight|Queen|King)\b/.test(card.name)||/^(?:Page|Knight|Queen|King)\b/.test(card.en?.name||'');
+    if(enMode)tail=tail.replace(/^(?:It|He|She)\s+/i,court?'This approach ':'This development ');
+    else if(!/^Il peut être nécessaire\b/.test(tail))tail=tail.replace(/^(?:Il|Elle)\s+/i,court?'Cette attitude ':'Cela ');
     return [opening,tail&&!tail.includes(title)?tail:''].filter(Boolean).join(' ');
   }
   if(sentences.length){
