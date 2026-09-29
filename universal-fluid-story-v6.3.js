@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.13';
+const VERSION='6.14';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -512,7 +512,11 @@ function tarotMixedPart(card,role,sc,i,enMode){
   }
   if(sentences.length){
     const clean=sentences.filter(sentence=>!sentence.includes(title)).join(' ').trim();
-    if(clean)return clean;
+    if(clean){
+      const spiritual=String(local.reading_spirituel||'').trim();
+      if(id<=22&&spiritual&&!spiritual.includes(title)&&norm(spiritual)!==norm(clean))return clean+' '+spiritual;
+      return clean;
+    }
   }
   let part=enMode?en(card,role,sc,i):distinctiveFr(card,role,sc)||preciseFr(card,role)||fr(card,role,sc,i);
   part=part.replace(/^(?:Au départ,?\s*|At first,?\s*)/i,'')
@@ -547,9 +551,33 @@ function tarotMixedNarrative(cards,cardRoles,enMode,reversedAt,sc){
       if(link)out.push(link);
     }
     out.push(full(d));
+    if(role==='obstacle'&&!d.reversed){
+      const nuance=tarotUprightObstacle(d.card,enMode);
+      if(nuance)out.push(nuance);
+    }
     if(d.reversed&&d.note&&(i<details.length-1||details.length>=5)&&Number(d.card.id)!==10)out.push(d.note);
   }
   return out;
+}
+function tarotUprightObstacle(card,enMode){
+  const t=theme(card,enMode);
+  if(['tension','ambiguity','conflict','heartbreak','loss'].includes(t))return '';
+  const id=Number(card.id);
+  if(id>=65)return enMode
+    ?'Protecting what already works can also leave too little room to try another way forward.'
+    :'Préserver ce qui fonctionne déjà peut aussi laisser trop peu de place à une autre manière d’avancer.';
+  if(id>=51)return enMode
+    ?'Even a useful analysis can stall a choice if it hardens before the facts have been tested.'
+    :'Même une analyse utile peut retenir le choix si elle se fige avant que les faits aient été éprouvés.';
+  if(id>=37)return enMode
+    ?'A genuine feeling still needs room for the other person’s response rather than deciding the direction alone.'
+    :'Un sentiment réel a encore besoin de laisser place à la réponse de l’autre, au lieu de décider seul de la direction.';
+  if(id>=23)return enMode
+    ?'An encouraging impulse can still scatter the effort if it has no clear direction.'
+    :'Un élan encourageant peut néanmoins disperser les efforts s’il ne trouve pas de direction claire.';
+  return enMode
+    ?'Even this strength may become restrictive if there is no room left for change.'
+    :'Même cette force peut devenir une limite si elle ne laisse plus de place au changement.';
 }
 function tarotPairLink(previous,current,enMode){
   const family=card=>card.id<=22?'major':card.id<=36?'wands':card.id<=50?'cups':card.id<=64?'swords':'pentacles';

@@ -184,6 +184,13 @@ test('a mixed Tarot cross spread tells the reported story at length without posi
   assert.match(varied,/Une direction intérieure se précise au contact des gestes/);
   assert.match(varied,/Ce qui se ressent doit aussi trouver une place/);
   assert.equal((varied.match(/La solitude cesse d'éclairer/g)||[]).length,1);
+  state.draw=[2,73,34,69,18].map(id=>w.TAROT_DATA.main.find(card=>card.id===id));
+  state.tarotReversed=[false,false,true,true,false];
+  fragment.innerHTML=w.CR_UNIVERSAL_FLUID_STORY(state.draw).match(/<p class="story-continuous">([\s\S]*?)<\/p>/)[1];
+  const another=fragment.textContent;
+  assert.match(another,/Préserver ce qui fonctionne déjà peut aussi laisser trop peu de place/);
+  assert.match(another,/Vous retrouvez une confiance plus paisible/);
+  assert.ok(another.split(/\s+/).length>=160,another);
   assert.deepEqual(errors,[]);
 });
 
