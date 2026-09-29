@@ -171,6 +171,26 @@ html{scroll-padding-top:130px}
 .tarot-reversal-option small{display:block;margin:5px 0 0 30px;color:#59616d}
 #drawCards .card.tarot-reversed .art img{transform:rotate(180deg)}
 #drawCards .card.tarot-reversed .num,#drawCards .card.tarot-reversed h3{color:#f1d6a2}
+/* Le Sept de Deniers a une marge basse intégrée au PNG : la masquer sans rogner la carte. */
+#tarotCatalogGrid .catalog-image img[src*="sept_de_deniers_au_coucher_du_soleil.png"],
+#drawCards .art img[src*="sept_de_deniers_au_coucher_du_soleil.png"]{
+  height:102.4%;
+  object-fit:fill;
+  object-position:top;
+}
+#drawCards .art img[src*="sept_de_deniers_au_coucher_du_soleil.png"]{
+  position:absolute;
+  top:0;
+  left:0;
+}
+#drawCards .card.tarot-reversed .art img[src*="sept_de_deniers_au_coucher_du_soleil.png"]{
+  top:-2.4%;
+}
+.card-detail-image[src*="sept_de_deniers_au_coucher_du_soleil.png"]{
+  transform:scaleY(1.024);
+  transform-origin:top;
+  clip-path:inset(0 0 2.3% 0);
+}
 @media(max-width:800px){
   #drawCards.single-card-draw{grid-template-columns:minmax(0,min(280px,82vw));}
   #drawCards.single-card-draw>.card{max-width:min(280px,82vw);}
@@ -1523,7 +1543,7 @@ navigator.serviceWorker.addEventListener('message',event=>{
  if(event.data&&event.data.type==='CRISTARIVA_UPDATED')cristarivaRefreshOnce();
 });
 const cristarivaCheckUpdate=()=>navigator.serviceWorker.register(
- './service-worker.js?v=20260929-tarot-narrative-r7',
+ './service-worker.js?v=20260929-sept-deniers-frame',
  {scope:'./',updateViaCache:'none'}
 ).then(reg=>{
  if(reg.waiting)reg.waiting.postMessage('SKIP_WAITING');
