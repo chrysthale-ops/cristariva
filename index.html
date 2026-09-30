@@ -1543,7 +1543,7 @@ navigator.serviceWorker.addEventListener('message',event=>{
  if(event.data&&event.data.type==='CRISTARIVA_UPDATED')cristarivaRefreshOnce();
 });
 const cristarivaCheckUpdate=()=>navigator.serviceWorker.register(
- './service-worker.js?v=20260930-oracle-harmony-61',
+ './service-worker.js?v=20260930-memory-restored-r1',
  {scope:'./',updateViaCache:'none'}
 ).then(reg=>{
  if(reg.waiting)reg.waiting.postMessage('SKIP_WAITING');
