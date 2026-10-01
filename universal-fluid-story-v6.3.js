@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.15';
+const VERSION='6.16';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -631,48 +631,70 @@ function tarotPairLink(previous,current,enMode){
   };
   return (enMode?en:fr)[a+':'+b]||'';
 }
+/* Keep the selected domain's actual meaning; never infer it from polarity or
+   incidental keywords. Removing a title must preserve a grammatical subject. */
+function groundedText(raw,card,enMode){
+  let text=String(raw||'').trim();
+  const title=enMode?(card.en?.name||card.name):card.name;
+  const quote=s=>String(s).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  text=text.replace(/^(?:Sur le plan [^,]+|Dans le cadre [^,]+|Dans une relation|Dans le travail),?\s*/i,'');
+  if(title)text=text.replace(new RegExp('(^|[.!?]\\s+)(?:«\\s*)?'+quote(title)+'(?:\\s*»)?(?=\\s|[,;:])','gi'),'$1Cette lecture');
+  text=text.replace(/(^|[.!?]\s+)(?:cette carte|la carte|cette lecture|elle)\s+(?:vous\s+)?/gi,'$1@ ');
+  const replacements=[
+    [/^@ (?:invite à|demande de|encourage à) /i,'Vous pouvez '],
+    [/^@ (?:rappelle|montre|indique|signale|enseigne) qu[’']/i,''],
+    [/^@ (?:rappelle|montre|indique|signale|enseigne) que /i,''],
+    [/^@ (?:parle de|évoque|représente|signale|indique|marque|met en lumière|annonce|désigne|symbolise|décrit|exprime) /i,'Il est question de '],
+    [/^@ peut marquer /i,'Vous pouvez traverser '],
+    [/^@ aide à /i,'Vous pouvez '],
+    [/^@ oblige à /i,'Il devient nécessaire de '],
+    [/^@ parle d[’']/i,'Il est question d’'],
+    [/^@ demande d[’']/i,'Il est nécessaire d’'],
+    [/^@ /i,'Cette expérience ']
+  ];
+  return (text.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[]).map(sentence=>{
+    let s=sentence.trim().replace(/^(?:Au départ|Aujourd’hui|À partir de là|Pour la suite|At first|Initially),?\s*/i,'');
+    s=s.replace(/^(?=(?:Indique|Désigne|Annonce|Représente|Signale|Évoque|Symbolise|Met|Parle|Montre|Place|Décrit|Exprime|Rappelle|Favorise|Ouvre|Fait|Invite|Avertit|Confirme)\b)/,'@ ');
+    for(const [pattern,replacement] of replacements)s=s.replace(pattern,replacement);
+    s=s.replace(/;\s*(?:la carte|elle) invite à /gi,' ; vous pouvez ');
+    s=s.replace(/Il est question de ([aeiouéèêàâîôù])/gi,'Il est question d’$1').replace(/Il est question de le /gi,'Il est question du ').replace(/Il est question de les /gi,'Il est question des ').replace(/Vous pouvez se /g,'Il est possible de se ').replace(/, et que /g,', et ').replace(/Cette expérience est celle de /g,'Il est question de ');
+    return s?s.charAt(0).toLocaleUpperCase()+s.slice(1):'';
+  }).join(' ');
+}
+function groundedPart(card,enMode){
+  const local=enMode?(card.en||{}):card;
+  const d=norm(state.domain);
+  const field=/profession|projet|work|career/.test(d)?'reading_professionnel':/general|spirit/.test(d)?'reading_spirituel':'reading_relationnel';
+  const precise={
+    Vision:'Votre intuition vous aide à envisager une direction et à replacer les événements dans une perspective plus large.',
+    Lune:'L’écoute de votre monde intérieur prend une place particulière : vos émotions, vos rêves ou certaines coïncidences peuvent éclairer progressivement ce qui vous échappait. Prenez le temps d’observer ce que vous ressentez avant d’agir.',
+    Bonheur:'Une harmonie intérieure peut se nourrir de gratitude et d’une attention à ce qui vous fait déjà du bien. Vous pouvez accueillir ces moments heureux sans attendre que tout soit parfait.'
+  };
+  if(!enMode&&state.oracle==='cristariva'&&field==='reading_spirituel'&&precise[card.name])return precise[card.name];
+  const raw=local[field]||local.meaning||local.definition||'';
+  return groundedText(raw,card,enMode);
+}
 function build(cards){
   if(!Array.isArray(cards)||!cards.length)return '';
-  const chosen=cards.slice(0,12), r=roles(chosen.length), sc=scope(), enMode=state?.lang==='en';
-  const reversedAt=i=>state?.oracle==='tarot'&&state?.draw?.[i]===chosen[i]&&state?.tarotReversed?.[i]===true;
-  const hasReversal=chosen.some((_,i)=>reversedAt(i));
-  const q=String(state?.question||'').replace(/\s+/g,' ').trim();
-  const themes=chosen.map(c=>theme(c,enMode));
-  const clarifyingCommitment=!hasReversal&&chosen.length===3&&sc==='relation'&&themes[0]==='triangle'&&themes[1]==='conflict'&&themes[2]==='commitment';
-  const stuckThenClarity=!hasReversal&&chosen.length===3&&themes[0]==='tension'&&themes[1]==='tension'&&themes[2]==='insight';
-  const parts=hasReversal&&state?.oracle==='tarot'?tarotMixedNarrative(chosen,r,enMode,reversedAt,sc):clarifyingCommitment?(enMode?[
-    'The situation begins with uncertainty about where each person stands. Several ties or competing wishes may be making it difficult to choose a clear direction.',
-    'That uncertainty is now bringing tension into the open. An honest conversation could clarify what each person wants, even if it is uncomfortable.',
-    'If the positions become clear, a more concrete commitment may become possible. Its strength will depend on shared decisions and lasting actions, not on promises alone.'
-  ]:[
-    'La situation semble d’abord marquée par une ambiguïté sentimentale : plusieurs liens, plusieurs directions ou des sentiments contradictoires rendent difficile de savoir quelle place chacun souhaite prendre.',
-    'Cette incertitude arrive maintenant à un point de tension. Des désaccords peuvent éclater, mais leur expression peut aussi permettre de clarifier les attentes et de sortir du non-dit.',
-    'Une fois les positions établies, la possibilité d’un engagement plus concret apparaît. Sa solidité dépendra de choix partagés et d’actes durables, au-delà des seules promesses.'
-  ]):stuckThenClarity?(enMode?[
-    'The earlier difficulty suggests that the route taken has stopped offering a workable answer. The present situation brings the mismatch into focus: continuing to force it could require giving up something essential.',
-    'The next step is to put the difficulty into clear words, distinguish what can be discussed from what cannot be compromised, and see whether a different way forward is possible. The cards point to a conversation and a choice, rather than a guaranteed outcome.'
-  ]:[
-    'Une difficulté ancienne semble avoir épuisé la voie suivie jusqu’ici. Ce qui coince aujourd’hui n’est peut-être pas un simple manque d’efforts : certaines attentes ou façons d’avancer ne s’accordent plus, et insister risque de demander trop de renoncements.',
-    'La suite invite à nommer clairement le désaccord, à distinguer ce qui peut se négocier de ce qui compte vraiment pour vous, puis à regarder si une autre voie est possible. Le tirage suggère une mise au clair et un choix, sans promettre une issue précise.'
-  ]):chosen.map((c,i)=>{
-    const role=r[i]||'evolution';
-    if(reversedAt(i)&&window.crTarotReversedSentence)return window.crTarotReversedSentence(c,role,enMode);
-    if(enMode)return en(c,role,sc,i);
-    const part=distinctiveFr(c,role,sc)||preciseFr(c,role)||fr(c,role,sc,i);
-    const detail=developFr(c,role);
-    return detail&&part.split(/\s+/).length<(chosen.length===1?50:27)?part+' '+detail:part;
+  const enMode=state.lang==='en', chosen=cards.slice(0,12), r=roles(chosen.length);
+  const reversedAt=i=>state.oracle==='tarot'&&state.draw?.[i]===chosen[i]&&state.tarotReversed?.[i]===true;
+  const parts=chosen.map((card,i)=>{
+    if(reversedAt(i))return groundedText(window.CR_TAROT_REVERSED?.[card.id]?.[enMode?'en':'fr']||'',card,enMode);
+    if(state.oracle==='tarot')return groundedText(tarotMixedPart(card,r[i],scope(),i,enMode),card,enMode);
+    return groundedPart(card,enMode);
   }).filter(Boolean);
-  if(!enMode&&chosen.length>=5&&!hasReversal&&!clarifyingCommitment&&!stuckThenClarity){
-    const context=contextFr(q,sc,chosen);
-    if(context)parts.splice(3,0,context);
+  // Position affects the reading, but must not invent a reversed meaning for
+  // an upright positive card or add a causal link absent from the source.
+  if(chosen.length===5&&parts.length===5){
+    parts[1]=(enMode?'The difficulty to examine concerns this aspect: ':'La difficulté à examiner concerne cet aspect : ')+parts[1].charAt(0).toLocaleLowerCase()+parts[1].slice(1);
+    parts[2]=(enMode?'You can draw support from this possibility: ':'Vous pouvez trouver un appui dans cette possibilité : ')+parts[2].charAt(0).toLocaleLowerCase()+parts[2].slice(1);
   }
-  const lead=!enMode&&!hasReversal?questionLead(q,sc):'';
-  if(lead&&parts.length){
-    const first=parts[0].replace(/^Au départ, /,'');
-    parts[0]=lead+(first===parts[0]?'':'il faut d’abord reconnaître que ')+first.charAt(0).toLowerCase()+first.slice(1);
-  }
+  const seen=new Set();
+  const narrative=parts.join(' ').match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[];
+  const body=narrative.filter(s=>{const key=norm(s).trim();if(seen.has(key))return false;seen.add(key);return true;}).join(' ').replace(/\s+/g,' ').trim();
+  const q=String(state.question||'').trim();
   const question=q?`<p class="reading-question">${enMode?'Your question':'Votre question'} : « ${esc(q)} »</p>`:'';
-  return `<div class="story-reading" data-story-engine="universal-fluid-${VERSION}"><h3>${enMode?'The story told by your cards':'L’histoire racontée par vos cartes'}</h3>${question}<p class="story-continuous">${esc(parts.join(' ').replace(/\s+/g,' ').trim())}</p></div>`;
+  return `<div class="story-reading" data-story-engine="universal-fluid-${VERSION}"><h3>${enMode?'The story told by your cards':'L’histoire racontée par vos cartes'}</h3>${question}<p class="story-continuous">${esc(body)}</p></div>`;
 }
 
 storyInterpretation=build;
@@ -696,3 +718,4 @@ try{refresh();}catch(e){}
 window.addEventListener('pageshow',refresh);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refresh();});
 })();
+

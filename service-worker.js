@@ -1,8 +1,8 @@
 /* CRISTARIVA — service worker v30 — récit professionnel développé.
    Force 22 arcanes majeurs + 56 arcanes mineurs HD sur PC et Android
    et recharge la planche validée complète des arcanes mineurs. */
-const CACHE_NAME='cristariva-v61-20261001-oracle-harmony-r2';
-const APP_VERSION='2026.10.01-oracle-harmony-r2';
+const CACHE_NAME='cristariva-v62-20261001-grounded-story';
+const APP_VERSION='2026.10.01-grounded-story';
 const SHELL=[
   './',
   './index.html',
@@ -12,7 +12,7 @@ const SHELL=[
   './icon-512.png',
   './story-fluid-v5.1.js?v=5.30',
   './tarot-reversals.js?v=20260929-r2',
-  './universal-fluid-story-v6.3.js?v=6.15-reversals',
+  './universal-fluid-story-v6.3.js?v=6.16-grounded',
   './question-context-story-v5.2.js?v=5.2.2',
   './question-intent-story-v5.3.js?v=5.6',
   './question-project-story-v5.5.js?v=5.21',
@@ -116,3 +116,4 @@ self.addEventListener('fetch',event=>{
 
   event.respondWith(networkFirst(request));
 });
+
