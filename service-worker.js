@@ -1,8 +1,8 @@
 /* CRISTARIVA — service worker v30 — récit professionnel développé.
    Force 22 arcanes majeurs + 56 arcanes mineurs HD sur PC et Android
    et recharge la planche validée complète des arcanes mineurs. */
-const CACHE_NAME='cristariva-v65-20261001-bonheur-r1';
-const APP_VERSION='2026.10.01-bonheur-r1';
+const CACHE_NAME='cristariva-v66-20261001-card-refresh-r1';
+const APP_VERSION='2026.10.01-card-refresh-r1';
 const SHELL=[
   './',
   './index.html',
@@ -105,6 +105,11 @@ self.addEventListener('fetch',event=>{
   }
 
   if(url.pathname.includes('/cards/tarot/cartes%20mineures%20HD/') || url.pathname.includes('/cards/tarot/cartes mineures HD/')){
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
+  if(url.pathname.includes('/cards/')){
     event.respondWith(networkFirst(request));
     return;
   }
