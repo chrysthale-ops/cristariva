@@ -22,7 +22,7 @@ GOLD = (218, 184, 78)
 def scaled_crop(im):
     im = im.convert("RGB").resize((W, H), Image.Resampling.LANCZOS)
     # Le cadre généré des nouvelles images doit disparaître totalement.
-    sx, sy = 1.17, 1.16
+    sx, sy = 1.17, 1.20
     nw, nh = round(W * sx), round(H * sy)
     big = im.resize((nw, nh), Image.Resampling.LANCZOS)
     left = (nw - W) // 2
@@ -56,7 +56,7 @@ def add_title_band(result, template):
     od = ImageDraw.Draw(overlay)
     # Presque opaque : masque complètement l'ancien cartouche/titre de l'image
     # recréée, tout en gardant une très légère profondeur visuelle.
-    od.rectangle((0, 1292, W, 1495), fill=(4, 11, 16, 238))
+    od.rectangle((0, 1292, W, H), fill=(4, 11, 16, 242))
     rgba = Image.alpha_composite(rgba, overlay)
 
     mask = extract_title_mask(template)
