@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.21';
+const VERSION='6.22';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -649,7 +649,11 @@ function groundedText(raw,card,enMode){
     [/^@ confirme que /i,''],
     [/^@ confirme /i,'Les faits confirment '],
     [/^@ (?:annonce|signale|indique|décrit|évoque|représente|désigne|symbolise|exprime|marque)(?: ou (?:annonce|signale|indique|décrit|évoque|représente|désigne|symbolise|exprime|marque))? /i,'Cela révèle '],
-    [/^@ (?:parle de|met en lumière) /i,'Cela révèle '],
+    [/^@ parle de (?=(?:un|une|le|la|les|des)\b|l[’'])/i,'Cela révèle '],
+    [/^@ parle d[’'](?=(?:un|une|le|la|les|des)\b|l[’'])/i,'Cela révèle '],
+    [/^@ parle de /i,'Cela fait état de '],
+    [/^@ parle d[’']/i,'Cela fait état d’'],
+    [/^@ met en lumière /i,'Cela révèle '],
     [/^@ peut marquer /i,'Vous pouvez traverser '],
     [/^@ aide à /i,'Vous pouvez '],
     [/^@ oblige à /i,'Il devient nécessaire de '],
