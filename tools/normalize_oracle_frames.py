@@ -47,8 +47,12 @@ def draw_master_frame(result, number, title):
     overlay = Image.new("RGBA", (W, H), (0,0,0,0))
     od = ImageDraw.Draw(overlay)
 
-    # Cartouche sombre calé sur le modèle Émotions.
-    od.rectangle((0, 1305, W, 1501), fill=(4, 11, 16, 184))
+    # Cartouche sombre calé sur le modèle Émotions. Il s'assombrit vers
+    # le bas afin de masquer totalement le titre intégré à l'image source.
+    for y in range(1305, H):
+        t = (y - 1305) / max(1, H - 1305 - 1)
+        alpha = round(184 + (255 - 184) * t)
+        od.line((0, y, W, y), fill=(4, 11, 16, alpha), width=1)
     rgba = Image.alpha_composite(rgba, overlay)
     d = ImageDraw.Draw(rgba)
 
