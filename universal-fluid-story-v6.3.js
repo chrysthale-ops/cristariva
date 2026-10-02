@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.18';
+const VERSION='6.19';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -641,10 +641,12 @@ function groundedText(raw,card,enMode){
   if(title)text=text.replace(new RegExp('(^|[.!?]\\s+)(?:«\\s*)?'+quote(title)+'(?:\\s*»)?(?=\\s|[,;:])','gi'),'$1Cette lecture');
   text=text.replace(/(^|[.!?]\s+)(?:cette carte|la carte|cette lecture|elle)\s+(?:vous\s+)?/gi,'$1@ ');
   const replacements=[
+    [/^@ demande de ne pas /i,'Il convient de ne pas '],
     [/^@ (?:invite à|demande de|encourage à) /i,'Vous pouvez '],
     [/^@ (?:rappelle|montre|indique|signale|enseigne) qu[’']/i,''],
     [/^@ (?:rappelle|montre|indique|signale|enseigne) que /i,''],
-    [/^@ (?:parle de|évoque|représente|signale|indique|marque|met en lumière|annonce|désigne|symbolise|décrit|exprime) /i,'Il est question de '],
+    [/^@ (?:annonce|signale|indique|décrit|évoque|représente|désigne|symbolise|exprime|marque)(?: ou (?:annonce|signale|indique|décrit|évoque|représente|désigne|symbolise|exprime|marque))? /i,'Il est question de '],
+    [/^@ (?:parle de|met en lumière) /i,'Il est question de '],
     [/^@ peut marquer /i,'Vous pouvez traverser '],
     [/^@ aide à /i,'Vous pouvez '],
     [/^@ oblige à /i,'Il devient nécessaire de '],
@@ -709,8 +711,8 @@ function build(cards){
   if(chosen.length===5&&parts.length===5){
     const lower=s=>s?s.charAt(0).toLocaleLowerCase()+s.slice(1):s;
     parts[1]=(enMode?'However, ':'Cependant, ')+lower(parts[1]);
-    parts[2]=(enMode?'A useful point of support also emerges: ':'Un point d’appui se dégage néanmoins : ')+lower(parts[2]);
-    parts[3]=(enMode?'The situation then continues to unfold: ':'La suite se précise alors : ')+lower(parts[3]);
+    parts[2]=(enMode?'A determining element nevertheless emerges: ':'Un élément déterminant apparaît néanmoins : ')+lower(parts[2]);
+    parts[3]=(enMode?'The situation then evolves: ':'La situation évolue ensuite : ')+lower(parts[3]);
     parts[4]=(enMode?'Finally, ':'Enfin, ')+lower(parts[4]);
   }
   const seen=new Set();
