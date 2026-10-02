@@ -662,6 +662,7 @@ function groundedText(raw,card,enMode){
     s=s.replace(/^(?=(?:Indique|Désigne|Annonce|Représente|Signale|Évoque|Symbolise|Met|Parle|Montre|Place|Décrit|Exprime|Rappelle|Favorise|Ouvre|Fait|Invite|Avertit|Confirme)\b)/,'@ ');
     for(const [pattern,replacement] of replacements)s=s.replace(pattern,replacement);
     s=s.replace(/;\s*(?:la carte|elle) invite à /gi,' ; vous pouvez ');
+    s=s.replace(/^Cela (Favorise|Ouvre|Fait|Place|Montre|Rappelle|Invite|Avertit)\b/,(m,v)=>'Cela '+v.charAt(0).toLocaleLowerCase()+v.slice(1));
     s=s.replace(/Il est question de ([aeiouéèêàâîôù])/gi,'Il est question d’$1').replace(/Il est question de le /gi,'Il est question du ').replace(/Il est question de les /gi,'Il est question des ').replace(/Vous pouvez se /g,'Il est possible de se ').replace(/, et que /g,', et ');
     return s?s.charAt(0).toLocaleUpperCase()+s.slice(1):'';
   }).join(' ');
