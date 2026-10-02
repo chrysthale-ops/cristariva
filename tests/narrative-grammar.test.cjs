@@ -123,6 +123,22 @@ test('reported relation spread avoids repeated generic experience wording',()=>{
   assert.doesNotMatch(text,/La difficulté à examiner concerne cet aspect|Vous pouvez trouver un appui dans cette possibilité/i);
   for(const term of ['réfléchit','tensions','attente','souvenir','chaleur'])assert.match(text,new RegExp(term,'i'));
   assert.match(text,/Cependant,/);
-  assert.match(text,/Un point d’appui se dégage néanmoins/);
+  assert.match(text,/Un élément déterminant apparaît néanmoins/);
   assert.match(text,/Enfin, la synthèse/i);
+});
+
+
+test('reported Complexité Projection Trahison Conflit Dissimulation spread stays grammatical',()=>{
+  const cards=[
+    {id:72,name:'Complexité',reading_relationnel:'Dans une relation, Complexité peut signaler sentiments mêlés, contraintes extérieures, histoire passée, distance ou statut ambigu. Une seule explication ne suffit pas.'},
+    {id:60,name:'Projection',reading_relationnel:'Dans une relation, Projection avertit que l’on peut attribuer à l’autre des sentiments, intentions ou promesses qui ne sont pas encore confirmés par ses actes.'},
+    {id:2,name:'Trahison',reading_relationnel:'Dans une relation, Trahison signale une blessure de confiance : mensonge, double jeu, promesse rompue ou sentiment d’avoir été trompé. La suite dépend d’une clarification réelle, pas seulement d’excuses.'},
+    {id:54,name:'Conflit',reading_relationnel:'Dans une relation, Conflit annonce ou décrit une confrontation : reproches, divergence de besoins, colère ou lutte pour faire reconnaître sa position.'},
+    {id:41,name:'Dissimulation',reading_relationnel:'Dans une relation, Dissimulation indique qu’un sentiment, une intention, une information ou une autre réalité n’est pas exprimé clairement. Elle demande de ne pas confondre silence et transparence.'}
+  ];
+  const text=prose(reading(cards,'Relations','le suite du projet'));
+  assert.match(text,/La situation évolue ensuite : il est question d’une confrontation/i);
+  assert.match(text,/Il convient de ne pas confondre silence et transparence/i);
+  assert.doesNotMatch(text,/il est question d[’']?ou décrit/i);
+  assert.doesNotMatch(text,/Vous pouvez ne pas confondre/i);
 });
