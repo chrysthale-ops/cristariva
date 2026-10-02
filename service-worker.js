@@ -1,8 +1,8 @@
 /* CRISTARIVA — service worker v30 — récit professionnel développé.
    Force 22 arcanes majeurs + 56 arcanes mineurs HD sur PC et Android
    et recharge la planche validée complète des arcanes mineurs. */
-const CACHE_NAME='cristariva-v72-20261002-patience-liberation-protection';
-const APP_VERSION='2026.10.02-patience-liberation-protection';
+const CACHE_NAME='cristariva-v74-20261002-oracle-format-r3';
+const APP_VERSION='2026.10.02-oracle-format-r3';
 const SHELL=[
   './',
   './index.html',
