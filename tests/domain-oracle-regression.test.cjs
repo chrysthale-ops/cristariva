@@ -241,6 +241,25 @@ test('matrice complète Domaine × Oracle : tirage, Relation, Datation, astrolog
     }
 
     assert.equal(matrix.filter(x => x.oracle === 'amour' && x.domain !== 'Sentimental').length, 3, 'les 3 scénarios Oracle sentimental hors Sentimental sont explicitement testés comme interdits');
+
+    // Régression récit sentimental : éviter les amorces répétitives et les sujets grammaticaux artificiels.
+    state.lang = 'fr';
+    state.domain = 'Sentimental';
+    state.oracle = 'amour';
+    state.question = 'kinya';
+    const loveIds = [5, 53, 34, 1, 7];
+    const loveCards = loveIds.map(id => w.AMOUR_DATA.main.find(card => card.id === id));
+    assert.ok(loveCards.every(Boolean), 'les cinq cartes du scénario sentimental de référence doivent exister');
+    state.draw = loveCards;
+    const loveStoryHtml = w.CR_UNIVERSAL_FLUID_STORY(loveCards);
+    const loveStoryBox = w.document.createElement('div');
+    loveStoryBox.innerHTML = loveStoryHtml;
+    const loveStory = loveStoryBox.textContent.replace(/\s+/g, ' ').trim();
+    assert.doesNotMatch(loveStory, /la difficulté\s+confirme/i, 'le récit ne doit jamais produire « la difficulté Confirme »');
+    assert.doesNotMatch(loveStory, /ce(?:tte)?\s+(?:tension|force|perspective)\s+confirme/i, 'aucun rôle artificiel ne doit être injecté devant « confirme »');
+    assert.ok((loveStory.match(/il est question/gi) || []).length <= 1, '« il est question » ne doit pas être répété mécaniquement');
+    assert.match(loveStory, /un lien se situe clairement dans le registre sentimental/i, 'la phrase « Confirme qu’un lien… » doit devenir une phrase autonome et grammaticale');
+
     assert.deepEqual(errors, [], `aucune erreur JavaScript silencieuse : ${errors.join(' | ')}`);
   } finally {
     dom.window.close();
