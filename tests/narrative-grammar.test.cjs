@@ -108,3 +108,21 @@ test('a five-card spread with a shared theme varies its implications without a g
   assert.match(story,/vérifier les informations nouvelles/);
   assert.doesNotMatch(story,/de éclaircir|de identifier|de accueillir|de éviter/);
 });
+
+
+test('reported relation spread avoids repeated generic experience wording',()=>{
+  const cards=[
+    {id:69,name:'Introspection',reading_relationnel:'Dans une relation, Introspection montre qu’une personne réfléchit à ce qu’elle ressent, à ses limites ou à la forme de lien qu’elle souhaite. Cela peut créer un temps de retrait sans signifier automatiquement désintérêt.'},
+    {id:7,name:'Tempête',reading_relationnel:'Dans une relation, Tempête décrit une période où les émotions et les tensions deviennent difficiles à contenir. Elle peut annoncer une dispute, un choc ou une remise à plat nécessaire.'},
+    {id:71,name:'Désillusion',reading_relationnel:'Dans une relation, Désillusion montre qu’une attente, une promesse ou une représentation de l’autre ne correspond pas entièrement à la réalité. Elle demande de regarder le lien tel qu’il est.'},
+    {id:52,name:'Mémoire',reading_relationnel:'Dans une relation, Mémoire montre qu’un souvenir partagé ou une ancienne blessure continue de colorer le lien actuel. Elle peut soutenir la nostalgie comme raviver une méfiance.'},
+    {id:12,name:'Bonheur',reading_relationnel:'Dans le cadre relationnel, elle peut indiquer une relation qui apporte chaleur, confiance et sentiment d’évidence. Elle favorise les retrouvailles heureuses, la tendresse ou la construction d’un climat affectif sécurisant.'}
+  ];
+  const text=prose(reading(cards,'Relations','Energie du jour'));
+  assert.doesNotMatch(text,/Cette expérience/i);
+  assert.doesNotMatch(text,/La difficulté à examiner concerne cet aspect|Vous pouvez trouver un appui dans cette possibilité/i);
+  for(const term of ['réfléchit','tensions','attente','souvenir','chaleur'])assert.match(text,new RegExp(term,'i'));
+  assert.match(text,/Cependant,/);
+  assert.match(text,/Un point d’appui se dégage néanmoins/);
+  assert.match(text,/Enfin, la synthèse/i);
+});
