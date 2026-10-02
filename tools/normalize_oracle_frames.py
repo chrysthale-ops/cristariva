@@ -21,9 +21,8 @@ GOLD = (218, 184, 78)
 
 def scaled_crop(im):
     im = im.convert("RGB").resize((W, H), Image.Resampling.LANCZOS)
-    # Agrandissement volontaire : il chasse complètement hors du canevas
-    # le cadre, le médaillon et les marges intégrés aux images recréées.
-    sx, sy = 1.17, 1.13
+    # Le cadre généré des nouvelles images doit disparaître totalement.
+    sx, sy = 1.17, 1.16
     nw, nh = round(W * sx), round(H * sy)
     big = im.resize((nw, nh), Image.Resampling.LANCZOS)
     left = (nw - W) // 2
@@ -31,13 +30,13 @@ def scaled_crop(im):
     return big.crop((left, top, left + W, top + H))
 
 def paste_badge(result, template):
-    # Médaillon historique exact, sans recopier son arrière-plan rectangulaire.
+    # Médaillon original de la carte, détouré en cercle.
     box = (454, 0, 570, 116)
     badge = template.crop(box)
     mask = Image.new("L", badge.size, 0)
     d = ImageDraw.Draw(mask)
     d.ellipse((4, 0, badge.width-5, badge.height-7), fill=255)
-    mask = mask.filter(ImageFilter.GaussianBlur(0.45))
+    mask = mask.filter(ImageFilter.GaussianBlur(0.4))
     result.paste(badge, box[:2], mask)
 
 def extract_title_mask(template):
@@ -46,31 +45,31 @@ def extract_title_mask(template):
     lum = 0.299*r + 0.587*g + 0.114*b
     chroma = np.maximum.reduce([r,g,b]) - np.minimum.reduce([r,g,b])
     yy, xx = np.mgrid[0:H, 0:W]
-    # Les lettres des anciennes cartes sont les seuls pixels presque blancs
-    # dans cette zone centrale du cartouche.
-    region = (xx > 150) & (xx < 875) & (yy > 1350) & (yy < 1465)
-    mask = ((lum > 205) & (chroma < 42) & region).astype("uint8") * 255
-    return Image.fromarray(mask, "L").filter(ImageFilter.GaussianBlur(0.35))
+    region = (xx > 145) & (xx < 885) & (yy > 1345) & (yy < 1468)
+    # Seules les lettres blanches/gris très clair de l'ancien titre sont gardées.
+    mask = ((lum > 208) & (chroma < 38) & region).astype("uint8") * 255
+    return Image.fromarray(mask, "L").filter(ImageFilter.GaussianBlur(0.25))
 
 def add_title_band(result, template):
     rgba = result.convert("RGBA")
     overlay = Image.new("RGBA", (W, H), (0,0,0,0))
     od = ImageDraw.Draw(overlay)
-    # Cartouche sombre standard, même hauteur que les cartes d'origine.
-    od.rectangle((0, 1304, W, 1494), fill=(4, 11, 16, 176))
+    # Presque opaque : masque complètement l'ancien cartouche/titre de l'image
+    # recréée, tout en gardant une très légère profondeur visuelle.
+    od.rectangle((0, 1292, W, 1495), fill=(4, 11, 16, 238))
     rgba = Image.alpha_composite(rgba, overlay)
 
     mask = extract_title_mask(template)
-    # Ombre noire très légère derrière le titre.
-    shadow = mask.filter(ImageFilter.MaxFilter(5))
-    black = Image.new("RGBA", (W, H), (0,0,0,185))
-    rgba.paste(black, (2,2), shadow)
+    # Fin liseré sombre autour du texte, sans double titre.
+    shadow = mask.filter(ImageFilter.MaxFilter(3))
+    black = Image.new("RGBA", (W, H), (0,0,0,135))
+    rgba.paste(black, (1,1), shadow)
     rgba.paste(template.convert("RGBA"), (0,0), mask)
     return rgba.convert("RGB")
 
 def add_frame(result):
     d = ImageDraw.Draw(result)
-    # Double filet CRISTARIVA : mêmes positions que le gabarit historique.
+    # Double filet standard du jeu CRISTARIVA.
     d.rectangle((20, 22, 1003, 1512), outline=GOLD, width=3)
     d.rectangle((31, 32, 992, 1501), outline=GOLD, width=2)
     return result
@@ -85,4 +84,4 @@ for new_name, template_name in TARGETS:
     paste_badge(result, template)
 
     result.save(CARDS / new_name, "WEBP", quality=94, method=6)
-    print(f"cadre standard CRISTARIVA applique: {new_name}")
+    print(f"gabarit CRISTARIVA final applique: {new_name}")
