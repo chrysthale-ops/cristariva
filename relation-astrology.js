@@ -28,7 +28,7 @@
     });
   }
 
-  loadScript('./relation-astrology-core-v1.4.js?v=1.4.1','relation-astrology-core')
+  loadScript('./relation-astrology-core-v1.4.js?v=1.4.2','relation-astrology-core')
     .then(function(){
       return loadScript('./relation-period-consistency-v1.5.js?v=1.7','relation-period-consistency-v1.6',false);
     })
