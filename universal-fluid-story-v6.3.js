@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.19';
+const VERSION='6.20';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -645,6 +645,9 @@ function groundedText(raw,card,enMode){
     [/^@ (?:invite à|demande de|encourage à) /i,'Vous pouvez '],
     [/^@ (?:rappelle|montre|indique|signale|enseigne) qu[’']/i,''],
     [/^@ (?:rappelle|montre|indique|signale|enseigne) que /i,''],
+    [/^@ confirme qu[’']/i,''],
+    [/^@ confirme que /i,''],
+    [/^@ confirme /i,'Les faits confirment '],
     [/^@ (?:annonce|signale|indique|décrit|évoque|représente|désigne|symbolise|exprime|marque)(?: ou (?:annonce|signale|indique|décrit|évoque|représente|désigne|symbolise|exprime|marque))? /i,'Il est question de '],
     [/^@ (?:parle de|met en lumière) /i,'Il est question de '],
     [/^@ peut marquer /i,'Vous pouvez traverser '],
@@ -690,10 +693,20 @@ function roleGrounded(text,role,enMode){
     if(!introduced){
       introduced=true;
       const before=source.slice(0,offset).trim();
-      return (before?continuationLead:firstLead)[role]||(enMode?'The situation':'La situation');
+      if(before)return enMode?'It':'Cela';
+      return firstLead[role]||(enMode?'The situation':'La situation');
     }
-    return enMode?'It':'Elle';
+    return enMode?'It':'Cela';
   });
+}
+
+function varyRepeatedFrenchLead(text){
+  let index=0;
+  const leads=['On retrouve ','La suite fait apparaître ','L’ensemble met en avant ','Cette étape révèle '];
+  const next=()=>leads[(index++)%leads.length];
+  return String(text||'')
+    .replace(/\bIl est question de (?=(?:un|une|le|la|les|des)\b|l[’'])/gi,()=>next())
+    .replace(/\bIl est question d[’'](?=(?:un|une|le|la|les|des)\b|l[’'])/gi,()=>next());
 }
 
 function build(cards){
@@ -717,7 +730,8 @@ function build(cards){
   }
   const seen=new Set();
   const narrative=parts.join(' ').match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[];
-  const body=narrative.filter(s=>{const key=norm(s).trim();if(seen.has(key))return false;seen.add(key);return true;}).join(' ').replace(/\s+/g,' ').trim();
+  let body=narrative.filter(s=>{const key=norm(s).trim();if(seen.has(key))return false;seen.add(key);return true;}).join(' ').replace(/\s+/g,' ').trim();
+  if(!enMode)body=varyRepeatedFrenchLead(body);
   const q=String(state.question||'').trim();
   const question=q?`<p class="reading-question">${enMode?'Your question':'Votre question'} : « ${esc(q)} »</p>`:'';
   return `<div class="story-reading" data-story-engine="universal-fluid-${VERSION}"><h3>${enMode?'The story told by your cards':'L’histoire racontée par vos cartes'}</h3>${question}<p class="story-continuous">${esc(body)}</p></div>`;
