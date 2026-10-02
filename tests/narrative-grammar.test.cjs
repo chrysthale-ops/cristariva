@@ -142,3 +142,21 @@ test('reported Complexité Projection Trahison Conflit Dissimulation spread stay
   assert.doesNotMatch(text,/il est question d[’']?ou décrit/i);
   assert.doesNotMatch(text,/Vous pouvez ne pas confondre/i);
 });
+
+
+test('reported Tempete Juste distance Paix Direction Trahison spread avoids il est question repetition',()=>{
+  const cards=[
+    {id:7,name:'Tempête',reading_relationnel:'Dans une relation, Tempête décrit une période où les émotions et les tensions deviennent difficiles à contenir. Elle peut annoncer une dispute, un choc ou une remise à plat nécessaire.'},
+    {id:86,name:'Juste distance',reading_relationnel:'Dans une relation, Juste distance indique qu’un lien fonctionne mieux lorsque chacun dispose d’espace, de limites et d’un rythme respectés. Trop de proximité comme trop de retrait peuvent déséquilibrer la relation.'},
+    {id:27,name:'Paix',reading_relationnel:'Dans le cadre relationnel, elle indique une détente, une trêve, une parole apaisée ou la possibilité de sortir d’un rapport de force. Elle favorise la douceur plutôt que l’insistance.'},
+    {id:1,name:'Direction',reading_relationnel:'Dans une relation, Direction montre qu’un cap se précise. Elle parle d’un lien qui doit choisir sa trajectoire : rapprochement, redéfinition ou prise de distance selon les cartes voisines.'},
+    {id:2,name:'Trahison',reading_relationnel:'Dans une relation, Trahison signale une blessure de confiance : mensonge, double jeu, promesse rompue ou sentiment d’avoir été trompé. La suite dépend d’une clarification réelle, pas seulement d’excuses.'}
+  ];
+  const text=prose(reading(cards,'Sentimental','kinya'));
+  assert.doesNotMatch(text,/Il est question de|Il est question d[’']/i);
+  for(const term of ['émotions','espace','détente','trajectoire','blessure de confiance'])assert.match(text,new RegExp(term,'i'));
+  assert.match(text,/Cependant,/);
+  assert.match(text,/Un élément déterminant apparaît néanmoins/);
+  assert.match(text,/La situation évolue ensuite/);
+  assert.match(text,/Enfin,/);
+});
