@@ -1,0 +1,58 @@
+name: Normaliser les cadres Oracle CRISTARIVA
+
+on:
+  push:
+    paths:
+      - 'tools/normalize_oracle_frames.py'
+      - '.github/workflows/normalize-oracle-frames.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  normalize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Préparer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Installer Pillow et NumPy
+        run: python -m pip install --disable-pip-version-check pillow numpy
+
+      - name: Reconstituer les 8 cartes avec leur cadre historique exact
+        run: python tools/normalize_oracle_frames.py
+
+      - name: Vérifier le format des fichiers
+        run: |
+          python - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          names = [
+            '003-joie-final.webp','007-tempete-final.webp','016-stabilite-final.webp',
+            '021-union-final.webp','036-blocage-final.webp','037-cohesion-final.webp',
+            '052-memoire-final.webp','088-vision-final.webp'
+          ]
+          for name in names:
+              im=Image.open(Path('cards')/name)
+              assert im.size == (1024,1536), (name, im.size)
+              print(name, im.size)
+          PY
+
+      - name: Publier les 8 cartes corrigées
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add cards/003-joie-final.webp cards/007-tempete-final.webp cards/016-stabilite-final.webp cards/021-union-final.webp cards/036-blocage-final.webp cards/037-cohesion-final.webp cards/052-memoire-final.webp cards/088-vision-final.webp
+          if git diff --cached --quiet; then
+            echo "Aucune modification."
+          else
+            git commit -m "Normaliser le cadre des 8 cartes harmonisées"
+            git push
+          fi
