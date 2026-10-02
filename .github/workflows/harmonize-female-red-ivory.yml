@@ -1,0 +1,62 @@
+name: Harmoniser vêtements féminins rouge ivoire
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/harmonize_female_red_ivory.py'
+      - '.github/workflows/harmonize-female-red-ivory.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  harmonize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Préparer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Installer Pillow et NumPy
+        run: python -m pip install --disable-pip-version-check pillow numpy
+
+      - name: Harmoniser les vêtements féminins
+        run: python tools/harmonize_female_red_ivory.py
+
+      - name: Vérifier les quatre cartes
+        run: |
+          python - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          names = [
+            '003-joie-final.webp',
+            '030-ecoute-final.webp',
+            '037-cohesion-final.webp',
+            '091.webp',
+          ]
+          for name in names:
+              path = Path('cards') / name
+              im = Image.open(path)
+              assert im.size == (1024, 1536), (name, im.size)
+              print(name, im.size, path.stat().st_size)
+          PY
+
+      - name: Publier les cartes harmonisées
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add             cards/003-joie-final.webp             cards/030-ecoute-final.webp             cards/037-cohesion-final.webp             cards/091.webp             index.html             service-worker.js
+          if git diff --cached --quiet; then
+            echo "Aucune modification."
+          else
+            git commit -m "Harmoniser les vêtements féminins en rouge et ivoire"
+            git pull --rebase origin main
+            git push
+          fi
