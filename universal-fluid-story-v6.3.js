@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.16';
+const VERSION='6.17';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -674,20 +674,44 @@ function groundedPart(card,enMode){
   const raw=local[field]||local.meaning||local.definition||'';
   return groundedText(raw,card,enMode);
 }
+
+function roleGrounded(text,role,enMode){
+  const firstLead=enMode
+    ?{origin:'The situation',obstacle:'The difficulty',resource:'This strength',evolution:'The development',outcome:'The overall picture'}
+    :{origin:'La situation',obstacle:'La difficulté',resource:'Cette force',evolution:'L’évolution',outcome:'La synthèse'};
+  const continuationLead=enMode
+    ?{origin:'This situation',obstacle:'This tension',resource:'This strength',evolution:'This development',outcome:'This perspective'}
+    :{origin:'Cette situation',obstacle:'Cette tension',resource:'Cette force',evolution:'Cette dynamique',outcome:'Cette perspective'};
+  let introduced=false;
+  const source=String(text||'');
+  return source.replace(/\b(?:Cette expérience|This experience)\b/g,(match,offset)=>{
+    if(!introduced){
+      introduced=true;
+      const before=source.slice(0,offset).trim();
+      return (before?continuationLead:firstLead)[role]||(enMode?'The situation':'La situation');
+    }
+    return enMode?'It':'Elle';
+  });
+}
+
 function build(cards){
   if(!Array.isArray(cards)||!cards.length)return '';
   const enMode=state.lang==='en', chosen=cards.slice(0,12), r=roles(chosen.length);
   const reversedAt=i=>state.oracle==='tarot'&&state.draw?.[i]===chosen[i]&&state.tarotReversed?.[i]===true;
   const parts=chosen.map((card,i)=>{
-    if(reversedAt(i))return groundedText(window.CR_TAROT_REVERSED?.[card.id]?.[enMode?'en':'fr']||'',card,enMode);
-    if(state.oracle==='tarot')return groundedText(tarotMixedPart(card,r[i],scope(),i,enMode),card,enMode);
-    return groundedPart(card,enMode);
+    let part='';
+    if(reversedAt(i))part=groundedText(window.CR_TAROT_REVERSED?.[card.id]?.[enMode?'en':'fr']||'',card,enMode);
+    else if(state.oracle==='tarot')part=groundedText(tarotMixedPart(card,r[i],scope(),i,enMode),card,enMode);
+    else part=groundedPart(card,enMode);
+    return roleGrounded(part,r[i],enMode);
   }).filter(Boolean);
-  // Position affects the reading, but must not invent a reversed meaning for
-  // an upright positive card or add a causal link absent from the source.
+  // Position affects the reading, but transitions should read as one story.
   if(chosen.length===5&&parts.length===5){
-    parts[1]=(enMode?'The difficulty to examine concerns this aspect: ':'La difficulté à examiner concerne cet aspect : ')+parts[1].charAt(0).toLocaleLowerCase()+parts[1].slice(1);
-    parts[2]=(enMode?'You can draw support from this possibility: ':'Vous pouvez trouver un appui dans cette possibilité : ')+parts[2].charAt(0).toLocaleLowerCase()+parts[2].slice(1);
+    const lower=s=>s?s.charAt(0).toLocaleLowerCase()+s.slice(1):s;
+    parts[1]=(enMode?'However, ':'Cependant, ')+lower(parts[1]);
+    parts[2]=(enMode?'A useful point of support also emerges: ':'Un point d’appui se dégage néanmoins : ')+lower(parts[2]);
+    parts[3]=(enMode?'The situation then continues to unfold: ':'La suite se précise alors : ')+lower(parts[3]);
+    parts[4]=(enMode?'Finally, ':'Enfin, ')+lower(parts[4]);
   }
   const seen=new Set();
   const narrative=parts.join(' ').match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[];
