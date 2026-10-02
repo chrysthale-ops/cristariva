@@ -137,7 +137,7 @@ test('reported Complexité Projection Trahison Conflit Dissimulation spread stay
     {id:41,name:'Dissimulation',reading_relationnel:'Dans une relation, Dissimulation indique qu’un sentiment, une intention, une information ou une autre réalité n’est pas exprimé clairement. Elle demande de ne pas confondre silence et transparence.'}
   ];
   const text=prose(reading(cards,'Relations','le suite du projet'));
-  assert.match(text,/La situation évolue ensuite : il est question d’une confrontation/i);
+  assert.match(text,/La situation évolue ensuite : l’évolution fait apparaître une confrontation/i);
   assert.match(text,/Il convient de ne pas confondre silence et transparence/i);
   assert.doesNotMatch(text,/il est question d[’']?ou décrit/i);
   assert.doesNotMatch(text,/Vous pouvez ne pas confondre/i);
