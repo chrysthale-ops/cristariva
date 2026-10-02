@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.17';
+const VERSION='6.18';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -650,14 +650,14 @@ function groundedText(raw,card,enMode){
     [/^@ oblige à /i,'Il devient nécessaire de '],
     [/^@ parle d[’']/i,'Il est question d’'],
     [/^@ demande d[’']/i,'Il est nécessaire d’'],
-    [/^@ /i,'Cette expérience ']
+    [/^@ /i,'Cela ']
   ];
   return (text.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[]).map(sentence=>{
     let s=sentence.trim().replace(/^(?:Au départ|Aujourd’hui|À partir de là|Pour la suite|At first|Initially),?\s*/i,'');
     s=s.replace(/^(?=(?:Indique|Désigne|Annonce|Représente|Signale|Évoque|Symbolise|Met|Parle|Montre|Place|Décrit|Exprime|Rappelle|Favorise|Ouvre|Fait|Invite|Avertit|Confirme)\b)/,'@ ');
     for(const [pattern,replacement] of replacements)s=s.replace(pattern,replacement);
     s=s.replace(/;\s*(?:la carte|elle) invite à /gi,' ; vous pouvez ');
-    s=s.replace(/Il est question de ([aeiouéèêàâîôù])/gi,'Il est question d’$1').replace(/Il est question de le /gi,'Il est question du ').replace(/Il est question de les /gi,'Il est question des ').replace(/Vous pouvez se /g,'Il est possible de se ').replace(/, et que /g,', et ').replace(/Cette expérience est celle de /g,'Il est question de ');
+    s=s.replace(/Il est question de ([aeiouéèêàâîôù])/gi,'Il est question d’$1').replace(/Il est question de le /gi,'Il est question du ').replace(/Il est question de les /gi,'Il est question des ').replace(/Vous pouvez se /g,'Il est possible de se ').replace(/, et que /g,', et ');
     return s?s.charAt(0).toLocaleUpperCase()+s.slice(1):'';
   }).join(' ');
 }
@@ -684,7 +684,7 @@ function roleGrounded(text,role,enMode){
     :{origin:'Cette situation',obstacle:'Cette tension',resource:'Cette force',evolution:'Cette dynamique',outcome:'Cette perspective'};
   let introduced=false;
   const source=String(text||'');
-  return source.replace(/\b(?:Cette expérience|This experience)\b/g,(match,offset)=>{
+  return source.replace(/\b(?:Cela|This experience)\b/g,(match,offset)=>{
     if(!introduced){
       introduced=true;
       const before=source.slice(0,offset).trim();
