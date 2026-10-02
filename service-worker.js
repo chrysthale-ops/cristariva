@@ -1,8 +1,8 @@
 /* CRISTARIVA — service worker v30 — récit professionnel développé.
    Force 22 arcanes majeurs + 56 arcanes mineurs HD sur PC et Android
    et recharge la planche validée complète des arcanes mineurs. */
-const CACHE_NAME='cristariva-v76-20261002-red-ivory-r1';
-const APP_VERSION='2026.10.02-red-ivory-r1';
+const CACHE_NAME='cristariva-v77-20261002-red-ivory-cross-summary-r1';
+const APP_VERSION='2026.10.02-red-ivory-cross-summary-r1';
 const SHELL=[
   './',
   './index.html',
@@ -31,7 +31,7 @@ const SHELL=[
   './tarot-minors-data-epees.js?v=20260924-tarot78-r9',
   './tarot-minors-data-deniers.js?v=20260924-tarot78-r9',
   './tarot-minors-v1.js?v=20260924-tarot78-r9',
-  './relation-astrology.js?v=20260926-cross-summary'
+  './relation-astrology.js?v=20261002-cross-summary-clean-r1'
 ];
 
 self.addEventListener('install',event=>{
