@@ -108,7 +108,7 @@ jobs:
               (1024,1536),
               Image.Transform.EXTENT,
               (x0,y0,x1,y1),
-              resample=Image.Resampling.LANCZOS
+              resample=Image.Resampling.BICUBIC
           )
 
           # Supprime le blanc résiduel connecté aux bords (coins arrondis de l'ancien export).
