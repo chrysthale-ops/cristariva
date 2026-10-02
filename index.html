@@ -359,6 +359,55 @@ html{scroll-padding-top:130px}
 }
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Allura&family=Bodoni+Moda:opsz,wght@6..96,500;6..96,600&family=Cinzel:wght@500;600&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Cormorant+SC:wght@500;600&display=swap" rel="stylesheet"/>
+<style id="oracle-recent-card-size-fix">
+/* 2026-10-02 — Les 8 cartes récemment harmonisées contiennent une petite marge
+   blanche intégrée à l'image. On la masque à l'affichage afin de retrouver
+   exactement le gabarit visuel des autres cartes de l'Oracle CRISTARIVA. */
+.card-detail-media{
+  position:relative;
+  width:100%;
+  aspect-ratio:2/3;
+  overflow:hidden;
+  background:#142332;
+  border-radius:10px;
+}
+.card-detail-media .card-detail-image{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  max-height:none;
+  object-fit:contain;
+  border-radius:0;
+}
+#catalogGrid .catalog-image img[src$="003-joie-final.webp"],
+#drawCards .art img[src$="003-joie-final.webp"],
+.card-detail-media img[src$="003-joie-final.webp"],
+#catalogGrid .catalog-image img[src$="007-tempete-final.webp"],
+#drawCards .art img[src$="007-tempete-final.webp"],
+.card-detail-media img[src$="007-tempete-final.webp"],
+#catalogGrid .catalog-image img[src$="016-stabilite-final.webp"],
+#drawCards .art img[src$="016-stabilite-final.webp"],
+.card-detail-media img[src$="016-stabilite-final.webp"],
+#catalogGrid .catalog-image img[src$="021-union-final.webp"],
+#drawCards .art img[src$="021-union-final.webp"],
+.card-detail-media img[src$="021-union-final.webp"],
+#catalogGrid .catalog-image img[src$="036-blocage-final.webp"],
+#drawCards .art img[src$="036-blocage-final.webp"],
+.card-detail-media img[src$="036-blocage-final.webp"],
+#catalogGrid .catalog-image img[src$="037-cohesion-final.webp"],
+#drawCards .art img[src$="037-cohesion-final.webp"],
+.card-detail-media img[src$="037-cohesion-final.webp"],
+#catalogGrid .catalog-image img[src$="052-memoire-final.webp"],
+#drawCards .art img[src$="052-memoire-final.webp"],
+.card-detail-media img[src$="052-memoire-final.webp"],
+#catalogGrid .catalog-image img[src$="088-vision-final.webp"],
+#drawCards .art img[src$="088-vision-final.webp"],
+.card-detail-media img[src$="088-vision-final.webp"]{
+  transform:scale(1.055,1.035)!important;
+  transform-origin:center center!important;
+}
+</style>
 </head>
 <body>
 <header class="topbar"><div class="shell nav">
@@ -1490,7 +1539,7 @@ function renderCardDialog(){
  details+=row(t('Catégorie'),cardField(c,'category'));
  details+=row(t('Intensité'),cardField(c,'intensity'));
  const section=c.group==='main'?(state.lang==='en'?'Main card':'Carte principale'):c.group==='relation'?(state.lang==='en'?'Relationship card':'Carte Relation'):(state.lang==='en'?'Timing card':'Carte Datation');
- $('#cardDialogBody').innerHTML=`<div class="card-detail-layout"><div><img class="card-detail-image" src="${readingEscape(cardImage(c))}" alt="${readingEscape(cardName(c))}"></div><div><p class="muted">${section} · ${c.id}</p><h2 id="cardDialogTitle">${readingEscape(cardName(c))}</h2>${details}</div></div>`;
+ $('#cardDialogBody').innerHTML=`<div class="card-detail-layout"><div class="card-detail-media"><img class="card-detail-image" src="${readingEscape(cardImage(c))}" alt="${readingEscape(cardName(c))}"></div><div><p class="muted">${section} · ${c.id}</p><h2 id="cardDialogTitle">${readingEscape(cardName(c))}</h2>${details}</div></div>`;
 }
 function openCard(group,id){
  catalogSelected=DATA[group].find(c=>c.id===Number(id));
@@ -1529,7 +1578,7 @@ try{const saved=new URLSearchParams(location.search).get('lang')||localStorage.g
 applyLanguage();
 </script>
 <script>if('serviceWorker' in navigator){
-const CRISTARIVA_PWA_VERSION='2026.10.01-grounded-story';
+const CRISTARIVA_PWA_VERSION='2026.10.02-card-size-fix-r1';
 let cristarivaReloading=false;
 const cristarivaRefreshOnce=()=>{
  if(cristarivaReloading)return;
@@ -1543,7 +1592,7 @@ navigator.serviceWorker.addEventListener('message',event=>{
  if(event.data&&event.data.type==='CRISTARIVA_UPDATED')cristarivaRefreshOnce();
 });
 const cristarivaCheckUpdate=()=>navigator.serviceWorker.register(
- './service-worker.js?v=20261001-oracle-final-r1',
+ './service-worker.js?v=20261002-card-size-r1',
  {scope:'./',updateViaCache:'none'}
 ).then(reg=>{
  if(reg.waiting)reg.waiting.postMessage('SKIP_WAITING');
