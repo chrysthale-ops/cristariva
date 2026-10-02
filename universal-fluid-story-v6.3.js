@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.20';
+const VERSION='6.21';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -648,12 +648,12 @@ function groundedText(raw,card,enMode){
     [/^@ confirme qu[’']/i,''],
     [/^@ confirme que /i,''],
     [/^@ confirme /i,'Les faits confirment '],
-    [/^@ (?:annonce|signale|indique|décrit|évoque|représente|désigne|symbolise|exprime|marque)(?: ou (?:annonce|signale|indique|décrit|évoque|représente|désigne|symbolise|exprime|marque))? /i,'Il est question de '],
-    [/^@ (?:parle de|met en lumière) /i,'Il est question de '],
+    [/^@ (?:annonce|signale|indique|décrit|évoque|représente|désigne|symbolise|exprime|marque)(?: ou (?:annonce|signale|indique|décrit|évoque|représente|désigne|symbolise|exprime|marque))? /i,'Cela révèle '],
+    [/^@ (?:parle de|met en lumière) /i,'Cela révèle '],
     [/^@ peut marquer /i,'Vous pouvez traverser '],
     [/^@ aide à /i,'Vous pouvez '],
     [/^@ oblige à /i,'Il devient nécessaire de '],
-    [/^@ parle d[’']/i,'Il est question d’'],
+    [/^@ parle d[’']/i,'Cela révèle '],
     [/^@ demande d[’']/i,'Il est nécessaire d’'],
     [/^@ /i,'Cela ']
   ];
@@ -663,7 +663,7 @@ function groundedText(raw,card,enMode){
     for(const [pattern,replacement] of replacements)s=s.replace(pattern,replacement);
     s=s.replace(/;\s*(?:la carte|elle) invite à /gi,' ; vous pouvez ');
     s=s.replace(/^Cela (Favorise|Ouvre|Fait|Place|Montre|Rappelle|Invite|Avertit)\b/,(m,v)=>'Cela '+v.charAt(0).toLocaleLowerCase()+v.slice(1));
-    s=s.replace(/Il est question de ([aeiouéèêàâîôù])/gi,'Il est question d’$1').replace(/Il est question de le /gi,'Il est question du ').replace(/Il est question de les /gi,'Il est question des ').replace(/Vous pouvez se /g,'Il est possible de se ').replace(/, et que /g,', et ');
+    s=s.replace(/Vous pouvez se /g,'Il est possible de se ').replace(/, et que /g,', et ');
     return s?s.charAt(0).toLocaleUpperCase()+s.slice(1):'';
   }).join(' ');
 }
@@ -685,29 +685,24 @@ function roleGrounded(text,role,enMode){
   const firstLead=enMode
     ?{origin:'The situation',obstacle:'The difficulty',resource:'This strength',evolution:'The development',outcome:'The overall picture'}
     :{origin:'La situation',obstacle:'La difficulté',resource:'Cette force',evolution:'L’évolution',outcome:'La synthèse'};
-  const continuationLead=enMode
-    ?{origin:'This situation',obstacle:'This tension',resource:'This strength',evolution:'This development',outcome:'This perspective'}
-    :{origin:'Cette situation',obstacle:'Cette tension',resource:'Cette force',evolution:'Cette dynamique',outcome:'Cette perspective'};
+  const firstReveal=enMode
+    ?{origin:'The situation highlights',obstacle:'The difficulty reveals',resource:'This strength brings',evolution:'The development brings out',outcome:'The overall picture highlights'}
+    :{origin:'La situation met en lumière',obstacle:'L’obstacle met en évidence',resource:'Cette force apporte',evolution:'L’évolution fait apparaître',outcome:'La synthèse met en évidence'};
+  const continuationReveal=enMode
+    ?{origin:'This situation also shows',obstacle:'This tension also shows',resource:'This strength also supports',evolution:'This development also highlights',outcome:'This perspective also underlines'}
+    :{origin:'Cette situation souligne aussi',obstacle:'Cette tension souligne aussi',resource:'Cette force soutient aussi',evolution:'Cette dynamique souligne',outcome:'Cette perspective souligne aussi'};
   let introduced=false;
   const source=String(text||'');
-  return source.replace(/\b(?:Cela|This experience)\b/g,(match,offset)=>{
-    if(!introduced){
-      introduced=true;
-      const before=source.slice(0,offset).trim();
-      if(before)return enMode?'It':'Cela';
-      return firstLead[role]||(enMode?'The situation':'La situation');
+  return source.replace(/\b(?:Cela révèle|Cela|This experience)\b/g,(match,offset)=>{
+    const before=source.slice(0,offset).trim();
+    const continuation=introduced||Boolean(before);
+    introduced=true;
+    if(/révèle/i.test(match)){
+      return (continuation?continuationReveal:firstReveal)[role]||(enMode?'The situation highlights':'La situation met en lumière');
     }
-    return enMode?'It':'Cela';
+    if(continuation)return enMode?'It':'Elle';
+    return firstLead[role]||(enMode?'The situation':'La situation');
   });
-}
-
-function varyRepeatedFrenchLead(text){
-  let index=0;
-  const leads=['On retrouve ','La suite fait apparaître ','L’ensemble met en avant ','Cette étape révèle '];
-  const next=()=>leads[(index++)%leads.length];
-  return String(text||'')
-    .replace(/\bIl est question de (?=(?:un|une|le|la|les|des)\b|l[’'])/gi,()=>next())
-    .replace(/\bIl est question d[’'](?=(?:un|une|le|la|les|des)\b|l[’'])/gi,()=>next());
 }
 
 function build(cards){
@@ -732,7 +727,6 @@ function build(cards){
   const seen=new Set();
   const narrative=parts.join(' ').match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[];
   let body=narrative.filter(s=>{const key=norm(s).trim();if(seen.has(key))return false;seen.add(key);return true;}).join(' ').replace(/\s+/g,' ').trim();
-  if(!enMode)body=varyRepeatedFrenchLead(body);
   const q=String(state.question||'').trim();
   const question=q?`<p class="reading-question">${enMode?'Your question':'Votre question'} : « ${esc(q)} »</p>`:'';
   return `<div class="story-reading" data-story-engine="universal-fluid-${VERSION}"><h3>${enMode?'The story told by your cards':'L’histoire racontée par vos cartes'}</h3>${question}<p class="story-continuous">${esc(body)}</p></div>`;
