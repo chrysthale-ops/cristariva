@@ -1,5 +1,5 @@
 /* CRISTARIVA — astrology for the person represented by the Relation card.
-   v1.4: cross-analysis 2 keeps up to two distinct shared phases and avoids repeating the same narrative theme. */
+   v1.4.1: when cross-analyses are available, the preceding global synthesis is removed so the section starts directly with cross-analysis 1. */
 (function(){
 'use strict';
 const section=document.getElementById('relationAstroSection');
@@ -131,7 +131,7 @@ function crossMarkup(c,r){
 }
 
 const originalRenderSynthesis=renderSynthesis;
-renderSynthesis=function(){originalRenderSynthesis.apply(this,arguments);const r=currentProfile(),c=state.astro,box=el('synthesis');if(!r||!c||!state.draw?.length||!box)return;box.querySelectorAll('.cr-cross-analysis').forEach(n=>n.remove());const target=box.querySelector('.cr3-global'),markup=crossMarkup(c,r);if(target)target.insertAdjacentHTML('afterend',markup);else box.insertAdjacentHTML('beforeend',markup);};
+renderSynthesis=function(){originalRenderSynthesis.apply(this,arguments);const r=currentProfile(),c=state.astro,box=el('synthesis');if(!r||!c||!state.draw?.length||!box)return;box.querySelectorAll('.cr-cross-analysis').forEach(n=>n.remove());box.querySelectorAll('.cr3-global').forEach(n=>n.remove());box.insertAdjacentHTML('beforeend',crossMarkup(c,r));};
 function refreshSynthesis(){if(!el('synthesis').classList.contains('hidden'))renderSynthesis();}
 function refresh(){section.querySelectorAll('[data-relation-fr]').forEach(n=>n.textContent=n.getAttribute(en()?'data-relation-en':'data-relation-fr'));el('relationBirthplace').placeholder=text('Commencez à écrire une ville','Start typing a city');el('relationAstroFields').hidden=!enabled.checked;el('relationAstroContext').textContent=state.relation?text('Carte Relation tirée : ','Relationship card drawn: ')+cardName(state.relation):text('Tirez une carte Relation pour préciser la personne concernée.','Draw a Relationship card to identify the person concerned.');el('relationAstroBtn').disabled=busy||!enabled.checked||!state.relation;el('relationAstroRemove').hidden=!currentProfile();if(currentProfile()){result.style.display='block';result.innerHTML=relationMarkup(currentProfile());}}
 function invalidate(){revision++;busy=false;state.relationAstro=null;boundRelation=null;result.innerHTML='';result.style.display='none';refresh();refreshSynthesis();}
