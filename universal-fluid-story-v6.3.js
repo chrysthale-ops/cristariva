@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.30';
+const VERSION='6.40';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -103,6 +103,12 @@ function motif(card,enMode){
   if(/^(amitie|friendship)$/.test(name))return 'friendship';
   if(/^(union)$/.test(name))return 'union';
   if(/^(karma)$/.test(name))return 'patterns';
+  // Love-oracle titles whose exact symbolic meaning must survive broad keyword classification.
+  if(/^(secret)$/.test(name))return 'secret';
+  if(/^(ame soeur|soulmate|soul mate)$/.test(name))return 'soulmate';
+  if(/^(transformation)$/.test(name))return 'transformation';
+  if(/^(coup de foudre|love at first sight)$/.test(name))return 'lightning';
+  if(/^(silence)$/.test(name))return 'silence';
   const k=norm([local?.name,local?.category,local?.keywords,local?.definition||local?.meaning].filter(Boolean).join(' '));
   const details=norm(local?.definition||local?.meaning||'');
   if(/trois d.?epees|three of swords/.test(name))return 'heartbreak';
@@ -153,6 +159,41 @@ function distinctiveFr(card,role,sc){
   const m=motif(card,false);
   const project=sc==='work';
   const stages={
+    secret:{
+      origin:'Le point de départ est marqué par ce qui demeure caché ou retenu. Des sentiments, des intentions ou une part de la situation peuvent exister sans être exprimés ouvertement, ce qui rend l’histoire difficile à lire dès son origine.',
+      obstacle:'Le non-dit devient ici un obstacle : ce qui est caché ou protégé empêche de savoir sur quoi le lien peut réellement s’appuyer.',
+      resource:'Ce qui n’a pas encore été dit peut devenir une ressource si cela trouve enfin une forme d’expression sincère, sans forcer ce qui doit rester intime.',
+      evolution:'Une part encore secrète de la situation continue d’influencer son évolution ; le mouvement dépend de ce qui pourra réellement sortir du non-dit.',
+      outcome:'La synthèse conserve une part cachée : tout n’est pas disponible ou exprimé, et l’histoire reste donc partiellement ouverte tant que ces éléments ne deviennent pas plus lisibles.'
+    },
+    soulmate:{
+      origin:'Le lien s’est construit avec un fort sentiment de familiarité, de compréhension ou d’évidence. Cette impression donne beaucoup de poids à l’histoire, sans suffire à elle seule à définir ce que les deux personnes peuvent réellement construire.',
+      obstacle:'Le principal obstacle vient précisément de l’impression d’évidence ou de connexion exceptionnelle. Ressentir une grande proximité peut nourrir beaucoup d’attentes ; pourtant, la profondeur ressentie ne garantit ni la réciprocité, ni la disponibilité, ni la possibilité concrète de former un couple.',
+      resource:'Le sentiment d’une compréhension profonde peut soutenir le lien lorsqu’il aide chacun à se montrer avec sincérité, sans transformer cette résonance en certitude sur l’avenir.',
+      evolution:'La sensation d’une connexion particulièrement forte prend davantage de place. Elle peut rapprocher, mais sa valeur se mesure à la manière dont elle est vécue et partagée dans les faits.',
+      outcome:'Le tirage se termine sur l’importance d’une connexion ressentie comme exceptionnelle. Cette intensité donne du sens au lien, mais elle ne décide pas à elle seule de sa forme ni de sa durée.'
+    },
+    transformation:{
+      origin:'Une mutation profonde est déjà engagée : une ancienne manière d’aimer ou de vivre la situation commence à perdre sa place.',
+      obstacle:'Le changement devient difficile lorsqu’une ancienne dynamique continue d’être retenue alors qu’elle ne correspond plus à ce qui est en train d’émerger.',
+      resource:'La force du tirage réside dans une transformation profonde. Elle permet de quitter d’anciens schémas et d’aborder les sentiments autrement, avec une manière nouvelle de se positionner et de comprendre le lien.',
+      evolution:'La relation ou la vie affective change de forme en profondeur. Ce qui existait auparavant ne peut pas simplement être reconduit à l’identique.',
+      outcome:'La synthèse annonce une transformation plutôt qu’un retour exact à l’ancien fonctionnement : la suite demande une autre manière de vivre les sentiments et le lien.'
+    },
+    lightning:{
+      origin:'L’histoire prend naissance dans une attirance immédiate et très vive, avec l’impression que quelque chose s’impose rapidement.',
+      obstacle:'L’intensité d’un élan immédiat peut devenir déstabilisante si elle est prise pour une certitude avant que le lien ait eu le temps de se construire.',
+      resource:'Une attraction puissante redonne de l’élan et peut réveiller la vie affective, à condition de ne pas confondre intensité et stabilité.',
+      evolution:'L’évolution s’accélère brusquement : une rencontre ou un rapprochement peut provoquer une émotion très forte et donner le sentiment que tout se remet en mouvement. Cet élan est réel dans le récit, mais il doit encore montrer ce qu’il peut devenir avec le temps.',
+      outcome:'La synthèse est celle d’un élan amoureux soudain et puissant. Quelque chose peut se déclencher rapidement, mais la force du départ ne permet pas encore de savoir quelle forme durable cette histoire prendra.'
+    },
+    silence:{
+      origin:'Le point de départ est marqué par une absence de réponse ou une communication interrompue. Le lien existe dans un espace où ce qui n’est pas dit pèse autant que ce qui est exprimé.',
+      obstacle:'Le silence devient le frein principal : l’absence de réponse ou le retrait empêche de savoir clairement ce qui est ressenti et laisse la relation sans direction partagée.',
+      resource:'Le silence peut offrir un temps de recul lorsqu’il n’est pas utilisé pour fuir la relation ; il permet alors de laisser retomber la pression avant une éventuelle reprise des échanges.',
+      evolution:'La dynamique entre dans une phase de retrait ou de communication suspendue. Après ce qui a précédé, le mouvement ralentit et laisse davantage de place à l’attente qu’à l’action.',
+      outcome:'La dernière étape est marquée par le silence : après les mouvements précédents, une absence de réponse, un retrait ou une communication interrompue laisse la situation en suspens. Ce silence peut correspondre à une hésitation, à une protection ou à une prise de distance, mais le tirage ne permet pas de choisir arbitrairement entre ces possibilités. Il ne constitue donc ni une clarification ni une conclusion définitive : il laisse l’histoire ouverte, avec une incertitude réelle sur ce qui sera exprimé ensuite.'
+    },
     friendship:{
       origin:'Un lien amical, fait d’écoute et de confiance, constitue le point de départ. Cette proximité offre une place dans la vie de l’autre, sans que sa nature soit nécessairement amoureuse.',
       obstacle:'Le décalage peut tenir à la place donnée au lien : une proximité amicale peut être vécue comme une promesse sentimentale alors que les attentes ne sont pas encore partagées. Nommer cette différence aiderait à vous situer.',
