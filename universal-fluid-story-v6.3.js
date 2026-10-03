@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.22';
+const VERSION='6.23';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -32,7 +32,11 @@ function theme(card,en=false){
   if(/dispute|querelle|conflit|altercation/.test(title))return 'conflict';
   if(/engagement|promesse|officialisation|construction/.test(title))return 'commitment';
   if(/communication|dialogue|parole|conversation|clarification|communication|dialog/.test(title))return 'insight';
-  if(/impasse|incompatibil|blocage|obstacle|rupture|conflit|betrayal|deadlock/.test(title))return 'tension';
+  if(/impasse|incompatibil|blocage|obstacle|rupture|conflit|trahison|infidelit|betrayal|deadlock/.test(title))return 'tension';
+  if(/silence|retrait|absence de reponse|non dit/.test(title))return 'ambiguity';
+  if(/alignement|coherence|accord/.test(title))return 'ground';
+  if(/desir|attirance|passion/.test(title))return 'movement';
+  if(/projet a deux|avenir commun|vie commune/.test(title))return 'bond';
   const h=hay(card,en);
   if(/secret|cache|non dit|dissim|mystere|ambigu|incert|hesit|flou|doute|unknown|uncertain|hidden/.test(h))return 'ambiguity';
   if(/liberte|autonom|independan|espace|distance saine|freedom|autonomy|independence/.test(h))return 'freedom';
@@ -713,11 +717,23 @@ function build(cards){
   if(!Array.isArray(cards)||!cards.length)return '';
   const enMode=state.lang==='en', chosen=cards.slice(0,12), r=roles(chosen.length);
   const reversedAt=i=>state.oracle==='tarot'&&state.draw?.[i]===chosen[i]&&state.tarotReversed?.[i]===true;
+  const sc=scope();
   const parts=chosen.map((card,i)=>{
     let part='';
-    if(reversedAt(i))part=groundedText(window.CR_TAROT_REVERSED?.[card.id]?.[enMode?'en':'fr']||'',card,enMode);
-    else if(state.oracle==='tarot')part=groundedText(tarotMixedPart(card,r[i],scope(),i,enMode),card,enMode);
-    else part=groundedPart(card,enMode);
+    if(reversedAt(i)){
+      part=groundedText(window.CR_TAROT_REVERSED?.[card.id]?.[enMode?'en':'fr']||'',card,enMode);
+    }else if(state.oracle==='tarot'){
+      part=groundedText(tarotMixedPart(card,r[i],sc,i,enMode),card,enMode);
+    }else if(enMode){
+      /* The card definition stays in the card commentary. The story must
+         interpret the card's role in the spread instead of paraphrasing it. */
+      part=en(card,r[i],sc,i);
+    }else{
+      /* Prefer a distinctive symbolic motif, then a role-specific reading,
+         then the broad thematic fallback. Never reuse the displayed
+         definition here: that would merely duplicate the card commentary. */
+      part=distinctiveFr(card,r[i],sc)||preciseFr(card,r[i])||fr(card,r[i],sc,i);
+    }
     return roleGrounded(part,r[i],enMode);
   }).filter(Boolean);
   // Position affects the reading, but transitions should read as one story.
