@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.23';
+const VERSION='6.24';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -713,11 +713,96 @@ function roleGrounded(text,role,enMode){
   });
 }
 
+
+function relationViewQuestion(q){
+  const s=norm(q);
+  return /(?:que pense|qu.?est.ce que .* pense|comment .* me voit|quel regard .* sur moi|que ressent|sentiments? .* pour moi|ce qu.?il pense de moi|ce qu.?elle pense de moi)/.test(s);
+}
+function relationViewPart(card,role,enMode,reversed){
+  const title=norm((enMode?card?.en?.name:card?.name)||card?.name);
+  const local=enMode?(card?.en||{}):card;
+  const reverseRaw=reversed?norm(window.CR_TAROT_REVERSED?.[card.id]?.[enMode?'en':'fr']||''):'';
+  const h=norm([title,local?.keywords,local?.category,local?.definition,local?.meaning,reverseRaw].filter(Boolean).join(' '));
+  if(enMode){
+    if(role==='origin'){
+      if(reversed&&/pape|hierophant|regle|conseil|tradition/.test(h))return 'The reading suggests that this person no longer sees the bond through a simple or conventional framework. Their view seems to be moving away from a fixed definition of what the relationship should be.';
+      if(/attir|desir|passion|sensual/.test(h))return 'Their current view appears strongly coloured by attraction and desire, even if that does not yet define the whole bond.';
+      if(/distance|silence|isolement|retrait/.test(h))return 'Their present view seems marked by distance or restraint, as though part of what they think remains unexpressed.';
+      return 'The reading suggests that their current view of you is still being redefined rather than fixed once and for all.';
+    }
+    if(role==='obstacle'){
+      if(/batons|conflit|dispute|competition|confront|tension/.test(h))return 'What complicates that view is a sense of tension or competing impulses: attraction may coexist with disagreement, pride or difficulty finding common ground.';
+      if(/silence|ambigu|secret|non dit/.test(h))return 'The main difficulty is that part of what they think remains unspoken, leaving room for uncertainty.';
+      return 'What complicates their view is an unresolved tension that prevents a completely simple or settled position.';
+    }
+    if(role==='resource'){
+      if(/neuf de coupes|nine of cups|satisfaction|plaisir|desir/.test(h))return 'At the same time, the reading points to genuine pleasure in the connection: they may associate you with desire, emotional gratification or the feeling that something they want could be possible.';
+      if(/reciproc|amour|lien|connexion|harmon/.test(h))return 'There is nevertheless a positive emotional current: they seem to associate you with closeness, support or a bond that matters.';
+      if(/clarte|verite|lucid|communication/.test(h))return 'A more lucid understanding of the bond is available to them, which can help separate real feelings from assumptions.';
+      return 'A positive element remains present in their view of you and prevents the situation from being reduced to the difficulty alone.';
+    }
+    if(role==='evolution'){
+      if(reversed&&/hermite|hermit|solitude|isolement|echange/.test(h))return 'Their inner position seems to be reaching the limits of withdrawal: the reading suggests that remaining isolated may become less satisfying and that renewed dialogue could become more meaningful.';
+      if(/silence|distance|retrait|isolement/.test(h))return 'For now, their thoughts may remain private or restrained, but that distance does not necessarily mean indifference.';
+      return 'Their view does not look completely fixed; it may evolve as communication or concrete interaction changes.';
+    }
+    if(role==='outcome'){
+      if(/imperatrice|empress|creation|expansion|sensual|communication/.test(h))return 'Overall, the reading gives their view of you a warm, attractive and stimulating quality. They may see you as someone who awakens desire, interest and the possibility of something more alive, but this still needs to be confirmed by what they actually express or do.';
+      if(/attir|desir|passion|sensual/.test(h))return 'Overall, attraction appears to play an important part in the way they see you, though attraction alone does not establish intention or commitment.';
+      if(/bond|connexion|amour|reciproc/.test(h))return 'Overall, the bond appears meaningful in their eyes, while its real direction still depends on mutual actions and communication.';
+      return 'Overall, the reading suggests interest rather than indifference, but their exact intentions remain something that only their words and actions can confirm.';
+    }
+  }else{
+    if(role==='origin'){
+      if(reversed&&/pape|regle|conseil|tradition/.test(h))return 'Le tirage suggère qu’en ce moment, Kinya ne regarde plus votre lien à travers un cadre simple ou conventionnel. Sa manière de vous situer semble s’éloigner d’une définition trop rigide de ce que votre relation devrait être.';
+      if(/attir|desir|passion|sensual/.test(h))return 'Son regard paraît actuellement fortement teinté d’attirance et de désir, même si cela ne suffit pas encore à définir tout le lien.';
+      if(/distance|silence|isolement|retrait/.test(h))return 'Son regard semble marqué par une certaine retenue : une partie de ce qu’il pense de vous paraît rester intérieure ou difficile à exprimer.';
+      return 'Le tirage suggère que son regard sur vous est encore en train de se redéfinir plutôt que définitivement fixé.';
+    }
+    if(role==='obstacle'){
+      if(/batons|conflit|dispute|competition|confront|tension/.test(h))return 'Ce qui complique ce regard est une impression de tension ou de volontés qui ne vont pas toujours dans le même sens. Il peut donc associer votre lien à la fois à une stimulation réelle et à une difficulté à trouver un terrain commun.';
+      if(/silence|ambigu|secret|non dit/.test(h))return 'La principale difficulté vient de ce qui reste non dit : une partie de sa pensée demeure difficile à lire clairement.';
+      return 'Ce qui complique son regard est une tension encore non résolue, qui l’empêche probablement d’avoir une position totalement simple ou arrêtée.';
+    }
+    if(role==='resource'){
+      if(/neuf de coupes|satisfaction|plaisir|desir/.test(h))return 'En parallèle, le tirage montre quelque chose de nettement plus positif : il peut vous associer au plaisir, au désir et à la satisfaction affective, comme si votre présence représentait quelque chose qu’il aimerait pouvoir vivre ou retrouver.';
+      if(/reciproc|amour|lien|connexion|harmon/.test(h))return 'Un courant affectif positif reste néanmoins présent : il semble vous associer à une proximité, un soutien ou un lien qui compte pour lui.';
+      if(/clarte|verite|lucid|communication/.test(h))return 'Il dispose aussi d’une possibilité de regarder le lien avec davantage de lucidité, en distinguant ce qu’il ressent réellement de ce qu’il suppose ou redoute.';
+      return 'Un élément positif subsiste dans sa manière de vous voir et empêche de réduire son regard aux seules difficultés.';
+    }
+    if(role==='evolution'){
+      if(reversed&&/hermite|solitude|isolement|echange/.test(h))return 'Sa position intérieure semble atteindre les limites du retrait : rester dans l’isolement ou dans la réflexion solitaire pourrait lui convenir de moins en moins. Le tirage ouvre donc l’idée qu’un échange avec vous puisse reprendre de l’importance dans sa manière de penser la relation.';
+      if(/silence|distance|retrait|isolement/.test(h))return 'Pour le moment, ses pensées peuvent rester retenues ou silencieuses, sans que cette distance signifie nécessairement de l’indifférence.';
+      return 'Son regard ne paraît pas complètement figé ; il peut encore évoluer selon les échanges et les actes concrets entre vous.';
+    }
+    if(role==='outcome'){
+      if(/imperatrice|creation|expansion|sensual|communication/.test(h))return 'Dans l’ensemble, le tirage donne à son regard sur vous une tonalité chaleureuse, attirée et stimulante. Il peut vous voir comme quelqu’un qui éveille chez lui du désir, de l’intérêt et la possibilité de quelque chose de plus vivant. Cela ne permet toutefois pas d’affirmer ses intentions : ce sont ses paroles et ses actes qui pourront les confirmer.';
+      if(/attir|desir|passion|sensual/.test(h))return 'Dans l’ensemble, l’attirance semble occuper une place importante dans sa manière de vous voir, sans suffire à elle seule à établir une intention ou un engagement.';
+      if(/lien|connexion|amour|reciproc/.test(h))return 'Dans l’ensemble, le lien semble avoir du poids dans son regard, mais sa direction concrète dépend encore de ce qu’il choisira réellement d’exprimer et de faire.';
+      return 'Dans l’ensemble, le tirage suggère davantage d’intérêt que d’indifférence, mais ses intentions précises ne peuvent être confirmées que par ses paroles et ses actes.';
+    }
+  }
+  return '';
+}
+function relationViewStory(cards,enMode){
+  const chosen=cards.slice(0,12), r=roles(chosen.length);
+  const reversedAt=i=>state.oracle==='tarot'&&state.draw?.[i]===chosen[i]&&state.tarotReversed?.[i]===true;
+  const parts=chosen.map((card,i)=>relationViewPart(card,r[i],enMode,reversedAt(i))).filter(Boolean);
+  if(enMode)return parts.join(' ');
+  return parts.join(' ');
+}
+
 function build(cards){
   if(!Array.isArray(cards)||!cards.length)return '';
   const enMode=state.lang==='en', chosen=cards.slice(0,12), r=roles(chosen.length);
   const reversedAt=i=>state.oracle==='tarot'&&state.draw?.[i]===chosen[i]&&state.tarotReversed?.[i]===true;
   const sc=scope();
+  const q=String(state.question||'').trim();
+  if(sc==='relation'&&relationViewQuestion(q)){
+    const body=relationViewStory(chosen,enMode);
+    const question=q?`<p class="reading-question">${enMode?'Your question':'Votre question'} : « ${esc(q)} »</p>`:'';
+    return `<div class="story-reading" data-story-engine="universal-fluid-${VERSION}-relation-view"><h3>${enMode?'The story told by your cards':'L’histoire racontée par vos cartes'}</h3>${question}<p class="story-continuous">${esc(body)}</p></div>`;
+  }
   const parts=chosen.map((card,i)=>{
     let part='';
     if(reversedAt(i)){
@@ -747,7 +832,6 @@ function build(cards){
   const seen=new Set();
   const narrative=parts.join(' ').match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[];
   let body=narrative.filter(s=>{const key=norm(s).trim();if(seen.has(key))return false;seen.add(key);return true;}).join(' ').replace(/\s+/g,' ').trim();
-  const q=String(state.question||'').trim();
   const question=q?`<p class="reading-question">${enMode?'Your question':'Votre question'} : « ${esc(q)} »</p>`:'';
   return `<div class="story-reading" data-story-engine="universal-fluid-${VERSION}"><h3>${enMode?'The story told by your cards':'L’histoire racontée par vos cartes'}</h3>${question}<p class="story-continuous">${esc(body)}</p></div>`;
 }
