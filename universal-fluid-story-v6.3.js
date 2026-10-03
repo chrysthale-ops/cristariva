@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.28';
+const VERSION='6.29';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -97,6 +97,9 @@ function motif(card,enMode){
   if(/^(lien amoureux|romantic bond|love bond)$/.test(name))return 'romantic';
   if(/^(evolution|development|growth)$/.test(name))return 'change';
   if(/^(protection)$/.test(name))return 'ground';
+  if(/^(tendresse|tenderness)$/.test(name))return 'tenderness';
+  if(/^(intimite|intimacy)$/.test(name))return 'intimacy';
+  if(/^(ame jumelle|twin soul|twin flame)$/.test(name))return 'mirror';
   const k=norm([local?.name,local?.category,local?.keywords,local?.definition||local?.meaning].filter(Boolean).join(' '));
   const details=norm(local?.definition||local?.meaning||'');
   if(/trois d.?epees|three of swords/.test(name))return 'heartbreak';
@@ -147,6 +150,27 @@ function distinctiveFr(card,role,sc){
   const m=motif(card,false);
   const project=sc==='work';
   const stages={
+    tenderness:{
+      origin:'Une proximité douce, faite d’attentions et de gestes rassurants, a donné au lien une valeur particulière. Cette expérience explique le besoin de vous sentir accueilli sans avoir à forcer votre place.',
+      obstacle:'La douceur peut manquer si les attentes deviennent pressantes ou si les besoins restent tus. Prendre soin du lien demande aussi de pouvoir dire ce qui vous touche sans craindre une réaction dure.',
+      resource:'La bienveillance et les petites attentions offrent un appui pour traverser les incertitudes. Une présence attentive peut rendre le dialogue plus sûr, sans exiger une réponse immédiate.',
+      evolution:'Le lien peut évoluer par des gestes plus doux et une attention plus personnelle. Cette proximité se construit dans la manière de vous accueillir mutuellement, au-delà de l’intensité du désir.',
+      outcome:'Ce qui mérite de durer, c’est la douceur entre vous : les attentions sincères, les gestes rassurants et la possibilité de vous rapprocher sans pression. Le désir et l’intensité peuvent ouvrir une étape, mais la qualité de cette étape se mesure surtout à la façon dont vous prenez soin l’un de l’autre. La suite la plus nourrissante serait une proximité où chacun se sent accueilli, libre de dire ce qu’il ressent et respecté dans son rythme.'
+    },
+    intimacy:{
+      origin:'Une proximité intime, émotionnelle ou physique, donne à votre histoire une profondeur particulière. Ce qui vous a rapprochés tient à la confiance et à la possibilité de vous montrer plus vulnérables, au-delà de la séduction.',
+      obstacle:'La proximité peut devenir difficile si la vulnérabilité expose à une attente trop forte. Vous ouvrir demande un espace sûr, où ce qui est confié reste respecté.',
+      resource:'La confiance déjà partagée peut aider à aborder ce qui reste délicat. Elle offre un espace pour parler plus personnellement et reconnaître les besoins de chacun.',
+      evolution:'Le rapprochement peut gagner en profondeur lorsque chacun accepte de se montrer plus authentiquement. La confiance devient alors aussi importante que l’attirance.',
+      outcome:'La direction profonde du tirage est celle d’une intimité plus confiante. Ce qui peut durer repose sur la sécurité émotionnelle, le respect de votre espace privé et la possibilité de vous montrer tels que vous êtes.'
+    },
+    mirror:{
+      origin:'Une attraction intense et un sentiment de vous reconnaître dans l’autre ont donné de la force à cette histoire. Cette résonance a aussi pu rendre vos fragilités plus sensibles.',
+      obstacle:'L’intensité du lien peut amplifier les attentes et les réactions. Le sentiment de vous reconnaître l’un dans l’autre ne règle pas à lui seul les désaccords ou les différences de disponibilité.',
+      resource:'Ce que l’autre réveille en vous peut aider à comprendre vos propres besoins. Cette lucidité devient une force lorsqu’elle permet de répondre autrement aux anciennes blessures.',
+      evolution:'Une forte résonance entre vous peut remettre les sentiments au premier plan. Ce rapprochement agit aussi comme un miroir : il rend visibles vos besoins et vos fragilités, et demande de la maturité pour trouver un équilibre.',
+      outcome:'La suite se joue dans votre capacité à donner un cadre plus mûr à une attraction intense. Le lien peut être marquant, mais ce sont vos choix réciproques et votre manière de traverser les difficultés qui lui donneront une stabilité.'
+    },
     romantic:{
       origin:'Votre question prend racine dans un attachement amoureux : le désir de proximité affective donne à cette histoire une portée qui dépasse un simple échange amical.',
       obstacle:'La dimension amoureuse du lien soulève des attentes qui peuvent être difficiles à accorder. Le désir de proximité mérite d’être exprimé pour comprendre ce que chacun souhaite réellement vivre.',
@@ -240,6 +264,7 @@ function distinctiveFr(card,role,sc){
 }
 function developFr(card,role){
   const actions={
+    tenderness:'préserver la douceur et les attentions sans imposer de pression',intimacy:'préserver la confiance et la sécurité émotionnelle',mirror:'donner un cadre mûr à cette résonance intense',
     romantic:'clarifier la place des sentiments amoureux et la proximité souhaitée par chacun',
     alignment:'faire correspondre vos décisions à vos besoins réels',separation:'reconnaître ce qui s’est terminé et ce qui pourrait être reconstruit',happiness:'choisir ce qui nourrit une joie durable',
     destiny:'choisir votre réponse à ce tournant marquant',retry:'reprendre autrement ce qui avait échoué',temptation:'mesurer les conséquences du désir avant de lui donner suite',
@@ -515,6 +540,7 @@ function en(card,role,sc,i){
 }
 function semanticEn(card,role,sc,i){
   const actions={
+    tenderness:'preserve kindness, reassuring gestures and closeness without pressure',intimacy:'build emotional safety and respect the vulnerability you share',mirror:'give an intense mutual resonance a mature and balanced framework',
     romantic:'clarify the romantic feelings and the emotional closeness each person wants',
     alignment:'bring your choices into line with what you genuinely need',separation:'acknowledge the break and establish what would need to change before rebuilding',happiness:'make room for lasting fulfilment without tying it to a single outcome',
     destiny:'choose your response to a turning point that has particular meaning for you',
@@ -690,6 +716,19 @@ function roleGrounded(text,role,enMode){
 }
 
 
+function outcomeDevelopment(card,cards,sc,enMode){
+  const k=motif(card,false)||theme(card,false);
+  const cautious=['separation','tension','conflict','heartbreak','loss','ambiguity','anxiety','illusion','burden','disenchantment'].includes(k);
+  const earlier=cards.slice(0,-1).some(c=>['separation','tension','conflict','heartbreak','loss','ambiguity','anxiety'].includes(motif(c,false)||theme(c,false)));
+  const focus=enMode
+    ?(sc==='relation'?'the closeness you can actually share':sc==='work'?'the project you can realistically sustain':'the path that fits your needs')
+    :(sc==='relation'?'la proximité que vous pouvez réellement vivre':sc==='work'?'le projet que vous pouvez soutenir dans la durée':'le chemin qui correspond à vos besoins');
+  const bridge=enMode
+    ?(cautious?'The earlier openings do not erase this final difficulty.':earlier?'The difficulties already described remain part of the picture, but they need not define the entire direction ahead.':'The earlier impulses and resources find their purpose in this final direction.')
+    :(cautious?'Les ouvertures précédentes n’effacent pas ce dernier point de vigilance.':earlier?'Les difficultés déjà évoquées restent à traverser, mais elles ne résument pas toute la direction qui s’ouvre.':'Les élans et les ressources précédents prennent leur sens dans cette orientation finale.');
+  const implication=enMode?semanticEn(card,'outcome',sc,cards.length-1):developFr(card,'outcome');
+  return bridge+' '+implication+' '+(enMode?`This is the deciding thread for ${focus}: it gives you a way to assess the next steps, rather than treating every earlier signal as a separate answer.`:`C’est le fil décisif pour ${focus} : cette orientation permet de juger les prochaines étapes, au lieu de considérer chaque signe précédent comme une réponse isolée.`);
+}
 function build(cards){
   if(!Array.isArray(cards)||!cards.length)return '';
   const enMode=state.lang==='en', chosen=cards.slice(), r=roles(chosen.length);
@@ -715,7 +754,10 @@ function build(cards){
     const sources=sourceSentences(chosen,enMode);
     // Develop the implication of each position, rather than padding the
     // story with definitions. Longer distinctive passages already do this.
-    if(part.split(/\s+/).length<45){
+    if(i===chosen.length-1&&chosen.length>1&&part.split(/\s+/).length<65){
+      const semantic=reversedAt(i)?{id:card.id,name:'',keywords:window.CR_TAROT_REVERSED?.[card.id]?.fr||''}:card;
+      part+=' '+outcomeDevelopment(semantic,chosen,sc,enMode);
+    }else if(part.split(/\s+/).length<45){
       const semantic=reversedAt(i)?{id:card.id,name:'',keywords:window.CR_TAROT_REVERSED?.[card.id]?.fr||''}:card;
       const detail=enMode?semanticEn(semantic,r[i],sc,i):developFr(semantic,r[i]);
       if(detail&&norm(detail)!==norm(part))part+=' '+detail;

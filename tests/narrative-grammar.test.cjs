@@ -52,6 +52,23 @@ function noCopy(text,cards){
     }
   }
 }
+test('the last card supplies a developed conclusion for three and five cards',()=>{
+  const deck=decks.amour;
+  for(const n of [3,5]){
+    const names=n===5?['Intimité','Plaisir','Évolution','Âme jumelle','Tendresse']:['Intimité','Évolution','Tendresse'];
+    const cards=names.map(name=>deck.find(c=>c.name===name));assert.ok(cards.every(Boolean));
+    Object.assign(state,{oracle:'amour',domain:'Sentimental',lang:'fr',question:'Ce qui mérite de durer entre nous ?',draw:cards,tarotReversed:[]});
+    const body=prose(window.CR_UNIVERSAL_FLUID_STORY(cards));
+    assert.match(body,/douceur entre vous/);assert.match(body,/sans pression/);assert.match(body,/respecté dans son rythme/);
+    const conclusion=body.slice(body.toLowerCase().indexOf('ce qui mérite de durer'));
+    assert.ok(conclusion.split(/\s+/).length>=65,conclusion);
+    noCopy(body,cards);
+    const changed=[...cards.slice(0,-1),deck.find(c=>c.name==='Rupture')];
+    const alternative=prose(window.CR_UNIVERSAL_FLUID_STORY(changed));
+    assert.doesNotMatch(alternative,/douceur entre vous/);
+    assert.match(alternative,/séparation/);
+  }
+});
 test('the reported five-card spread explicitly retains the romantic nature of the bond',()=>{
   const cards=['Sincérité','Doute','Protection','Lien amoureux','Évolution'].map(name=>decks.amour.find(c=>c.name===name));
   assert.ok(cards.every(Boolean));
@@ -130,6 +147,6 @@ test('question intents share the same protected engine, including thoughts, date
     const html=window.CR_UNIVERSAL_FLUID_STORY(state.draw);
     noCopy(prose(html),state.draw);
     assert.doesNotMatch(prose(html),/Kinya|Alex|Marie|<script>/);
-    assert.match(html,/universal-fluid-6.28/);
+    assert.match(html,/universal-fluid-6.29/);
   }
 });
