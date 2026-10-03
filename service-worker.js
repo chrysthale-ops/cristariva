@@ -1,8 +1,8 @@
 /* CRISTARIVA — service worker v30 — récit professionnel développé.
    Force 22 arcanes majeurs + 56 arcanes mineurs HD sur PC et Android
    et recharge la planche validée complète des arcanes mineurs. */
-const CACHE_NAME='cristariva-v95-20261003-story629-cartouches-r4';
-const APP_VERSION='2026.10.03-story629-cartouches-r4';
+const CACHE_NAME='cristariva-v95-20261003-story630-cartouches-r4';
+const APP_VERSION='2026.10.03-story630-cartouches-r4';
 const SHELL=[
   './',
   './index.html',
@@ -12,7 +12,7 @@ const SHELL=[
   './icon-512.png',
   './story-fluid-v5.1.js?v=5.30',
   './tarot-reversals.js?v=20260929-r2',
-  './universal-fluid-story-v6.3.js?v=6.29-final-card-weight-r1',
+  './universal-fluid-story-v6.3.js?v=6.30-friendship-meaning-r1',
   './question-context-story-v5.2.js?v=5.2.2',
   './question-intent-story-v5.3.js?v=5.6',
   './question-project-story-v5.5.js?v=5.21',

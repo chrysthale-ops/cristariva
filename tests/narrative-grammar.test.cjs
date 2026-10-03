@@ -52,6 +52,18 @@ function noCopy(text,cards){
     }
   }
 }
+test('friendship as the final card remains explicitly friendship, not collaboration',()=>{
+  const cards=['Liberté','Union','Seconde chance','Karma','Amitié'].map(name=>decks.amour.find(c=>c.name===name));
+  assert.ok(cards.every(Boolean));
+  Object.assign(state,{oracle:'amour',domain:'Sentimental',lang:'fr',question:'Mon avenir amoureux ?',draw:cards,tarotReversed:[]});
+  const body=prose(window.CR_UNIVERSAL_FLUID_STORY(cards));
+  assert.match(body,/amitié au premier plan/);assert.match(body,/pas encore une promesse de couple/);
+  assert.match(body,/ancien schéma relationnel/);assert.match(body,/engagement assumé/);
+  assert.doesNotMatch(body,/collaboration effective|comment chacun peut contribuer/);
+  noCopy(body,cards);
+  state.lang='en';
+  assert.match(prose(window.CR_UNIVERSAL_FLUID_STORY(cards)),/friendship/);
+});
 test('the last card supplies a developed conclusion for three and five cards',()=>{
   const deck=decks.amour;
   for(const n of [3,5]){
@@ -147,6 +159,6 @@ test('question intents share the same protected engine, including thoughts, date
     const html=window.CR_UNIVERSAL_FLUID_STORY(state.draw);
     noCopy(prose(html),state.draw);
     assert.doesNotMatch(prose(html),/Kinya|Alex|Marie|<script>/);
-    assert.match(html,/universal-fluid-6.29/);
+    assert.match(html,/universal-fluid-6.30/);
   }
 });

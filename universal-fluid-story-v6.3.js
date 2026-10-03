@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.29';
+const VERSION='6.30';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -100,6 +100,9 @@ function motif(card,enMode){
   if(/^(tendresse|tenderness)$/.test(name))return 'tenderness';
   if(/^(intimite|intimacy)$/.test(name))return 'intimacy';
   if(/^(ame jumelle|twin soul|twin flame)$/.test(name))return 'mirror';
+  if(/^(amitie|friendship)$/.test(name))return 'friendship';
+  if(/^(union)$/.test(name))return 'union';
+  if(/^(karma)$/.test(name))return 'patterns';
   const k=norm([local?.name,local?.category,local?.keywords,local?.definition||local?.meaning].filter(Boolean).join(' '));
   const details=norm(local?.definition||local?.meaning||'');
   if(/trois d.?epees|three of swords/.test(name))return 'heartbreak';
@@ -150,6 +153,34 @@ function distinctiveFr(card,role,sc){
   const m=motif(card,false);
   const project=sc==='work';
   const stages={
+    friendship:{
+      origin:'Un lien amical, fait d’écoute et de confiance, constitue le point de départ. Cette proximité offre une place dans la vie de l’autre, sans que sa nature soit nécessairement amoureuse.',
+      obstacle:'Le décalage peut tenir à la place donnée au lien : une proximité amicale peut être vécue comme une promesse sentimentale alors que les attentes ne sont pas encore partagées. Nommer cette différence aiderait à vous situer.',
+      resource:'La confiance amicale et l’écoute constituent un appui réel. Elles permettent de parler plus librement de vos attentes sans faire dépendre la valeur du lien d’une évolution amoureuse.',
+      evolution:'Le lien prend une forme plus amicale, centrée sur la confiance, les échanges et le soutien mutuel. Des sentiments pourraient évoluer, mais cette proximité ne permet pas à elle seule de conclure à la formation d’un couple.',
+      outcome:'La conclusion du tirage met l’amitié au premier plan : un lien de confiance, d’écoute et de soutien paraît être la forme de proximité à privilégier. Pour votre avenir amoureux, cela peut représenter une base affective importante, mais pas encore une promesse de couple. Une évolution sentimentale reste possible si elle devient désirée et exprimée de part et d’autre ; elle ne découle pas automatiquement de la complicité. La direction actuelle consiste donc à reconnaître la valeur du lien amical tout en clarifiant la place que chacun souhaite lui donner.'
+    },
+    union:{
+      origin:'Le désir de faire route ensemble a donné une forme plus concrète à vos attentes. Vous cherchez une place reconnue dans le lien, au-delà des seuls échanges ou de l’attirance.',
+      obstacle:'Le passage à un couple ou à un engagement assumé constitue ici le point difficile. Les sentiments ne suffisent pas si vos envies de vous unir, votre disponibilité ou le rythme souhaité restent différents.',
+      resource:'Un engagement partagé peut donner un cadre à vos sentiments. La possibilité de décider ensemble et de reconnaître votre place respective offre une base pour construire.',
+      evolution:'Le lien peut prendre une forme plus assumée, avec un choix concret de faire route ensemble. Cette étape demande que l’engagement soit voulu et porté par les deux personnes.',
+      outcome:'La direction du tirage est celle d’une union plus concrète : donner au lien une place visible et choisir de construire ensemble. Cette perspective devient solide lorsque les intentions sont partagées et se traduisent par un engagement réciproque.'
+    },
+    patterns:{
+      origin:'Un ancien schéma relationnel a marqué votre façon d’entrer dans cette histoire. Ce qui se répète mérite d’être reconnu pour distinguer le désir présent des habitudes du passé.',
+      obstacle:'La répétition d’une ancienne dynamique peut vous ramener aux mêmes attentes et aux mêmes déceptions. Le frein se situe dans ce mécanisme, qui risque de guider vos réactions malgré l’envie de changer.',
+      resource:'Comprendre ce qui se répète vous rend une liberté de choix. Vous pouvez utiliser cette expérience pour reconnaître plus tôt les limites et répondre autrement.',
+      evolution:'L’étape qui se dessine remet un ancien schéma relationnel en lumière. Une nouvelle tentative risque de reproduire le passé si les attentes, les limites et les façons de réagir restent identiques ; reconnaître ce mécanisme ouvre la possibilité de changer réellement la suite.',
+      outcome:'Le fil central est de sortir d’un schéma qui se répète. La suite dépend moins du retour d’une situation familière que de votre capacité à choisir une réponse nouvelle et à ne plus accepter les mêmes déséquilibres.'
+    },
+    freedom:{
+      origin:'Votre vie affective part d’un besoin d’espace et d’autonomie. Vous cherchez un lien dans lequel vous pouvez rester vous-même, sans perdre votre liberté pour conserver une proximité.',
+      obstacle:'Des attentes trop contraignantes peuvent rendre le rapprochement difficile. Trouver une place pour chacun demande de respecter les besoins d’indépendance sans laisser l’autre dans une attente indéfinie.',
+      resource:'Votre autonomie vous aide à choisir le lien plutôt qu’à le subir. Cet espace personnel permet de vous rapprocher sans faire dépendre tout votre équilibre de la relation.',
+      evolution:'Le lien évolue en laissant davantage de place à l’espace personnel. Cette respiration peut soutenir une proximité plus libre si les besoins de chacun sont compris.',
+      outcome:'La suite gagne à préserver votre liberté et celle de l’autre. Un lien durable demande une proximité choisie, où chacun peut conserver ses repères sans transformer l’attachement en contrainte.'
+    },
     tenderness:{
       origin:'Une proximité douce, faite d’attentions et de gestes rassurants, a donné au lien une valeur particulière. Cette expérience explique le besoin de vous sentir accueilli sans avoir à forcer votre place.',
       obstacle:'La douceur peut manquer si les attentes deviennent pressantes ou si les besoins restent tus. Prendre soin du lien demande aussi de pouvoir dire ce qui vous touche sans craindre une réaction dure.',
@@ -264,6 +295,7 @@ function distinctiveFr(card,role,sc){
 }
 function developFr(card,role){
   const actions={
+    friendship:'reconnaître la nature amicale du lien et clarifier toute attente sentimentale',union:'vérifier que l’engagement est souhaité de part et d’autre',patterns:'reconnaître le schéma relationnel qui se répète pour choisir autrement',
     tenderness:'préserver la douceur et les attentions sans imposer de pression',intimacy:'préserver la confiance et la sécurité émotionnelle',mirror:'donner un cadre mûr à cette résonance intense',
     romantic:'clarifier la place des sentiments amoureux et la proximité souhaitée par chacun',
     alignment:'faire correspondre vos décisions à vos besoins réels',separation:'reconnaître ce qui s’est terminé et ce qui pourrait être reconstruit',happiness:'choisir ce qui nourrit une joie durable',
@@ -540,6 +572,7 @@ function en(card,role,sc,i){
 }
 function semanticEn(card,role,sc,i){
   const actions={
+    friendship:'recognise the friendship at the heart of the bond without assuming that it promises a romantic relationship',union:'check that commitment is genuinely wanted by both people',patterns:'recognise the recurring relationship pattern and choose a different response',
     tenderness:'preserve kindness, reassuring gestures and closeness without pressure',intimacy:'build emotional safety and respect the vulnerability you share',mirror:'give an intense mutual resonance a mature and balanced framework',
     romantic:'clarify the romantic feelings and the emotional closeness each person wants',
     alignment:'bring your choices into line with what you genuinely need',separation:'acknowledge the break and establish what would need to change before rebuilding',happiness:'make room for lasting fulfilment without tying it to a single outcome',
