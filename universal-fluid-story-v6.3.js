@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.26';
+const VERSION='6.27';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -91,6 +91,9 @@ function motif(card,enMode){
   if(/^(destin|destiny|fate)$/.test(name))return 'destiny';
   if(/seconde chance|deuxieme chance|second chance/.test(name))return 'retry';
   if(/tentation|temptation/.test(name))return 'temptation';
+  if(/^(alignement|alignment)$/.test(name))return 'alignment';
+  if(/^(rupture|breakup|break-up|separation)$/.test(name))return 'separation';
+  if(/^(bonheur|happiness)$/.test(name))return 'happiness';
   const k=norm([local?.name,local?.category,local?.keywords,local?.definition||local?.meaning].filter(Boolean).join(' '));
   const details=norm(local?.definition||local?.meaning||'');
   if(/trois d.?epees|three of swords/.test(name))return 'heartbreak';
@@ -141,6 +144,27 @@ function distinctiveFr(card,role,sc){
   const m=motif(card,false);
   const project=sc==='work';
   const stages={
+    alignment:{
+      origin:'Vous avez cherché à faire correspondre vos choix à ce que vous ressentez vraiment. Ce besoin de cohérence explique pourquoi une réponse incertaine ou des gestes contradictoires ne peuvent plus vous satisfaire.',
+      obstacle:'Un décalage entre vos attentes et les actes posés fragilise votre direction. Chercher l’accord à tout prix risquerait de vous éloigner de ce qui compte pour vous.',
+      resource:'Vous pouvez vous appuyer sur une vision plus claire de vos besoins. Elle vous aide à reconnaître les propositions qui vous conviennent et à poser vos limites avec davantage de calme.',
+      evolution:'Vos décisions se rapprochent de vos besoins réels. Cette cohérence change votre manière de répondre : vous cherchez moins à maintenir une apparence d’accord qu’à vivre quelque chose de juste.',
+      outcome:'La suite gagne en cohérence lorsque vos choix traduisent vos besoins réels. Une direction devient plus solide si vous pouvez la vivre sans vous renier.'
+    },
+    separation:{
+      origin:'Une coupure a changé les repères sur lesquels vous comptiez. Elle laisse une histoire à comprendre, mais elle a aussi rendu impossible de continuer exactement comme auparavant.',
+      obstacle:'La séparation ou la fin d’un ancien fonctionnement reste le point difficile à traverser. Le désir de retrouver ce qui existait ne suffit pas encore à résoudre ce qui vous a éloignés.',
+      resource:'Reconnaître la coupure vous rend une marge de choix. Vous pouvez distinguer ce qui mérite encore une tentative de ce qui vous retient dans une attente douloureuse.',
+      evolution:'Aujourd’hui, une coupure ou la fin d’un ancien fonctionnement occupe le premier plan. Même si l’attachement demeure, un rapprochement demanderait de traiter ce qui vous a éloignés et de construire un échange différent.',
+      outcome:'Une fin ou une séparation marque la direction actuelle. Elle invite à protéger votre équilibre et à laisser une éventuelle reprise dépendre de changements réels.'
+    },
+    happiness:{
+      origin:'Des moments heureux ont donné à cette histoire une valeur particulière. Leur souvenir nourrit votre désir de retrouver une vie où vous vous sentez pleinement à votre place.',
+      obstacle:'L’envie de retrouver le bonheur peut rendre difficile de voir ce qui manque aujourd’hui. Préserver une image heureuse ne devrait pas vous faire accepter une réalité qui vous blesse.',
+      resource:'Ce qui vous apporte une joie réelle devient un repère précieux. Vous pouvez vous appuyer sur ces expériences pour choisir ce qui nourrit votre vie plutôt que la seule attente d’un résultat.',
+      evolution:'Une place plus grande se libère pour la joie et la satisfaction. Cette amélioration prend corps dans des expériences où vous vous sentez accueilli et libre d’être vous-même.',
+      outcome:'La direction qui s’ouvre est plus lumineuse et laisse une place à l’épanouissement. Ce mieux-être peut venir d’un lien renouvelé, mais aussi d’une manière de retrouver votre équilibre sans rester suspendu à une seule issue.'
+    },
     destiny:{
       origin:'Une rencontre ou un tournant marquant a laissé une empreinte qui donne encore du poids à votre question.',
       obstacle:'Le sentiment que tout serait déjà écrit risque de faire attendre un signe au lieu de choisir votre réponse.',
@@ -199,12 +223,14 @@ function distinctiveFr(card,role,sc){
     }
   };
   let text=stages[m]?.[role]||'';
-  if(sc==='work')text=text.replace('Une rencontre ou un tournant marquant','Une occasion ou un tournant professionnel marquant').replace('L’attirance','L’attrait d’une proposition').replace('retrouver le passé','relancer le projet précédent');
+  if(sc!=='relation')text=text.replace('ce qui vous a éloignés','ce qui a conduit à cette interruption').replace('un rapprochement','une reprise').replace('d’un lien renouvelé','d’une nouvelle orientation').replace('l’attachement demeure','l’envie de poursuivre demeure');
+  if(sc==='work')text=text.replace('Une rencontre ou un tournant marquant','Une occasion ou un tournant professionnel marquant').replace('L’attirance','L’attrait d’une proposition').replace('retrouver le passé','relancer le projet précédent').replace('un échange différent','un fonctionnement différent');
   if(sc==='life')text=text.replace('Une rencontre ou un tournant marquant','Une expérience ou un tournant marquant').replace('L’attirance','L’envie d’explorer une autre voie');
   return text;
 }
 function developFr(card,role){
   const actions={
+    alignment:'faire correspondre vos décisions à vos besoins réels',separation:'reconnaître ce qui s’est terminé et ce qui pourrait être reconstruit',happiness:'choisir ce qui nourrit une joie durable',
     destiny:'choisir votre réponse à ce tournant marquant',retry:'reprendre autrement ce qui avait échoué',temptation:'mesurer les conséquences du désir avant de lui donner suite',
     departure:'nommer ce qui ne nourrit plus la situation',contentment:'vérifier ce qui apporte une satisfaction durable',
     anxiety:'séparer les inquiétudes des faits établis',pause:'utiliser le recul pour revoir les hypothèses',
@@ -478,6 +504,7 @@ function en(card,role,sc,i){
 }
 function semanticEn(card,role,sc,i){
   const actions={
+    alignment:'bring your choices into line with what you genuinely need',separation:'acknowledge the break and establish what would need to change before rebuilding',happiness:'make room for lasting fulfilment without tying it to a single outcome',
     destiny:'choose your response to a turning point that has particular meaning for you',
     retry:'make a fresh attempt while changing what caused the earlier setback',
     temptation:'weigh a compelling desire against its consequences before acting',
@@ -674,6 +701,13 @@ function build(cards){
       part=distinctiveFr(card,r[i],sc)||preciseFr(card,r[i])||fr(card,r[i],sc,i);
     }
     const sources=sourceSentences(chosen,enMode);
+    // Develop the implication of each position, rather than padding the
+    // story with definitions. Longer distinctive passages already do this.
+    if(part.split(/\s+/).length<45){
+      const semantic=reversedAt(i)?{id:card.id,name:'',keywords:window.CR_TAROT_REVERSED?.[card.id]?.fr||''}:card;
+      const detail=enMode?semanticEn(semantic,r[i],sc,i):developFr(semantic,r[i]);
+      if(detail&&norm(detail)!==norm(part))part+=' '+detail;
+    }
     part=withoutCatalogue(part,sources);
     if(!part)part=enMode?semanticEn(card,r[i],sc,i):fr(card,r[i],sc,i);
     return roleGrounded(withoutCatalogue(part,sources),r[i],enMode);
@@ -691,13 +725,18 @@ function build(cards){
       const left=motif(chosen[i-1],false)||theme(chosen[i-1],false);
       const right=motif(chosen[i],false)||theme(chosen[i],false);
       if(left===right)continue;
-      const link=state.oracle==='tarot'?tarotPairLink(chosen[i-1],chosen[i],enMode):'';
+      let link=state.oracle==='tarot'?tarotPairLink(chosen[i-1],chosen[i],enMode):'';
+      if(!enMode&&sc==='relation'&&left==='alignment'&&right==='separation')link='Cette recherche de justesse rend la coupure plus sensible : ce qui paraissait cohérent doit maintenant être réévalué à la lumière de ce qui se passe réellement.';
+      if(!enMode&&sc==='relation'&&left==='separation'&&right==='happiness')link='La coupure ne ferme pourtant pas toute perspective heureuse ; elle change le chemin par lequel vous pourriez y parvenir.';
       if(link)parts[i]=link+' '+parts[i];
     }
   }
   const seen=new Set();
   const narrative=parts.join(' ').match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[];
   let body=narrative.filter(s=>{const key=norm(s).replace(/^(cependant|enfin|un element determinant apparait neanmoins|la situation evolue ensuite)\s*[:,]?\s*/,'').trim();if(seen.has(key))return false;seen.add(key);return true;}).join(' ').replace(/\s+/g,' ').trim();
+  if(sc==='relation'&&/retour|revenir|revienne|return|come back/.test(norm(q))&&chosen.some(c=>motif(c,false)==='separation')){
+    body+=' '+(enMode?'For the return you are asking about, the break remains a real issue: renewed contact would need mutual willingness and a different way of relating. A favourable direction does not by itself confirm that this person will come back.':'Concernant le retour que vous évoquez, la coupure reste donc un élément central : une reprise demanderait une volonté partagée et une autre manière de vivre le lien. Une direction favorable ne suffit pas, à elle seule, à confirmer le retour de cette personne.');
+  }
   const question=q?`<p class="reading-question">${enMode?'Your question':'Votre question'} : « ${esc(q)} »</p>`:'';
   return `<div class="story-reading" data-story-engine="universal-fluid-${VERSION}"><h3>${enMode?'The story told by your cards':'L’histoire racontée par vos cartes'}</h3>${question}<p class="story-continuous">${esc(body)}</p></div>`;
 }

@@ -52,6 +52,16 @@ function noCopy(text,cards){
     }
   }
 }
+test('alignment, breakup and happiness develop a connected answer about a return',()=>{
+  const cards=['Alignement','Rupture','Bonheur'].map(name=>decks.amour.find(c=>c.name===name));
+  assert.ok(cards.every(Boolean));
+  Object.assign(state,{oracle:'amour',domain:'Sentimental',lang:'fr',question:'Le retour de quelqu’un dans ma vie ?',draw:cards,tarotReversed:[]});
+  const body=prose(window.CR_UNIVERSAL_FLUID_STORY(cards));
+  assert.ok(body.split(/\s+/).length>=150);
+  assert.match(body,/coupure/);assert.match(body,/cohérence/);assert.match(body,/épanouissement/);
+  assert.match(body,/volonté partagée/);assert.match(body,/ne suffit pas/);
+  noCopy(body,cards);
+});
 test('every real card, deck, domain, language and supported format avoids catalogue sentences',()=>{
   assert.equal(decks.tarot.length,78);
   let count=0;
@@ -109,6 +119,6 @@ test('question intents share the same protected engine, including thoughts, date
     const html=window.CR_UNIVERSAL_FLUID_STORY(state.draw);
     noCopy(prose(html),state.draw);
     assert.doesNotMatch(prose(html),/Kinya|Alex|Marie|<script>/);
-    assert.match(html,/universal-fluid-6.26/);
+    assert.match(html,/universal-fluid-6.27/);
   }
 });
