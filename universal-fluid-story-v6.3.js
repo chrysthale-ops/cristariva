@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.25';
+const VERSION='6.26';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -29,6 +29,11 @@ function scope(){
 }
 function theme(card,en=false){
   const title=norm((en?card?.en?.name:card?.name)||card?.name);
+  if(!card?._themePass){
+    const primary={name:card?.name,keywords:card?.keywords,_themePass:true,en:{name:card?.en?.name,keywords:card?.en?.keywords}};
+    const key=theme(primary,en);
+    if(key!=='neutral')return key;
+  }
   if(/triangle|triangul|troisieme personne|rivalit/.test(title))return 'ambiguity';
   if(/dispute|querelle|conflit|altercation/.test(title))return 'conflict';
   if(/engagement|promesse|officialisation|construction/.test(title))return 'ground';
@@ -74,6 +79,18 @@ function pick(arr,card,i){
 function motif(card,enMode){
   const local=enMode?(card?.en||card):card;
   const name=norm(local?.name||card?.name);
+  // A title and explicit keywords express the symbol. Incidental words in
+  // prose (including negations and comparisons) must never override them.
+  if(!card?._semanticPass){
+    const primary={...card,_semanticPass:true,definition:'',meaning:'',category:'',en:{...card?.en,definition:'',meaning:'',category:''}};
+    const titled=motif({...primary,keywords:'',en:{...primary.en,keywords:''}},enMode);
+    if(titled)return titled;
+    const keyed=motif(primary,enMode);
+    if(keyed)return keyed;
+  }
+  if(/^(destin|destiny|fate)$/.test(name))return 'destiny';
+  if(/seconde chance|deuxieme chance|second chance/.test(name))return 'retry';
+  if(/tentation|temptation/.test(name))return 'temptation';
   const k=norm([local?.name,local?.category,local?.keywords,local?.definition||local?.meaning].filter(Boolean).join(' '));
   const details=norm(local?.definition||local?.meaning||'');
   if(/trois d.?epees|three of swords/.test(name))return 'heartbreak';
@@ -124,6 +141,27 @@ function distinctiveFr(card,role,sc){
   const m=motif(card,false);
   const project=sc==='work';
   const stages={
+    destiny:{
+      origin:'Une rencontre ou un tournant marquant a laissé une empreinte qui donne encore du poids à votre question.',
+      obstacle:'Le sentiment que tout serait déjà écrit risque de faire attendre un signe au lieu de choisir votre réponse.',
+      resource:'Ce qui a profondément compté pour vous aide à reconnaître la direction que vous souhaitez réellement prendre.',
+      evolution:'Un tournant donne une portée nouvelle à vos choix ; vous gardez la possibilité de répondre autrement.',
+      outcome:'La suite pourrait prendre une importance particulière dans votre parcours, sans vous retirer la liberté de choisir.'
+    },
+    retry:{
+      origin:'Une première tentative n’a pas clos l’histoire ; le désir de reprendre autrement reste présent.',
+      obstacle:'Recommencer sans modifier ce qui avait échoué ferait courir le risque de retrouver les mêmes difficultés.',
+      resource:'L’expérience passée vous permet de savoir ce qui doit changer pour rendre une nouvelle tentative plus solide.',
+      evolution:'Une possibilité de reprendre ce qui semblait interrompu se présente maintenant, en construisant autrement cette nouvelle étape.',
+      outcome:'Une nouvelle tentative reste envisageable si elle s’accompagne de changements réels plutôt que de la seule envie de retrouver le passé.'
+    },
+    temptation:{
+      origin:'Un désir puissant ou une possibilité séduisante a bousculé vos repères et ouvert cette question.',
+      obstacle:'L’attrait immédiat peut faire oublier une limite ou une conséquence qui comptera ensuite.',
+      resource:'Reconnaître votre désir vous aide à choisir consciemment la place que vous souhaitez lui donner.',
+      evolution:'Une envie plus forte pousse à franchir un pas ; prendre le temps d’en mesurer les conséquences protège votre choix.',
+      outcome:'L’attirance peut donner l’impulsion de la prochaine étape, mais sa force ne suffit pas à garantir ce qui pourra durer.'
+    },
     heartbreak:{
       origin:'Une blessure ou une vérité douloureuse marque le point de départ. Elle mérite d’être regardée sans détour, car l’ignorer rendrait la suite moins juste et moins lisible.',
       obstacle:'La douleur peut devenir un frein si elle pousse à éviter les faits ou à interpréter chaque geste à travers la blessure passée. Il faut lui donner une place sans la laisser décider de tout.',
@@ -160,10 +198,14 @@ function distinctiveFr(card,role,sc){
       outcome:project?'La synthèse ouvre sur une avancée possible, à condition de choisir une direction précise et de concentrer les moyens sur une première étape réalisable. L’élan devient utile lorsqu’il sert un cap tenu dans la durée.':'La synthèse invite à choisir une direction nette, puis à conduire les forces disponibles vers ce même objectif. Une avancée est possible si la volonté s’accompagne d’actes coordonnés.'
     }
   };
-  return stages[m]?.[role]||'';
+  let text=stages[m]?.[role]||'';
+  if(sc==='work')text=text.replace('Une rencontre ou un tournant marquant','Une occasion ou un tournant professionnel marquant').replace('L’attirance','L’attrait d’une proposition').replace('retrouver le passé','relancer le projet précédent');
+  if(sc==='life')text=text.replace('Une rencontre ou un tournant marquant','Une expérience ou un tournant marquant').replace('L’attirance','L’envie d’explorer une autre voie');
+  return text;
 }
 function developFr(card,role){
   const actions={
+    destiny:'choisir votre réponse à ce tournant marquant',retry:'reprendre autrement ce qui avait échoué',temptation:'mesurer les conséquences du désir avant de lui donner suite',
     departure:'nommer ce qui ne nourrit plus la situation',contentment:'vérifier ce qui apporte une satisfaction durable',
     anxiety:'séparer les inquiétudes des faits établis',pause:'utiliser le recul pour revoir les hypothèses',
     tangible:'donner une forme concrète à la possibilité entrevue',disenchantment:'réévaluer ce qui existe avant de le quitter',
@@ -436,6 +478,9 @@ function en(card,role,sc,i){
 }
 function semanticEn(card,role,sc,i){
   const actions={
+    destiny:'choose your response to a turning point that has particular meaning for you',
+    retry:'make a fresh attempt while changing what caused the earlier setback',
+    temptation:'weigh a compelling desire against its consequences before acting',
     heartbreak:'recognise the hurt without letting it decide everything',burden:'share the responsibilities and reduce the load',
     sensitivity:'follow a gentle opening with consistent actions',composure:'express what matters calmly',direction:'choose a clear course before accelerating',
     departure:'decide what is worth leaving behind',contentment:'check whether satisfaction also meets the deeper need',
@@ -688,4 +733,3 @@ try{refresh();}catch(e){}
 window.addEventListener('pageshow',refresh);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refresh();});
 })();
-

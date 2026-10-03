@@ -18,6 +18,28 @@ for(const suit of ['batons','coupes','epees','deniers'])vm.runInContext(read('ta
 const base=JSON.parse(read('index.html').match(/^const DATA =(.+);$/m)[1]);
 const minors=window.CR_TAROT_MINOR_ROWS.map(r=>({id:r[0],name:r[1],category:r[2],keywords:r[4],definition:r[5],en:{name:r[9],keywords:r[12],definition:r[13]}}));
 const decks={cristariva:base.main,amour:window.AMOUR_DATA.main,tarot:[...window.TAROT_DATA.main.filter(c=>c.id<=22),...minors]};
+test('Destin, Seconde chance and Tentation retain their meanings and their positions',()=>{
+  const cards=['Destin','Seconde chance','Tentation'].map(name=>Object.values(decks).flat().find(c=>c.name===name));
+  assert.ok(cards.every(Boolean));
+  Object.assign(state,{oracle:'amour',domain:'Sentimental',lang:'fr',draw:cards,tarotReversed:[]});
+  const body=prose(window.CR_UNIVERSAL_FLUID_STORY(cards));
+  assert.match(body,/empreinte/);assert.match(body,/reprendre/);assert.match(body,/attirance/i);
+  assert.doesNotMatch(body,/désaccord|choisir le cap/);
+  for(let i=0;i<3;i++){
+    const changed=cards.slice();changed[i]=decks.tarot.find(c=>c.name==='Le Chariot');
+    assert.notEqual(prose(window.CR_UNIVERSAL_FLUID_STORY(changed)),body);
+  }
+  assert.notEqual(prose(window.CR_UNIVERSAL_FLUID_STORY([...cards].reverse())),body);
+});
+test('incidental contradictions in a definition cannot override a recognised title',()=>{
+  for(const [oracle,deck] of Object.entries(decks))for(const name of ['Seconde chance','Tentation','Le Chariot','Trois d’Épées']){
+    const card=deck.find(c=>c.name===name);if(!card)continue;
+    Object.assign(state,{oracle,domain:'Sentimental',lang:'fr',draw:[card],tarotReversed:[false]});
+    const expected=prose(window.CR_UNIVERSAL_FLUID_STORY([card]));
+    const altered={...card,definition:'Volonté, conflit, deuil, perte, pause, surcharge.',meaning:''};
+    assert.equal(prose(window.CR_UNIVERSAL_FLUID_STORY([altered])),expected);
+  }
+});
 function prose(html){return html.match(/<p class="story-continuous">([\s\S]*?)<\/p>/)[1].replace(/&#39;/g,"'").replace(/&amp;/g,'&');}
 function clean(text){return text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();}
 function noCopy(text,cards){
@@ -87,6 +109,6 @@ test('question intents share the same protected engine, including thoughts, date
     const html=window.CR_UNIVERSAL_FLUID_STORY(state.draw);
     noCopy(prose(html),state.draw);
     assert.doesNotMatch(prose(html),/Kinya|Alex|Marie|<script>/);
-    assert.match(html,/universal-fluid-6.25/);
+    assert.match(html,/universal-fluid-6.26/);
   }
 });
