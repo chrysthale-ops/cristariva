@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.24';
+const VERSION='6.25';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -20,24 +20,25 @@ function hay(card,en=false){
   ].filter(Boolean).join(' '));
 }
 function scope(){
-  const d=norm(state?.domain||''),q=norm(state?.question||'');
-  if(/profession|travail|emploi|carriere|projet|business|work|career|job|money|argent|finance/.test(d+' '+q))return 'work';
-  if(/relation|amour|couple|sentiment|romant|intimit|rencontr|love|partner|retour|recontact/.test(d+' '+q))return 'relation';
-  if(/site|cristariva|plateforme|entreprise/.test(q)&&/actualite|ouverture|fonctionnalite|creation|developpement|integrer|connecter|relier/.test(q))return 'work';
+  // The selected domain is authoritative; a question must not change it.
+  const d=norm(state?.domain||'');
+  if(/profession|travail|projet|work|career/.test(d))return 'work';
+  if(/sentiment|relation|romantic|love/.test(d))return 'relation';
+  if(/general|spirit/.test(d))return 'life';
   return 'life';
 }
 function theme(card,en=false){
   const title=norm((en?card?.en?.name:card?.name)||card?.name);
-  if(/triangle|triangul|troisieme personne|rivalit/.test(title))return 'triangle';
+  if(/triangle|triangul|troisieme personne|rivalit/.test(title))return 'ambiguity';
   if(/dispute|querelle|conflit|altercation/.test(title))return 'conflict';
-  if(/engagement|promesse|officialisation|construction/.test(title))return 'commitment';
+  if(/engagement|promesse|officialisation|construction/.test(title))return 'ground';
   if(/communication|dialogue|parole|conversation|clarification|communication|dialog/.test(title))return 'insight';
   if(/impasse|incompatibil|blocage|obstacle|rupture|conflit|trahison|infidelit|betrayal|deadlock/.test(title))return 'tension';
   if(/silence|retrait|absence de reponse|non dit/.test(title))return 'ambiguity';
   if(/alignement|coherence|accord/.test(title))return 'ground';
   if(/desir|attirance|passion/.test(title))return 'movement';
   if(/projet a deux|avenir commun|vie commune/.test(title))return 'bond';
-  const h=hay(card,en);
+  const h=title+' '+hay(card,en);
   if(/secret|cache|non dit|dissim|mystere|ambigu|incert|hesit|flou|doute|unknown|uncertain|hidden/.test(h))return 'ambiguity';
   if(/liberte|autonom|independan|espace|distance saine|freedom|autonomy|independence/.test(h))return 'freedom';
   if(/transformation|mutation|changement|renouveau|renaissance|transition|change|transform|renew/.test(h))return 'change';
@@ -73,7 +74,7 @@ function pick(arr,card,i){
 function motif(card,enMode){
   const local=enMode?(card?.en||card):card;
   const name=norm(local?.name||card?.name);
-  const k=norm([local?.category,local?.keywords].filter(Boolean).join(' '));
+  const k=norm([local?.name,local?.category,local?.keywords,local?.definition||local?.meaning].filter(Boolean).join(' '));
   const details=norm(local?.definition||local?.meaning||'');
   if(/trois d.?epees|three of swords/.test(name))return 'heartbreak';
   if(/dix de batons|ten of wands/.test(name))return 'burden';
@@ -100,7 +101,8 @@ function motif(card,enMode){
   if(/deuil|perte|regret|deception/.test(k))return 'loss';
   if(/conflit|dispute|desaccord|querelle/.test(k))return 'conflict';
   if(/secret|ambiguite|non.dit|incertitude/.test(k))return 'ambiguity';
-  if(/cooperation|soutien|entraide|equipe|partage/.test(k))return 'cooperation';
+  if(/cooperation|soutien|entraide|equipe|partage|collaboration/.test(k))return 'cooperation';
+  if(/regle|conseil|jugement|evaluation|tradition/.test(k))return 'insight';
   if(/verite|clarte|lucidite|discernement|communication|dialogue/.test(k))return 'insight';
   if(/liberte|autonomie|independance/.test(k))return 'freedom';
   if(/\belan\b|passion|rapidite|mouvement|impulsion/.test(k))return 'movement';
@@ -432,158 +434,62 @@ function en(card,role,sc,i){
   };
   return pick(bank?.[role]?.[t]||bank?.[role]?.neutral||[],card,i);
 }
-/* Ouvertures narratives des mineurs : leur définition commence souvent par
-   le nom de la carte. Le récit exprime le même sens sans le citer. */
-const tarotOpeners=Object.fromEntries([
-  [23,'Une énergie créative cherche une forme concrète avant que son élan ne s’épuise.','Creative energy is seeking a practical form before its momentum fades.'],
-  [24,'Un horizon plus vaste oblige à choisir entre le connu et une expansion préparée avec soin.','A wider horizon calls for a choice between the familiar and carefully prepared expansion.'],
-  [25,'Ce qui a été entrepris commence à produire des effets hors du contrôle immédiat.','What has been set in motion is beginning to bear fruit beyond immediate control.'],
-  [26,'Une étape déjà construite offre un espace de stabilité et de réussite partagée.','A step already built offers room for stability and shared achievement.'],
-  [27,'Des volontés différentes se confrontent et peuvent stimuler le mouvement ou disperser les forces.','Different aims are meeting and may spur progress or scatter the available energy.'],
-  [28,'Un effort devient visible et peut recevoir la reconnaissance qu’il mérite.','An effort is becoming visible and may receive deserved recognition.'],
-  [29,'Une position acquise demande à être défendue sans faire de chaque échange un combat.','An established position needs protection without turning every exchange into a battle.'],
-  [30,'L’immobilité commence à céder et demande de se préparer à un rythme plus vif.','The standstill begins to give way and calls for readiness for a quicker pace.'],
-  [31,'Une fatigue réelle coexiste avec la capacité de tenir encore une limite importante.','Real fatigue coexists with the strength to protect an important boundary.'],
-  [32,'Les responsabilités accumulées commencent à peser sur la direction poursuivie.','Accumulated responsibilities are beginning to weigh on the chosen direction.'],
-  [33,'Une curiosité vive ouvre la voie à un essai ou à une nouvelle stimulante.','Lively curiosity opens the way to an experiment or encouraging news.'],
-  [34,'Une passion pousse à agir vite, avec le risque de perdre le cap en chemin.','Passion urges swift action, with a risk of losing direction along the way.'],
-  [35,'Une assurance chaleureuse rend l’initiative plus visible et plus communicative.','Warm confidence makes initiative more visible and easier to share.'],
-  [36,'Une vision assumée peut entraîner d’autres personnes si elle laisse aussi une place à leur contribution.','A clear vision can bring others along when it leaves room for their contribution.'],
-  [37,'Une émotion nouvelle cherche à circuler et à ouvrir une disponibilité plus grande.','A new feeling is looking for room to move and greater openness.'],
-  [38,'Deux sensibilités cherchent un accord dans lequel chacune puisse être reconnue.','Two people or perspectives seek an agreement in which both can be acknowledged.'],
-  [39,'La joie partagée et le soutien de proches redonnent de l’élan au lien.','Shared joy and support from others bring fresh energy to the connection.'],
-  [40,'Une lassitude passagère rend moins visible une possibilité pourtant encore présente.','Passing weariness is obscuring a possibility that is still there.'],
-  [41,'Une perte retient l’attention, mais elle n’efface pas les liens qui demeurent.','A loss commands attention without erasing the ties that remain.'],
-  [42,'Un souvenir, une personne ou une ancienne habitude revient dans le présent.','A memory, a person, or an old habit returns to the present.'],
-  [43,'Plusieurs possibilités séduisantes se présentent sans offrir encore de choix vérifié.','Several appealing possibilities appear before any one has been tested.'],
-  [44,'Ce qui retenait autrefois ne nourrit plus assez pour justifier de rester sans questionner la suite.','What once held things together no longer nourishes them enough to stay without question.'],
-  [45,'Un désir peut se réaliser et procurer une satisfaction réelle, sans résoudre tous les autres besoins.','A wish may come true and bring real satisfaction without meeting every other need.'],
-  [46,'Une harmonie affective peut trouver une place durable dans un groupe, un foyer ou un lien choisi.','Emotional harmony may find a lasting place in a group, a home, or a chosen bond.'],
-  [47,'Un message sensible, un geste tendre ou une intuition nouvelle cherche à être accueilli.','A sensitive message, a tender gesture, or a new intuition seeks a response.'],
-  [48,'Une proposition ou une invitation avance avec un élan qui mérite d’être éprouvé dans les actes.','An offer or invitation moves forward with an impulse that still needs to be tested in action.'],
-  [49,'Une écoute profonde rend les émotions des autres plus lisibles, sans devoir les porter à leur place.','Deep attention makes others’ feelings easier to understand without carrying them in their place.'],
-  [50,'La maîtrise des émotions permet de rester présent sans nier ce qui est ressenti.','Emotional steadiness allows one to remain present without denying what is felt.'],
-  [51,'Une vérité devient plus nette et rend possible une parole ou une décision claire.','A truth comes into sharper focus, allowing a clear word or decision.'],
-  [52,'Une décision reste suspendue tant que deux positions semblent impossibles à départager.','A decision remains suspended while two positions seem impossible to reconcile.'],
-  [53,'Une douleur affective ou une vérité difficile demande à être regardée sans détour.','Emotional pain or a difficult truth needs to be faced directly.'],
-  [54,'Une pause utile protège la clarté d’esprit après une période de tension.','A necessary pause protects clarity after a period of strain.'],
-  [55,'Un conflit peut coûter plus cher que la victoire qu’il semblait promettre.','A conflict may cost more than the victory it seemed to promise.'],
-  [56,'Un passage hors d’une période difficile commence même si toutes les réponses ne sont pas encore là.','A passage out of a difficult period begins before every answer is known.'],
-  [57,'La discrétion ou la stratégie devient utile si elle ne sert pas à éviter la vérité.','Discretion or strategy helps when it does not become a way to avoid the truth.'],
-  [58,'Des contraintes ou des peurs donnent l’impression d’être enfermé dans une seule lecture possible.','Constraints or fears make one narrow reading of events feel inescapable.'],
-  [59,'Une pensée répétée amplifie l’inquiétude au-delà de ce que les faits établissent.','A recurring thought magnifies worry beyond what the facts establish.'],
-  [60,'Une manière de poursuivre arrive à sa limite et demande qu’une fin soit reconnue.','One way of carrying on has reached its limit and calls for an ending to be acknowledged.'],
-  [61,'Une vigilance curieuse cherche des faits avant de tirer des conclusions.','Curious vigilance looks for facts before drawing conclusions.'],
-  [62,'Une décision franche accélère les échanges, mais doit encore laisser de la place à l’écoute.','A direct decision quickens the exchange while still needing to leave room to listen.'],
-  [63,'Une lucidité indépendante permet de poser des limites sans perdre la dimension humaine.','Independent clarity makes it possible to set boundaries without losing humanity.'],
-  [64,'Une pensée structurée soutient une décision qui résiste mieux à l’impulsion du moment.','Structured thought supports a decision that can outlast the impulse of the moment.'],
-  [65,'Une possibilité concrète apparaît dans les ressources, le travail ou la vie matérielle.','A tangible opportunity appears among resources, work, or material circumstances.'],
-  [66,'Plusieurs priorités réclament le même temps et appellent une organisation soutenable.','Several priorities compete for the same time and call for a sustainable plan.'],
-  [67,'Un savoir-faire partagé et une coopération réelle donnent forme à ce qui se construit.','Shared skill and genuine cooperation give shape to what is being built.'],
-  [68,'Le désir de préserver ses acquis crée une base sûre, à condition de ne pas tout figer.','The wish to protect what has been gained creates security if it does not freeze everything in place.'],
-  [69,'Un manque matériel ou un sentiment d’exclusion rend l’aide disponible plus difficile à voir.','Material scarcity or a feeling of exclusion makes available help harder to see.'],
-  [70,'Les ressources circulent mieux lorsque donner et recevoir préservent la dignité de chacun.','Resources move more freely when giving and receiving preserve everyone’s dignity.'],
-  [71,'Un investissement demande du temps avant de montrer pleinement ce qu’il peut produire.','An investment needs time before its full results can be seen.'],
-  [72,'Un travail régulier affine peu à peu le geste, la méthode et la confiance.','Regular work gradually refines skill, method, and confidence.'],
-  [73,'Une autonomie s’est construite avec le temps, l’effort et des choix tenus.','Independence has grown through time, effort, and sustained choices.'],
-  [74,'Une stabilité dépasse l’individu et touche la famille, la transmission ou une structure durable.','Stability extends beyond one person into family, continuity, or a lasting structure.'],
-  [75,'Une occasion modeste invite à apprendre et à poser les bases d’une réalisation future.','A modest opportunity invites learning and the foundations of a future achievement.'],
-  [76,'Une progression lente mais régulière donne sa force à une démarche fiable.','Slow but steady progress lends strength to a dependable approach.'],
-  [77,'Le soin du quotidien et le sens pratique peuvent rendre les ressources plus solides.','Daily care and practical judgment can make resources more secure.'],
-  [78,'Une réussite matérielle fondée sur l’expérience demande une gestion responsable.','Material success grounded in experience calls for responsible stewardship.']
-].map(([id,fr,en])=>[id,{fr,en}]));
+function semanticEn(card,role,sc,i){
+  const actions={
+    heartbreak:'recognise the hurt without letting it decide everything',burden:'share the responsibilities and reduce the load',
+    sensitivity:'follow a gentle opening with consistent actions',composure:'express what matters calmly',direction:'choose a clear course before accelerating',
+    departure:'decide what is worth leaving behind',contentment:'check whether satisfaction also meets the deeper need',
+    anxiety:'separate the feared scenarios from established facts',pause:'use the pause to reconsider the next step',
+    tangible:'turn the available opportunity into something workable',disenchantment:'reassess what is still available before dismissing it',
+    illusion:'choose an option that can actually be tested',loss:'acknowledge the loss while making use of what remains',
+    conflict:'address the disagreement directly',ambiguity:'clarify what remains unspoken',cooperation:'agree on how each person can contribute',
+    insight:'make the decision with clearer information',freedom:'leave room for independence',movement:'give the momentum a sustainable direction',
+    change:'put the new approach into practice',ground:'build on what is dependable'
+  };
+  const action=actions[motif(card,false)||theme(card,false)];
+  if(!action)return en(card,role,sc,i);
+  const place=sc==='work'?'the project':sc==='relation'?'the connection':'your next step';
+  return {
+    origin:`What set ${place} in motion explains why you now need to ${action}.`,
+    obstacle:`Progress could falter if you do not ${action} before carrying on.`,
+    resource:`You have a useful opening here: you can ${action} and make it a point of support.`,
+    evolution:`A shift becomes possible as you begin to ${action} in practice.`,
+    outcome:`The direction ahead depends on your willingness to ${action}, with attention to what the earlier steps have revealed.`
+  }[role];
+}
 function tarotMixedPart(card,role,sc,i,enMode){
-  const id=Number(card.id);
-  /* Ces deux arcanes ont un second énoncé de catalogue qui répète le premier.
-     Leur prolongement conserve le sens sans répéter sujet et verbe. */
-  if(id===28)return enMode
-    ?'An effort can become visible and receive recognition. The praise has value when it reflects work actually done, while leaving room to see what still needs care.'
-    :'Un effort peut devenir visible et recevoir une reconnaissance méritée. Celle-ci a d’autant plus de valeur qu’elle reflète un travail accompli, sans faire oublier ce qui demande encore de l’attention.';
-  if(id===29)return enMode
-    ?'An established position needs protection without turning every exchange into a fight. Outside pressure is real, but choosing which boundaries matter helps preserve energy for what is essential.'
-    :'Une position acquise demande à être défendue sans faire de chaque échange un combat. La pression extérieure existe, mais choisir les limites qui comptent évite de disperser ses forces.';
-  if(id===50)return enMode
-    ?'Emotional steadiness makes it possible to stay present without denying what is felt. A calm conversation can then hold even intense feelings without letting them make every decision.'
-    :'La maîtrise des émotions permet de rester présent sans nier ce qui est ressenti. Une parole calme peut accueillir des sentiments intenses sans leur laisser décider seuls de la suite.';
-  const local=enMode?(card.en||{}):card;
-  const definition=String(local.definition||local.meaning||'');
-  const title=String(local.name||card.name||'');
-  const sentences=definition.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[];
-  const opening=tarotOpeners[Number(card.id)]?.[enMode?'en':'fr'];
-  if(opening){
-    let tail=sentences.slice(1).join(' ').trim();
-    const court=/^(?:Valet|Cavalier|Reine|Roi|Page|Knight|Queen|King)\b/.test(card.name)||/^(?:Page|Knight|Queen|King)\b/.test(card.en?.name||'');
-    if(enMode)tail=tail.replace(/^(?:It|He|She)\s+/i,court?'This approach ':'This development ');
-    else if(!/^Il peut être nécessaire\b/.test(tail))tail=tail.replace(/^(?:Il|Elle)\s+/i,court?'Cette attitude ':'Cela ');
-    return [opening,tail&&!tail.includes(title)?tail:''].filter(Boolean).join(' ');
-  }
-  if(sentences.length){
-    const clean=sentences.filter(sentence=>!sentence.includes(title)).join(' ').trim();
-    if(clean){
-      const spiritual=String(local.reading_spirituel||'').trim();
-      if(id<=22&&spiritual&&!spiritual.includes(title)&&norm(spiritual)!==norm(clean))return clean+' '+spiritual;
-      return clean;
-    }
-  }
-  let part=enMode?en(card,role,sc,i):distinctiveFr(card,role,sc)||preciseFr(card,role)||fr(card,role,sc,i);
-  part=part.replace(/^(?:Au départ,?\s*|At first,?\s*)/i,'')
-    .replace(/^Le récit (?:commence|s’ouvre) (?:sur|dans) /i,'')
-    .replace(/^The story (?:begins|opens) with /i,'');
-  return part?part.charAt(0).toLocaleUpperCase(enMode?'en':'fr')+part.slice(1):'';
+  // Use meaning only to identify a motif. Never emit catalogue sentences.
+  return enMode?semanticEn(card,role,sc,i):
+    distinctiveFr(card,role,sc)||preciseFr(card,role)||fr(card,role,sc,i);
 }
-/* Les cartouches restent des sens autonomes. Le récit prend dans chaque carte
-   une tension et une piste de réponse, puis relie les positions entre elles. */
-function tarotMixedNarrative(cards,cardRoles,enMode,reversedAt,sc){
-  const key=enMode?'en':'fr';
-  const details=cards.map((card,i)=>{
-    if(!reversedAt(i))return {card,reversed:false,body:tarotMixedPart(card,cardRoles[i]||'evolution',sc,i,enMode)};
-    const meaning=window.CR_TAROT_REVERSED?.[card.id]?.[key]||'';
-    const note=window.CR_TAROT_REVERSED_NOTES?.[card.id]?.[key]||'';
-    const halves=meaning.split(/\s*;\s*/);
-    return {card,reversed:true,observation:halves[0],response:halves.slice(1).join('; '),note};
-  });
-  const full=d=>d.reversed?[d.observation,d.response].filter(Boolean).join(enMode?'; ':' ; ').replace(/\.?$/,'.'):d.body;
-  if(details.length===1){
-    const d=details[0];
-    return [full(d),d.reversed?d.note:''].filter(Boolean);
-  }
-  const out=[];
-  const first=details[0];
-  out.push(full(first));
-  if(first.reversed&&first.note&&Number(first.card.id)!==10)out.push(first.note);
-  for(let i=1;i<details.length;i++){
-    const d=details[i],role=cardRoles[i]||'evolution';
-    if(i===1||i===details.length-1||(role==='evolution'&&details.length>=5)){
-      const link=tarotPairLink(details[i-1].card,d.card,enMode);
-      if(link)out.push(link);
-    }
-    out.push(full(d));
-    if(role==='obstacle'&&!d.reversed){
-      const nuance=tarotUprightObstacle(d.card,enMode);
-      if(nuance)out.push(nuance);
-    }
-    if(d.reversed&&d.note&&(i<details.length-1||details.length>=5)&&Number(d.card.id)!==10)out.push(d.note);
-  }
-  return out;
+function reversedPart(card,role,sc,i,enMode){
+  const raw=window.CR_TAROT_REVERSED?.[card.id]?.fr||'';
+  const symbolic={id:card.id,name:'',keywords:raw,definition:'',en:{name:'',keywords:raw}};
+  let part=tarotMixedPart(symbolic,role,sc,i,enMode);
+  // A reversal is a different dynamic, not a mechanical opposite.
+  const nuance=enMode
+    ?{origin:'The initial impulse has not yet found a workable form.',obstacle:'The imbalance asks for an adjustment before pushing ahead.',resource:'This support becomes useful when its limits are acknowledged.',evolution:'A change of approach can release what has remained held back.',outcome:'Progress depends on correcting the imbalance rather than forcing a result.'}
+    :{origin:'L’impulsion de départ n’a pas encore trouvé une forme qui vous convienne.',obstacle:'Ce déséquilibre demande un ajustement avant de reprendre votre avancée.',resource:'Cet appui devient utile lorsque vous en reconnaissez aussi les limites.',evolution:'Une autre manière d’aborder ce point peut débloquer ce qui restait en suspens.',outcome:'L’issue dépend d’un réajustement plutôt que d’un résultat obtenu à force d’insister.'};
+  if(Number(card.id)===6)part=enMode
+    ?'You can reassess the advice you have followed in light of what you actually need.'
+    :'Vous pouvez réexaminer les conseils suivis jusqu’ici à la lumière de ce dont vous avez réellement besoin.';
+  return part+' '+nuance[role];
 }
-function tarotUprightObstacle(card,enMode){
-  const t=theme(card,enMode);
-  if(['tension','ambiguity','conflict','heartbreak','loss'].includes(t))return '';
-  const id=Number(card.id);
-  if(id<=22)return '';
-  if(id>=65)return enMode
-    ?'Protecting what already works can also leave too little room to try another way forward.'
-    :'Préserver ce qui fonctionne déjà peut aussi laisser trop peu de place à une autre manière d’avancer.';
-  if(id>=51)return enMode
-    ?'Even a useful analysis can stall a choice if it hardens before the facts have been tested.'
-    :'Même une analyse utile peut retenir le choix si elle se fige avant que les faits aient été éprouvés.';
-  if(id>=37)return enMode
-    ?'A genuine feeling still needs room for the other person’s response rather than deciding the direction alone.'
-    :'Un sentiment réel a encore besoin de laisser place à la réponse de l’autre, au lieu de décider seul de la direction.';
-  if(id>=23)return enMode
-    ?'An encouraging impulse can still scatter the effort if it has no clear direction.'
-    :'Un élan encourageant peut néanmoins disperser les efforts s’il ne trouve pas de direction claire.';
-  return '';
+function sourceSentences(cards,enMode){
+  const values=[];
+  for(const card of cards){
+    for(const local of [card,card.en||{}])
+      for(const field of ['definition','meaning','reading_relationnel','reading_professionnel','reading_spirituel'])
+        values.push(local[field]||'');
+    values.push(window.CR_TAROT_REVERSED?.[card.id]?.[enMode?'en':'fr']||'');
+  }
+  return values.flatMap(v=>String(v).match(/[^.!?;]+[.!?;]?/g)||[]).map(v=>norm(v).replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim()).filter(v=>v.split(' ').length>=7);
+}
+function withoutCatalogue(text,sources){
+  return (String(text).match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[]).filter(sentence=>{
+    const clean=norm(sentence).replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+    return !sources.some(source=>clean.includes(source)||source.includes(clean));
+  }).join(' ').trim();
 }
 function tarotPairLink(previous,current,enMode){
   const family=card=>card.id<=22?'major':card.id<=36?'wands':card.id<=50?'cups':card.id<=64?'swords':'pentacles';
@@ -675,20 +581,6 @@ function groundedText(raw,card,enMode){
     return s?s.charAt(0).toLocaleUpperCase()+s.slice(1):'';
   }).join(' ');
 }
-function groundedPart(card,enMode){
-  const local=enMode?(card.en||{}):card;
-  const d=norm(state.domain);
-  const field=/profession|projet|work|career/.test(d)?'reading_professionnel':/general|spirit/.test(d)?'reading_spirituel':'reading_relationnel';
-  const precise={
-    Vision:'Votre intuition vous aide à envisager une direction et à replacer les événements dans une perspective plus large.',
-    Lune:'L’écoute de votre monde intérieur prend une place particulière : vos émotions, vos rêves ou certaines coïncidences peuvent éclairer progressivement ce qui vous échappait. Prenez le temps d’observer ce que vous ressentez avant d’agir.',
-    Bonheur:'Une harmonie intérieure peut se nourrir de gratitude et d’une attention à ce qui vous fait déjà du bien. Vous pouvez accueillir ces moments heureux sans attendre que tout soit parfait.'
-  };
-  if(!enMode&&state.oracle==='cristariva'&&field==='reading_spirituel'&&precise[card.name])return precise[card.name];
-  const raw=local[field]||local.meaning||local.definition||'';
-  return groundedText(raw,card,enMode);
-}
-
 function roleGrounded(text,role,enMode){
   const firstLead=enMode
     ?{origin:'The situation',obstacle:'The difficulty',resource:'This strength',evolution:'The development',outcome:'The overall picture'}
@@ -714,112 +606,32 @@ function roleGrounded(text,role,enMode){
 }
 
 
-function relationViewQuestion(q){
-  const s=norm(q);
-  return /(?:que pense|qu.?est.ce que .* pense|comment .* me voit|quel regard .* sur moi|que ressent|sentiments? .* pour moi|ce qu.?il pense de moi|ce qu.?elle pense de moi)/.test(s);
-}
-function relationViewPart(card,role,enMode,reversed){
-  const title=norm((enMode?card?.en?.name:card?.name)||card?.name);
-  const local=enMode?(card?.en||{}):card;
-  const reverseRaw=reversed?norm(window.CR_TAROT_REVERSED?.[card.id]?.[enMode?'en':'fr']||''):'';
-  const h=norm([title,local?.keywords,local?.category,local?.definition,local?.meaning,reverseRaw].filter(Boolean).join(' '));
-  if(enMode){
-    if(role==='origin'){
-      if(reversed&&/pape|hierophant|regle|conseil|tradition/.test(h))return 'The reading suggests that this person no longer sees the bond through a simple or conventional framework. Their view seems to be moving away from a fixed definition of what the relationship should be.';
-      if(/attir|desir|passion|sensual/.test(h))return 'Their current view appears strongly coloured by attraction and desire, even if that does not yet define the whole bond.';
-      if(/distance|silence|isolement|retrait/.test(h))return 'Their present view seems marked by distance or restraint, as though part of what they think remains unexpressed.';
-      return 'The reading suggests that their current view of you is still being redefined rather than fixed once and for all.';
-    }
-    if(role==='obstacle'){
-      if(/batons|conflit|dispute|competition|confront|tension/.test(h))return 'What complicates that view is a sense of tension or competing impulses: attraction may coexist with disagreement, pride or difficulty finding common ground.';
-      if(/silence|ambigu|secret|non dit/.test(h))return 'The main difficulty is that part of what they think remains unspoken, leaving room for uncertainty.';
-      return 'What complicates their view is an unresolved tension that prevents a completely simple or settled position.';
-    }
-    if(role==='resource'){
-      if(/neuf de coupes|nine of cups|satisfaction|plaisir|desir/.test(h))return 'At the same time, the reading points to genuine pleasure in the connection: they may associate you with desire, emotional gratification or the feeling that something they want could be possible.';
-      if(/reciproc|amour|lien|connexion|harmon/.test(h))return 'There is nevertheless a positive emotional current: they seem to associate you with closeness, support or a bond that matters.';
-      if(/clarte|verite|lucid|communication/.test(h))return 'A more lucid understanding of the bond is available to them, which can help separate real feelings from assumptions.';
-      return 'A positive element remains present in their view of you and prevents the situation from being reduced to the difficulty alone.';
-    }
-    if(role==='evolution'){
-      if(reversed&&/hermite|hermit|solitude|isolement|echange/.test(h))return 'Their inner position seems to be reaching the limits of withdrawal: the reading suggests that remaining isolated may become less satisfying and that renewed dialogue could become more meaningful.';
-      if(/silence|distance|retrait|isolement/.test(h))return 'For now, their thoughts may remain private or restrained, but that distance does not necessarily mean indifference.';
-      return 'Their view does not look completely fixed; it may evolve as communication or concrete interaction changes.';
-    }
-    if(role==='outcome'){
-      if(/imperatrice|empress|creation|expansion|sensual|communication/.test(h))return 'Overall, the reading gives their view of you a warm, attractive and stimulating quality. They may see you as someone who awakens desire, interest and the possibility of something more alive, but this still needs to be confirmed by what they actually express or do.';
-      if(/attir|desir|passion|sensual/.test(h))return 'Overall, attraction appears to play an important part in the way they see you, though attraction alone does not establish intention or commitment.';
-      if(/bond|connexion|amour|reciproc/.test(h))return 'Overall, the bond appears meaningful in their eyes, while its real direction still depends on mutual actions and communication.';
-      return 'Overall, the reading suggests interest rather than indifference, but their exact intentions remain something that only their words and actions can confirm.';
-    }
-  }else{
-    if(role==='origin'){
-      if(reversed&&/pape|regle|conseil|tradition/.test(h))return 'Le tirage suggère qu’en ce moment, Kinya ne regarde plus votre lien à travers un cadre simple ou conventionnel. Sa manière de vous situer semble s’éloigner d’une définition trop rigide de ce que votre relation devrait être.';
-      if(/attir|desir|passion|sensual/.test(h))return 'Son regard paraît actuellement fortement teinté d’attirance et de désir, même si cela ne suffit pas encore à définir tout le lien.';
-      if(/distance|silence|isolement|retrait/.test(h))return 'Son regard semble marqué par une certaine retenue : une partie de ce qu’il pense de vous paraît rester intérieure ou difficile à exprimer.';
-      return 'Le tirage suggère que son regard sur vous est encore en train de se redéfinir plutôt que définitivement fixé.';
-    }
-    if(role==='obstacle'){
-      if(/batons|conflit|dispute|competition|confront|tension/.test(h))return 'Ce qui complique ce regard est une impression de tension ou de volontés qui ne vont pas toujours dans le même sens. Il peut donc associer votre lien à la fois à une stimulation réelle et à une difficulté à trouver un terrain commun.';
-      if(/silence|ambigu|secret|non dit/.test(h))return 'La principale difficulté vient de ce qui reste non dit : une partie de sa pensée demeure difficile à lire clairement.';
-      return 'Ce qui complique son regard est une tension encore non résolue, qui l’empêche probablement d’avoir une position totalement simple ou arrêtée.';
-    }
-    if(role==='resource'){
-      if(/neuf de coupes|satisfaction|plaisir|desir/.test(h))return 'En parallèle, le tirage montre quelque chose de nettement plus positif : il peut vous associer au plaisir, au désir et à la satisfaction affective, comme si votre présence représentait quelque chose qu’il aimerait pouvoir vivre ou retrouver.';
-      if(/reciproc|amour|lien|connexion|harmon/.test(h))return 'Un courant affectif positif reste néanmoins présent : il semble vous associer à une proximité, un soutien ou un lien qui compte pour lui.';
-      if(/clarte|verite|lucid|communication/.test(h))return 'Il dispose aussi d’une possibilité de regarder le lien avec davantage de lucidité, en distinguant ce qu’il ressent réellement de ce qu’il suppose ou redoute.';
-      return 'Un élément positif subsiste dans sa manière de vous voir et empêche de réduire son regard aux seules difficultés.';
-    }
-    if(role==='evolution'){
-      if(reversed&&/hermite|solitude|isolement|echange/.test(h))return 'Sa position intérieure semble atteindre les limites du retrait : rester dans l’isolement ou dans la réflexion solitaire pourrait lui convenir de moins en moins. Le tirage ouvre donc l’idée qu’un échange avec vous puisse reprendre de l’importance dans sa manière de penser la relation.';
-      if(/silence|distance|retrait|isolement/.test(h))return 'Pour le moment, ses pensées peuvent rester retenues ou silencieuses, sans que cette distance signifie nécessairement de l’indifférence.';
-      return 'Son regard ne paraît pas complètement figé ; il peut encore évoluer selon les échanges et les actes concrets entre vous.';
-    }
-    if(role==='outcome'){
-      if(/imperatrice|creation|expansion|sensual|communication/.test(h))return 'Dans l’ensemble, le tirage donne à son regard sur vous une tonalité chaleureuse, attirée et stimulante. Il peut vous voir comme quelqu’un qui éveille chez lui du désir, de l’intérêt et la possibilité de quelque chose de plus vivant. Cela ne permet toutefois pas d’affirmer ses intentions : ce sont ses paroles et ses actes qui pourront les confirmer.';
-      if(/attir|desir|passion|sensual/.test(h))return 'Dans l’ensemble, l’attirance semble occuper une place importante dans sa manière de vous voir, sans suffire à elle seule à établir une intention ou un engagement.';
-      if(/lien|connexion|amour|reciproc/.test(h))return 'Dans l’ensemble, le lien semble avoir du poids dans son regard, mais sa direction concrète dépend encore de ce qu’il choisira réellement d’exprimer et de faire.';
-      return 'Dans l’ensemble, le tirage suggère davantage d’intérêt que d’indifférence, mais ses intentions précises ne peuvent être confirmées que par ses paroles et ses actes.';
-    }
-  }
-  return '';
-}
-function relationViewStory(cards,enMode){
-  const chosen=cards.slice(0,12), r=roles(chosen.length);
-  const reversedAt=i=>state.oracle==='tarot'&&state.draw?.[i]===chosen[i]&&state.tarotReversed?.[i]===true;
-  const parts=chosen.map((card,i)=>relationViewPart(card,r[i],enMode,reversedAt(i))).filter(Boolean);
-  if(enMode)return parts.join(' ');
-  return parts.join(' ');
-}
-
 function build(cards){
   if(!Array.isArray(cards)||!cards.length)return '';
-  const enMode=state.lang==='en', chosen=cards.slice(0,12), r=roles(chosen.length);
+  const enMode=state.lang==='en', chosen=cards.slice(), r=roles(chosen.length);
   const reversedAt=i=>state.oracle==='tarot'&&state.draw?.[i]===chosen[i]&&state.tarotReversed?.[i]===true;
   const sc=scope();
   const q=String(state.question||'').trim();
-  if(sc==='relation'&&relationViewQuestion(q)){
-    const body=relationViewStory(chosen,enMode);
-    const question=q?`<p class="reading-question">${enMode?'Your question':'Votre question'} : « ${esc(q)} »</p>`:'';
-    return `<div class="story-reading" data-story-engine="universal-fluid-${VERSION}-relation-view"><h3>${enMode?'The story told by your cards':'L’histoire racontée par vos cartes'}</h3>${question}<p class="story-continuous">${esc(body)}</p></div>`;
-  }
   const parts=chosen.map((card,i)=>{
     let part='';
     if(reversedAt(i)){
-      part=groundedText(window.CR_TAROT_REVERSED?.[card.id]?.[enMode?'en':'fr']||'',card,enMode);
+      part=reversedPart(card,r[i],sc,i,enMode);
     }else if(state.oracle==='tarot'){
       part=groundedText(tarotMixedPart(card,r[i],sc,i,enMode),card,enMode);
     }else if(enMode){
       /* The card definition stays in the card commentary. The story must
          interpret the card's role in the spread instead of paraphrasing it. */
-      part=en(card,r[i],sc,i);
+      part=semanticEn(card,r[i],sc,i);
     }else{
       /* Prefer a distinctive symbolic motif, then a role-specific reading,
          then the broad thematic fallback. Never reuse the displayed
          definition here: that would merely duplicate the card commentary. */
       part=distinctiveFr(card,r[i],sc)||preciseFr(card,r[i])||fr(card,r[i],sc,i);
     }
-    return roleGrounded(part,r[i],enMode);
+    const sources=sourceSentences(chosen,enMode);
+    part=withoutCatalogue(part,sources);
+    if(!part)part=enMode?semanticEn(card,r[i],sc,i):fr(card,r[i],sc,i);
+    return roleGrounded(withoutCatalogue(part,sources),r[i],enMode);
   }).filter(Boolean);
   // Position affects the reading, but transitions should read as one story.
   if(chosen.length===5&&parts.length===5){
@@ -829,9 +641,18 @@ function build(cards){
     parts[3]=(enMode?'The situation then evolves: ':'La situation évolue ensuite : ')+lower(parts[3]);
     parts[4]=(enMode?'Finally, ':'Enfin, ')+lower(parts[4]);
   }
+  if(chosen.length>1){
+    for(let i=1;i<parts.length;i++){
+      const left=motif(chosen[i-1],false)||theme(chosen[i-1],false);
+      const right=motif(chosen[i],false)||theme(chosen[i],false);
+      if(left===right)continue;
+      const link=state.oracle==='tarot'?tarotPairLink(chosen[i-1],chosen[i],enMode):'';
+      if(link)parts[i]=link+' '+parts[i];
+    }
+  }
   const seen=new Set();
   const narrative=parts.join(' ').match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[];
-  let body=narrative.filter(s=>{const key=norm(s).trim();if(seen.has(key))return false;seen.add(key);return true;}).join(' ').replace(/\s+/g,' ').trim();
+  let body=narrative.filter(s=>{const key=norm(s).replace(/^(cependant|enfin|un element determinant apparait neanmoins|la situation evolue ensuite)\s*[:,]?\s*/,'').trim();if(seen.has(key))return false;seen.add(key);return true;}).join(' ').replace(/\s+/g,' ').trim();
   const question=q?`<p class="reading-question">${enMode?'Your question':'Votre question'} : « ${esc(q)} »</p>`:'';
   return `<div class="story-reading" data-story-engine="universal-fluid-${VERSION}"><h3>${enMode?'The story told by your cards':'L’histoire racontée par vos cartes'}</h3>${question}<p class="story-continuous">${esc(body)}</p></div>`;
 }
@@ -840,6 +661,16 @@ storyInterpretation=build;
 interpretation=build;
 window.CR_UNIVERSAL_FLUID_STORY=build;
 window.CR_UNIVERSAL_FLUID_STORY_VERSION=VERSION;
+// The final consultation uses concise implications, rather than copying the
+// catalogue or reproducing the developed story paragraph.
+window.CR_UNIVERSAL_ROLE_SUMMARY=function(card,role,enMode){
+  role=role==='movement'?'evolution':role;
+  const i=state.draw.indexOf(card),reversed=state.oracle==='tarot'&&state.tarotReversed?.[i]===true;
+  const semantic=reversed?{id:card.id,name:'',keywords:window.CR_TAROT_REVERSED?.[card.id]?.fr||''}:card;
+  let text=enMode?semanticEn(semantic,role,scope(),i):developFr(semantic,role);
+  if(!text)text=enMode?en(semantic,role,scope(),i):fr(semantic,role,scope(),i);
+  return withoutCatalogue(text,sourceSentences(state.draw,enMode));
+};
 
 function refresh(){
   try{

@@ -191,7 +191,7 @@
 
   function polishRepeatedStoryOpeners(html){
     try{
-      if(!html||state.lang==='en')return html;
+      if(!html||state.lang==='en'||Number(window.CR_UNIVERSAL_FLUID_STORY_VERSION)>=6.25)return html;
       const tpl=document.createElement('template');
       tpl.innerHTML=String(html);
       for(const p of tpl.content.querySelectorAll('.story-continuous')){

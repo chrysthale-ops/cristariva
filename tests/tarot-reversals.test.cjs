@@ -84,10 +84,10 @@ test('opt-in controls orientation, visible card and narrative for 1, 3 and 5 pos
   const card=state.draw[0];
   assert.match(w.document.querySelector('#drawCards').textContent,/Renversée/);
   assert.ok(w.document.querySelector('#drawCards').textContent.includes(w.CR_TAROT_REVERSED[card.id].fr));
-  assert.ok(w.document.querySelector('#reading').textContent.toLowerCase().includes(w.CR_TAROT_REVERSED[card.id].fr.toLowerCase()));
+  assert.ok(!w.document.querySelector('#reading').textContent.toLowerCase().includes(w.CR_TAROT_REVERSED[card.id].fr.toLowerCase()));
   assert.ok(!w.document.querySelector('#reading .story-continuous').textContent.includes(card.name));
   w.renderSynthesis();
-  assert.ok(w.document.querySelector('#synthesis').textContent.toLowerCase().includes(w.CR_TAROT_REVERSED[card.id].fr.toLowerCase()),w.document.querySelector('#synthesis').textContent);
+  assert.ok(!w.document.querySelector('#synthesis').textContent.toLowerCase().includes(w.CR_TAROT_REVERSED[card.id].fr.toLowerCase()));
 
   for(const count of [3,5]){
     let calls=0;
@@ -99,7 +99,7 @@ test('opt-in controls orientation, visible card and narrative for 1, 3 and 5 pos
     assert.equal(w.document.querySelectorAll('#drawCards .tarot-reversed').length,state.tarotReversed.filter(Boolean).length);
     for(let i=0;i<count;i++)if(state.tarotReversed[i]){
       const meaning=w.CR_TAROT_REVERSED[state.draw[i].id].fr;
-      assert.ok(w.document.querySelector('#reading').textContent.toLowerCase().includes(meaning.toLowerCase()));
+      assert.ok(!w.document.querySelector('#reading').textContent.toLowerCase().includes(meaning.toLowerCase()));
     }
     w.renderSynthesis();
     assert.ok(w.document.querySelector('#synthesis').textContent.length>100);
@@ -113,9 +113,9 @@ test('language preserves orientations and switching back to an oracle clears the
   const meaning=w.CR_TAROT_REVERSED[state.draw[index].id].en;
   assert.ok(w.document.querySelectorAll('#drawCards .tarot-reversed').length>0);
   assert.ok(w.document.querySelector('#drawCards').textContent.includes(meaning));
-  assert.ok(w.document.querySelector('#reading').textContent.toLowerCase().includes(meaning.toLowerCase()));
+  assert.ok(!w.document.querySelector('#reading').textContent.toLowerCase().includes(meaning.toLowerCase()));
   w.renderSynthesis();
-  assert.ok(w.document.querySelector('#synthesis').textContent.toLowerCase().includes(meaning.toLowerCase()));
+  assert.ok(!w.document.querySelector('#synthesis').textContent.toLowerCase().includes(meaning.toLowerCase()));
   setDeck('cristariva');
   assert.equal(w.document.querySelector('#tarotReversalOption').hidden,true);
   assert.equal(state.tarotReversed.length,0);
@@ -135,62 +135,28 @@ test('final synthesis opens for a three-card draw with an upright middle card',(
   synthesis.textContent='';
   w.document.querySelector('#synthesisBtn').click();
   assert.equal(synthesis.classList.contains('hidden'),false);
-  assert.ok(synthesis.textContent.toLowerCase().includes(w.CR_TAROT_REVERSED[state.draw[0].id].fr.toLowerCase()));
-  assert.ok(synthesis.textContent.toLowerCase().includes(w.CR_TAROT_REVERSED[state.draw[2].id].fr.toLowerCase()));
+  assert.ok(!synthesis.textContent.toLowerCase().includes(w.CR_TAROT_REVERSED[state.draw[0].id].fr.toLowerCase()));
+  assert.ok(!synthesis.textContent.toLowerCase().includes(w.CR_TAROT_REVERSED[state.draw[2].id].fr.toLowerCase()));
   assert.deepEqual(errors,[]);
 });
 
-test('a mixed Tarot cross spread tells the reported story at length without position formulas',()=>{
+test('the reported mixed cross spread keeps orientations and uses an independent story and summary',()=>{
   setDeck('tarot');
-  state.domain='Général / spirituel';
-  state.question='tarot inversé';
-  state.lang='fr';
-  const cards=[48,66,1,28,50].map(id=>w.TAROT_DATA.main.find(card=>card.id===id));
-  state.draw=cards;
-  state.tarotReversed=[true,true,true,false,false];
-  const story=w.CR_UNIVERSAL_FLUID_STORY(cards);
+  Object.assign(state,{domain:'Général / spirituel',question:'tarot inversé',lang:'fr',draw:[48,66,1,28,50].map(id=>w.TAROT_DATA.main.find(card=>card.id===id)),tarotReversed:[true,true,true,false,false]});
   const fragment=w.document.createElement('div');
-  fragment.innerHTML=story.match(/<p class="story-continuous">([\s\S]*?)<\/p>/)[1];
-  const prose=fragment.textContent;
-  assert.ok(prose.split(/\s+/).length>=170,prose);
-  assert.ok(prose.indexOf('Une invitation séduit')<prose.indexOf('Plusieurs priorités'));
-  assert.ok(prose.indexOf('Plusieurs priorités')<prose.indexOf('L\'élan vers l\'inconnu'));
-  assert.ok(prose.indexOf('L\'élan vers l\'inconnu')<prose.indexOf('Un effort peut devenir visible'));
-  assert.ok(prose.indexOf('Un effort peut devenir visible')<prose.indexOf('La maîtrise des émotions'));
-  assert.match(prose,/Ce qui se ressent doit aussi trouver une place dans les contraintes concrètes/);
-  assert.match(prose,/reconnaissance méritée/);
-  assert.match(prose,/Une parole calme peut accueillir/);
-  assert.doesNotMatch(prose,/Au départ|La difficulté actuelle apparaît ici|Un appui reste possible|Pour la suite|Le changement se vérifiera/);
-  for(const card of cards)assert.ok(!prose.includes(card.name),card.name);
-
-  state.lang='en';
-  fragment.innerHTML=w.CR_UNIVERSAL_FLUID_STORY(cards).match(/<p class="story-continuous">([\s\S]*?)<\/p>/)[1];
-  const english=fragment.textContent;
-  assert.ok(english.split(/\s+/).length>=160,english);
-  assert.match(english,/everyday demands|actions actually taken/);
-  assert.doesNotMatch(english,/At the outset|The present difficulty is this|For what comes next|Au départ/);
-
-  state.lang='fr';
-  state.draw=[31,58,53,70,75].map(id=>w.TAROT_DATA.main.find(card=>card.id===id));
-  state.tarotReversed=[true,true,true,true,true];
-  fragment.innerHTML=w.CR_UNIVERSAL_FLUID_STORY(state.draw).match(/<p class="story-continuous">([\s\S]*?)<\/p>/)[1];
-  assert.ok(fragment.textContent.split(/\s+/).length>=135,fragment.textContent);
-  assert.doesNotMatch(fragment.textContent,/Au départ|La difficulté actuelle|Un appui reste possible|Pour la suite/);
-  state.draw=[10,23,37,48,70].map(id=>w.TAROT_DATA.main.find(card=>card.id===id));
-  state.tarotReversed=[true,true,true,true,false];
-  fragment.innerHTML=w.CR_UNIVERSAL_FLUID_STORY(state.draw).match(/<p class="story-continuous">([\s\S]*?)<\/p>/)[1];
-  const varied=fragment.textContent;
-  assert.ok(varied.split(/\s+/).length>=145,varied);
-  assert.match(varied,/Une direction intérieure se précise au contact des gestes/);
-  assert.match(varied,/Ce qui se ressent doit aussi trouver une place/);
-  assert.equal((varied.match(/La solitude cesse d'éclairer/g)||[]).length,1);
-  state.draw=[2,73,34,69,18].map(id=>w.TAROT_DATA.main.find(card=>card.id===id));
-  state.tarotReversed=[false,false,true,true,false];
-  fragment.innerHTML=w.CR_UNIVERSAL_FLUID_STORY(state.draw).match(/<p class="story-continuous">([\s\S]*?)<\/p>/)[1];
-  const another=fragment.textContent;
-  assert.match(another,/Préserver ce qui fonctionne déjà peut aussi laisser trop peu de place/);
-  assert.match(another,/Vous retrouvez une confiance plus paisible/);
-  assert.ok(another.split(/\s+/).length>=160,another);
+  for(const lang of ['fr','en']){
+    state.lang=lang;
+    fragment.innerHTML=w.CR_UNIVERSAL_FLUID_STORY(state.draw);
+    const prose=fragment.querySelector('.story-continuous').textContent;
+    assert.ok(prose.length>400);
+    for(const card of state.draw){
+      assert.ok(!prose.includes(lang==='en'?card.en.name:card.name));
+      const original=w.CR_TAROT_REVERSED[card.id][lang];
+      assert.ok(!prose.includes(original));
+    }
+    w.renderSynthesis();
+    assert.ok(w.document.querySelector('#synthesis').textContent.length>150);
+  }
   assert.deepEqual(errors,[]);
 });
 
@@ -216,5 +182,6 @@ test('every upright Tarot card keeps its own subject in a mixed reading without 
   state.lang='fr';
   state.draw=[reversed,w.TAROT_DATA.main.find(card=>card.id===37),closing];
   fragment.innerHTML=w.CR_UNIVERSAL_FLUID_STORY(state.draw).match(/<p class="story-continuous">([\s\S]*?)<\/p>/)[1];
-  assert.match(fragment.textContent,/Une émotion nouvelle cherche à circuler.*Cela peut signaler un sentiment/s);
+  assert.doesNotMatch(fragment.textContent,/Cela peut signaler un sentiment/);
+  assert.match(fragment.textContent,/rapprochement|coopération|échanges/);
 });

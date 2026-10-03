@@ -3,160 +3,90 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
 const path=require('node:path');
-const source=fs.readFileSync(path.join(__dirname,'../universal-fluid-story-v6.3.js'),'utf8');
-function reading(cards,domain='Sentimental',question='Mes possibilités',lang='fr',oracle='cristariva'){
-  const state={domain,question,lang,oracle,draw:[]};
-  const window={addEventListener(){}};
-  const document={addEventListener(){},getElementById(){return null}};
-  const context={state,window,document};
-  vm.createContext(context);vm.runInContext(source,context);
-  return window.CR_UNIVERSAL_FLUID_STORY(cards);
-}
-function prose(html){return html.match(/<p class="story-continuous">([\s\S]*?)<\/p>/)[1];}
-test('the reported ambiguity, conflict and commitment reading forms a coherent arc',()=>{
-  const cards=['Triangle amoureux','Conflit','Engagement'].map(name=>({name}));
-  const text=prose(reading(cards));
-  assert.match(text,/ambiguïté sentimentale/);
-  assert.match(text,/désaccords peuvent éclater/);
-  assert.match(text,/engagement plus concret/);
-  assert.ok(text.indexOf('ambiguïté')<text.indexOf('désaccords'));
-  assert.ok(text.indexOf('désaccords')<text.indexOf('engagement'));
-  assert.doesNotMatch(text,/(?:Au départ|Aujourd’hui|À partir de là),\s*(?:signale|parle|indique)/i);
-  assert.doesNotMatch(text,/Triangle amoureux|\bConflit\b/i);
-});
-test('all draw lengths and domains use complete narrative sentences',()=>{
-  const names=['Impasse','Incompatibilité','Communication','Transformation','Équilibre'];
-  for(const domain of ['Sentimental','Relations','Professionnelle / Projet','Général / spirituel'])
-    for(const length of [1,2,3,4,5]){
-      const text=prose(reading(names.slice(0,length).map(name=>({name,keywords:name})),domain));
-      assert.ok(text.length>65,`${domain} / ${length}`);
-      assert.doesNotMatch(text,/(?:^|[.!?]\s+)(?:signale|parle|indique|montre|invite)\s/i);
-      assert.doesNotMatch(text,/\b(?:Impasse|Incompatibilité|Communication|Transformation|Équilibre)\b/i);
+const root=path.join(__dirname,'..');
+const read=file=>fs.readFileSync(path.join(root,file),'utf8');
+const source=read('universal-fluid-story-v6.3.js');
+const state={domain:'Sentimental',question:'Ma prochaine étape ?',lang:'fr',oracle:'cristariva',draw:[],tarotReversed:[]};
+const window={addEventListener(){}};
+const document={addEventListener(){},getElementById(){return null}};
+const context=vm.createContext({state,window,document});
+vm.runInContext(source,context);
+vm.runInContext(read('tarot-reversals.js'),context);
+vm.runInContext(read('oracle-amour-data.js'),context);
+vm.runInContext(read('tarot-divinatoire-data.js'),context);
+for(const suit of ['batons','coupes','epees','deniers'])vm.runInContext(read('tarot-minors-data-'+suit+'.js'),context);
+const base=JSON.parse(read('index.html').match(/^const DATA =(.+);$/m)[1]);
+const minors=window.CR_TAROT_MINOR_ROWS.map(r=>({id:r[0],name:r[1],category:r[2],keywords:r[4],definition:r[5],en:{name:r[9],keywords:r[12],definition:r[13]}}));
+const decks={cristariva:base.main,amour:window.AMOUR_DATA.main,tarot:[...window.TAROT_DATA.main.filter(c=>c.id<=22),...minors]};
+function prose(html){return html.match(/<p class="story-continuous">([\s\S]*?)<\/p>/)[1].replace(/&#39;/g,"'").replace(/&amp;/g,'&');}
+function clean(text){return text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();}
+function noCopy(text,cards){
+  const body=clean(text);
+  for(const card of cards){
+    const originals=[card.definition,card.meaning,card.reading_relationnel,card.reading_professionnel,card.reading_spirituel,card.en?.definition,window.CR_TAROT_REVERSED[card.id]?.[state.lang]];
+    for(const raw of originals.filter(Boolean))for(const sentence of raw.split(/[.!?;]/)){
+      const c=clean(sentence);
+      if(c.split(' ').length>=7)assert.ok(!body.includes(c),`Copied card ${card.name}: ${sentence}\n${text}`);
     }
+  }
+}
+test('every real card, deck, domain, language and supported format avoids catalogue sentences',()=>{
+  assert.equal(decks.tarot.length,78);
+  let count=0;
+  for(const [oracle,deck] of Object.entries(decks))for(const domain of ['Sentimental','Relationnel','Professionnel / projet','Général / spirituel'])for(const lang of ['fr','en'])for(const n of [1,3,5])for(let i=0;i<deck.length;i++){
+    Object.assign(state,{oracle,domain,lang,question:'Quel chemin choisir ?',draw:Array.from({length:n},(_,j)=>deck[(i+j)%deck.length]),tarotReversed:Array(n).fill(false)});
+    const body=prose(window.CR_UNIVERSAL_FLUID_STORY(state.draw));
+    assert.ok(body.length>45,`${oracle} ${domain} ${lang} ${n} ${i}`);
+    noCopy(body,state.draw);
+    assert.doesNotMatch(body,/Kinya|@ |undefined|\b(?:de éclaircir|de identifier|de accueillir|de éviter)\b/);
+    count++;
+  }
+  assert.ok(count>5000);
 });
-test('question is escaped and English story remains in English',()=>{
-  const html=reading([{name:'Conflit',en:{name:'Conflict',keywords:'conflict'}}],'Relations','Me & <toi>');
-  assert.match(html,/Me &amp; &lt;toi&gt;/);
-  const english=prose(reading([{name:'Conflit',en:{name:'Conflict',keywords:'conflict'}}],'Relations','My future','en'));
-  assert.match(english,/progress|direction|situation/i);
-  assert.doesNotMatch(english,/\b(?:Au départ|La suite)\b/);
+test('all 78 reversals affect the story and final summary without repeating their displayed explanation',()=>{
+  for(const card of decks.tarot)for(const lang of ['fr','en'])for(const n of [1,3,5]){
+    Object.assign(state,{oracle:'tarot',domain:'Relationnel',lang,question:'Comment avancer ?',draw:[card,...decks.tarot.filter(c=>c!==card).slice(0,n-1)],tarotReversed:Array(n).fill(false)});
+    const upright=prose(window.CR_UNIVERSAL_FLUID_STORY(state.draw));
+    state.tarotReversed[0]=true;
+    const reverse=prose(window.CR_UNIVERSAL_FLUID_STORY(state.draw));
+    assert.notEqual(reverse,upright);
+    noCopy(reverse,state.draw);
+    const summary=window.CR_UNIVERSAL_ROLE_SUMMARY(card,n===1?'outcome':'origin',lang==='en');
+    assert.ok(summary.length>20);
+    noCopy(summary,[card]);
+  }
 });
-test('five tarot cards follow their own meanings and end on the concrete synthesis',()=>{
-  const cards=[
-    {name:'Huit de Coupes',keywords:'quête, détachement',definition:'Une situation ne nourrit plus suffisamment malgré l’attachement.'},
-    {name:'Neuf de Coupes',keywords:'plaisir, satisfaction',definition:'Un désir peut se concrétiser.'},
-    {name:'Neuf d’Épées',keywords:'anxiété, inquiétude',definition:'Une pensée tourne en boucle et amplifie la peur.'},
-    {name:'Le Pendu',keywords:'pause, attente',definition:'La progression se suspend afin qu’un autre point de vue devienne possible.'},
-    {name:'As de Deniers',keywords:'opportunité, stabilité',definition:'Une possibilité concrète se présente.'}
-  ];
-  const text=prose(reading(cards,'Général / spirituel','Connecter Cristariva aux événements du monde'));
-  for(const term of ['Cristariva aux événements du monde','confort','inquiétudes','perspective','possibilité concrète'])assert.match(text,new RegExp(term,'i'));
-  assert.ok(text.indexOf('confort')<text.indexOf('inquiétudes'));
-  assert.ok(text.indexOf('inquiétudes')<text.indexOf('perspective'));
-  assert.ok(text.indexOf('perspective')<text.indexOf('possibilité concrète'));
-  assert.doesNotMatch(text,/Dans l’ensemble|progression continue plutôt qu’une succession|Le récit commence dans une période de transition/);
-  assert.doesNotMatch(text,/Huit de Coupes|Neuf de Coupes|Le Pendu|As de Deniers/);
+test('selected domain is authoritative even when question mentions another domain',()=>{
+  const card=decks.tarot.find(c=>c.id===8);
+  Object.assign(state,{oracle:'tarot',draw:[card],tarotReversed:[false],lang:'fr',question:'Un projet avec mon partenaire ?',domain:'Général / spirituel'});
+  const spiritual=prose(window.CR_UNIVERSAL_FLUID_STORY(state.draw));
+  state.domain='Professionnel / projet';
+  const professional=prose(window.CR_UNIVERSAL_FLUID_STORY(state.draw));
+  assert.notEqual(spiritual,professional);
+  assert.doesNotMatch(spiritual,/première étape réalisable/);
 });
-test('the same spread changes with the actual card in a position',()=>{
-  const surrounding=[{name:'Blocage',keywords:'obstacle'},null,{name:'Transformation',keywords:'changement'}];
-  const satisfying=prose(reading(surrounding.map(c=>c||{name:'Neuf de Coupes'})));
-  const illusory=prose(reading(surrounding.map(c=>c||{name:'Sept de Coupes'})));
-  assert.match(satisfying,/satisfaction recherchée/);
-  assert.match(illusory,/réduire les options/);
-  assert.notEqual(satisfying,illusory);
-  assert.doesNotMatch(illusory,/Dans l’ensemble/);
+test('person questions never inject a remembered name; question is escaped and every input length is retained',()=>{
+  Object.assign(state,{oracle:'tarot',draw:[decks.tarot.find(c=>c.id===6)],tarotReversed:[true],lang:'fr',domain:'Relationnel',question:'Que pense Alex de moi ?'});
+  const body=prose(window.CR_UNIVERSAL_FLUID_STORY(state.draw));
+  assert.doesNotMatch(body,/Kinya/);noCopy(body,state.draw);
+  state.question='Me & <toi>';
+  assert.match(window.CR_UNIVERSAL_FLUID_STORY(state.draw),/Me &amp; &lt;toi&gt;/);
+  state.draw=decks.tarot.slice(0,14);state.tarotReversed=[];
+  assert.ok(prose(window.CR_UNIVERSAL_FLUID_STORY(state.draw)).length>300);
 });
-test('every deck, domain and spread format uses the shared narrative without a stock conclusion',()=>{
-  const cards=[
-    {name:'Départ',keywords:'éloignement, choix',definition:'Une situation ne convient plus.'},
-    {name:'Illusion',keywords:'illusion, projections',definition:'Plusieurs options séduisent.'},
-    {name:'Clarté',keywords:'vérité, décision',definition:'Une mise au clair devient possible.'},
-    {name:'Pause',keywords:'suspension, recul',definition:'Une pause change le regard.'},
-    {name:'Possibilité',keywords:'opportunité, base matérielle',definition:'Une occasion concrète se présente.'}
-  ];
-  for(const oracle of ['cristariva','amour','tarot'])
-    for(const domain of ['Vue d’ensemble','Sentimental','Relations','Professionnelle / Projet','Décision','Chemin personnel','Spiritualité'])
-      for(const length of [1,3,5]){
-        const text=prose(reading(cards.slice(0,length),domain,'Comment avancer ?', 'fr',oracle));
-        assert.ok(text.length>65,`${oracle} / ${domain} / ${length}`);
-        assert.doesNotMatch(text,/Dans l’ensemble|succession de significations isolées/,`${oracle} / ${domain} / ${length}`);
-        if(length===5)assert.match(text,/possibilité concrète|possibilité se présente/i);
-      }
-});
-test('the reported Tarot cross spread develops all five card positions and its news question',()=>{
-  const cards=[
-    {name:'Trois d’Épées',category:'Blessure',keywords:'peine, séparation, vérité douloureuse, blessure',definition:'Une douleur affective ou une vérité difficile demande à être regardée.'},
-    {name:'Dix de Bâtons',category:'Charge',keywords:'responsabilité, surcharge, effort, poids',definition:'Le poids devient excessif si tout repose sur une seule personne.'},
-    {name:'Valet de Coupes',category:'Sensibilité',keywords:'message, intuition, tendresse, nouveauté',definition:'Un message sensible et une intuition nouvelle invitent à ouvrir le cœur.'},
-    {name:'Roi de Coupes',category:'Maîtrise',keywords:'maturité émotionnelle, calme, compassion, équilibre',definition:'Il maîtrise ses émotions sans les nier.'},
-    {name:'Le Chariot',category:'Mouvement',keywords:'avancée, volonté, direction, maîtrise',definition:'La situation gagne en vitesse lorsqu’une direction nette est choisie.'}
-  ];
-  const story=prose(reading(cards,'Général / spirituel',"ouverture de cristariva à l'actualité",'fr','tarot'));
-  assert.ok(story.split(/\s+/).length>=170,'the cross spread should develop the five distinct positions');
-  for(const phrase of ['blessure','tout porter','regard sensible','attitude stable','ligne éditoriale','direction précise'])assert.match(story,new RegExp(phrase,'i'));
-  assert.ok(story.indexOf('blessure')<story.indexOf('tout porter'));
-  assert.ok(story.indexOf('tout porter')<story.indexOf('regard sensible'));
-  assert.ok(story.indexOf('attitude stable')<story.indexOf('direction précise'));
-  assert.doesNotMatch(story,/Une prise de conscience a commencé|Une attente trop longue|mise au clair des faits et des attentes|La suite reste ouverte et devrait se préciser/);
-  assert.doesNotMatch(story,/Trois d’Épées|Dix de Bâtons|Valet de Coupes|Roi de Coupes|Le Chariot/);
-});
-test('a five-card spread with a shared theme varies its implications without a grammar break',()=>{
-  const cards=Array.from({length:5},(_,i)=>({name:`Voile ${i}`,category:'Ambiguïté',keywords:'incertitude'}));
-  const story=prose(reading(cards,'Spiritualité','Quel chemin choisir ?'));
-  assert.ok(story.split(/\s+/).length>=140);
-  assert.match(story,/demander les précisions/);
-  assert.match(story,/vérifier les informations nouvelles/);
-  assert.doesNotMatch(story,/de éclaircir|de identifier|de accueillir|de éviter/);
+test('five identical themes do not repeat complete sentences behind different transitions',()=>{
+  Object.assign(state,{oracle:'cristariva',draw:Array.from({length:5},(_,i)=>({id:i,name:'Secret',keywords:'ambiguïté'})),tarotReversed:[],lang:'fr',domain:'Relationnel',question:'La suite ?'});
+  const sentences=prose(window.CR_UNIVERSAL_FLUID_STORY(state.draw)).split(/[.!?]/).map(clean).filter(Boolean);
+  assert.equal(new Set(sentences).size,sentences.length);
 });
 
-
-test('reported relation spread avoids repeated generic experience wording',()=>{
-  const cards=[
-    {id:69,name:'Introspection',reading_relationnel:'Dans une relation, Introspection montre qu’une personne réfléchit à ce qu’elle ressent, à ses limites ou à la forme de lien qu’elle souhaite. Cela peut créer un temps de retrait sans signifier automatiquement désintérêt.'},
-    {id:7,name:'Tempête',reading_relationnel:'Dans une relation, Tempête décrit une période où les émotions et les tensions deviennent difficiles à contenir. Elle peut annoncer une dispute, un choc ou une remise à plat nécessaire.'},
-    {id:71,name:'Désillusion',reading_relationnel:'Dans une relation, Désillusion montre qu’une attente, une promesse ou une représentation de l’autre ne correspond pas entièrement à la réalité. Elle demande de regarder le lien tel qu’il est.'},
-    {id:52,name:'Mémoire',reading_relationnel:'Dans une relation, Mémoire montre qu’un souvenir partagé ou une ancienne blessure continue de colorer le lien actuel. Elle peut soutenir la nostalgie comme raviver une méfiance.'},
-    {id:12,name:'Bonheur',reading_relationnel:'Dans le cadre relationnel, elle peut indiquer une relation qui apporte chaleur, confiance et sentiment d’évidence. Elle favorise les retrouvailles heureuses, la tendresse ou la construction d’un climat affectif sécurisant.'}
-  ];
-  const text=prose(reading(cards,'Relations','Energie du jour'));
-  assert.doesNotMatch(text,/Cette expérience/i);
-  assert.doesNotMatch(text,/La difficulté à examiner concerne cet aspect|Vous pouvez trouver un appui dans cette possibilité/i);
-  for(const term of ['réfléchit','tensions','attente','souvenir','chaleur'])assert.match(text,new RegExp(term,'i'));
-  assert.match(text,/Cependant,/);
-  assert.match(text,/Un élément déterminant apparaît néanmoins/);
-  assert.match(text,/Enfin, la synthèse/i);
-});
-
-
-test('reported Complexité Projection Trahison Conflit Dissimulation spread stays grammatical',()=>{
-  const cards=[
-    {id:72,name:'Complexité',reading_relationnel:'Dans une relation, Complexité peut signaler sentiments mêlés, contraintes extérieures, histoire passée, distance ou statut ambigu. Une seule explication ne suffit pas.'},
-    {id:60,name:'Projection',reading_relationnel:'Dans une relation, Projection avertit que l’on peut attribuer à l’autre des sentiments, intentions ou promesses qui ne sont pas encore confirmés par ses actes.'},
-    {id:2,name:'Trahison',reading_relationnel:'Dans une relation, Trahison signale une blessure de confiance : mensonge, double jeu, promesse rompue ou sentiment d’avoir été trompé. La suite dépend d’une clarification réelle, pas seulement d’excuses.'},
-    {id:54,name:'Conflit',reading_relationnel:'Dans une relation, Conflit annonce ou décrit une confrontation : reproches, divergence de besoins, colère ou lutte pour faire reconnaître sa position.'},
-    {id:41,name:'Dissimulation',reading_relationnel:'Dans une relation, Dissimulation indique qu’un sentiment, une intention, une information ou une autre réalité n’est pas exprimé clairement. Elle demande de ne pas confondre silence et transparence.'}
-  ];
-  const text=prose(reading(cards,'Relations','le suite du projet'));
-  assert.match(text,/La situation évolue ensuite : l’évolution fait apparaître une confrontation/i);
-  assert.match(text,/Il convient de ne pas confondre silence et transparence/i);
-  assert.doesNotMatch(text,/il est question d[’']?ou décrit/i);
-  assert.doesNotMatch(text,/Vous pouvez ne pas confondre/i);
-});
-
-
-test('reported Tempete Juste distance Paix Direction Trahison spread avoids il est question repetition',()=>{
-  const cards=[
-    {id:7,name:'Tempête',reading_relationnel:'Dans une relation, Tempête décrit une période où les émotions et les tensions deviennent difficiles à contenir. Elle peut annoncer une dispute, un choc ou une remise à plat nécessaire.'},
-    {id:86,name:'Juste distance',reading_relationnel:'Dans une relation, Juste distance indique qu’un lien fonctionne mieux lorsque chacun dispose d’espace, de limites et d’un rythme respectés. Trop de proximité comme trop de retrait peuvent déséquilibrer la relation.'},
-    {id:27,name:'Paix',reading_relationnel:'Dans le cadre relationnel, elle indique une détente, une trêve, une parole apaisée ou la possibilité de sortir d’un rapport de force. Elle favorise la douceur plutôt que l’insistance.'},
-    {id:1,name:'Direction',reading_relationnel:'Dans une relation, Direction montre qu’un cap se précise. Elle parle d’un lien qui doit choisir sa trajectoire : rapprochement, redéfinition ou prise de distance selon les cartes voisines.'},
-    {id:2,name:'Trahison',reading_relationnel:'Dans une relation, Trahison signale une blessure de confiance : mensonge, double jeu, promesse rompue ou sentiment d’avoir été trompé. La suite dépend d’une clarification réelle, pas seulement d’excuses.'}
-  ];
-  const text=prose(reading(cards,'Sentimental','kinya'));
-  assert.doesNotMatch(text,/Il est question de|Il est question d[’']/i);
-  for(const term of ['émotions','espace','détente','trajectoire','blessure de confiance'])assert.match(text,new RegExp(term,'i'));
-  assert.match(text,/Cependant,/);
-  assert.match(text,/Un élément déterminant apparaît néanmoins/);
-  assert.match(text,/La situation évolue ensuite/);
-  assert.match(text,/Enfin,/);
+test('question intents share the same protected engine, including thoughts, dates and decisions',()=>{
+  const questions=['Que pense Alex de moi ?','Que ressent Marie pour moi ?','Mon prochain crush ?','L’issue du projet ?','Quand aura lieu le retour ?','Quel message essaie-t-on de me transmettre ?','Mon avenir sentimental','Mes avancées d’aujourd’hui ?','Connecter Cristariva aux événements du monde','<script>alert(1)</script>'];
+  for(const [oracle,deck] of Object.entries(decks))for(const domain of ['Sentimental','Relationnel','Professionnel / projet','Général / spirituel'])for(const lang of ['fr','en'])for(const n of [1,3,5])for(const question of questions){
+    Object.assign(state,{oracle,domain,lang,question,draw:deck.slice(0,n),tarotReversed:Array(n).fill(oracle==='tarot')});
+    const html=window.CR_UNIVERSAL_FLUID_STORY(state.draw);
+    noCopy(prose(html),state.draw);
+    assert.doesNotMatch(prose(html),/Kinya|Alex|Marie|<script>/);
+    assert.match(html,/universal-fluid-6.25/);
+  }
 });
