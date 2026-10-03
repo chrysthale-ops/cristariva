@@ -52,6 +52,17 @@ function noCopy(text,cards){
     }
   }
 }
+test('the reported five-card spread explicitly retains the romantic nature of the bond',()=>{
+  const cards=['Sincérité','Doute','Protection','Lien amoureux','Évolution'].map(name=>decks.amour.find(c=>c.name===name));
+  assert.ok(cards.every(Boolean));
+  Object.assign(state,{oracle:'amour',domain:'Sentimental',lang:'fr',question:'Où en sommes-nous avec Alex ?',draw:cards,tarotReversed:[]});
+  const body=prose(window.CR_UNIVERSAL_FLUID_STORY(cards));
+  assert.match(body,/registre amoureux/);assert.match(body,/sentiments/);
+  assert.doesNotMatch(body,/compétences complémentaires|choisir un cap avant d’accélérer/);
+  noCopy(body,cards);
+  state.lang='en';
+  assert.match(prose(window.CR_UNIVERSAL_FLUID_STORY(cards)),/romantic feelings/);
+});
 test('alignment, breakup and happiness develop a connected answer about a return',()=>{
   const cards=['Alignement','Rupture','Bonheur'].map(name=>decks.amour.find(c=>c.name===name));
   assert.ok(cards.every(Boolean));
@@ -119,6 +130,6 @@ test('question intents share the same protected engine, including thoughts, date
     const html=window.CR_UNIVERSAL_FLUID_STORY(state.draw);
     noCopy(prose(html),state.draw);
     assert.doesNotMatch(prose(html),/Kinya|Alex|Marie|<script>/);
-    assert.match(html,/universal-fluid-6.27/);
+    assert.match(html,/universal-fluid-6.28/);
   }
 });

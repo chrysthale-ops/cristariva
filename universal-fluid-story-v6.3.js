@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.27';
+const VERSION='6.28';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -94,6 +94,9 @@ function motif(card,enMode){
   if(/^(alignement|alignment)$/.test(name))return 'alignment';
   if(/^(rupture|breakup|break-up|separation)$/.test(name))return 'separation';
   if(/^(bonheur|happiness)$/.test(name))return 'happiness';
+  if(/^(lien amoureux|romantic bond|love bond)$/.test(name))return 'romantic';
+  if(/^(evolution|development|growth)$/.test(name))return 'change';
+  if(/^(protection)$/.test(name))return 'ground';
   const k=norm([local?.name,local?.category,local?.keywords,local?.definition||local?.meaning].filter(Boolean).join(' '));
   const details=norm(local?.definition||local?.meaning||'');
   if(/trois d.?epees|three of swords/.test(name))return 'heartbreak';
@@ -144,6 +147,13 @@ function distinctiveFr(card,role,sc){
   const m=motif(card,false);
   const project=sc==='work';
   const stages={
+    romantic:{
+      origin:'Votre question prend racine dans un attachement amoureux : le désir de proximité affective donne à cette histoire une portée qui dépasse un simple échange amical.',
+      obstacle:'La dimension amoureuse du lien soulève des attentes qui peuvent être difficiles à accorder. Le désir de proximité mérite d’être exprimé pour comprendre ce que chacun souhaite réellement vivre.',
+      resource:'La dimension amoureuse constitue ici une force : la tendresse et le désir de proximité peuvent soutenir un dialogue plus personnel. Cet appui gagne en solidité lorsque chacun peut dire la place qu’il souhaite donner au lien.',
+      evolution:'L’évolution se situe dans le registre amoureux : l’attachement, les sentiments et le désir de proximité affective prennent davantage de place. Cette orientation ouvre une possibilité de rapprochement sentimental, dont la réciprocité et la forme concrète restent à éclaircir entre vous.',
+      outcome:'L’ensemble du tirage met en avant la nature amoureuse du lien. Il ouvre une perspective affective, sans fixer à lui seul la durée de la relation ni confirmer les intentions de chacun.'
+    },
     alignment:{
       origin:'Vous avez cherché à faire correspondre vos choix à ce que vous ressentez vraiment. Ce besoin de cohérence explique pourquoi une réponse incertaine ou des gestes contradictoires ne peuvent plus vous satisfaire.',
       obstacle:'Un décalage entre vos attentes et les actes posés fragilise votre direction. Chercher l’accord à tout prix risquerait de vous éloigner de ce qui compte pour vous.',
@@ -230,6 +240,7 @@ function distinctiveFr(card,role,sc){
 }
 function developFr(card,role){
   const actions={
+    romantic:'clarifier la place des sentiments amoureux et la proximité souhaitée par chacun',
     alignment:'faire correspondre vos décisions à vos besoins réels',separation:'reconnaître ce qui s’est terminé et ce qui pourrait être reconstruit',happiness:'choisir ce qui nourrit une joie durable',
     destiny:'choisir votre réponse à ce tournant marquant',retry:'reprendre autrement ce qui avait échoué',temptation:'mesurer les conséquences du désir avant de lui donner suite',
     departure:'nommer ce qui ne nourrit plus la situation',contentment:'vérifier ce qui apporte une satisfaction durable',
@@ -504,6 +515,7 @@ function en(card,role,sc,i){
 }
 function semanticEn(card,role,sc,i){
   const actions={
+    romantic:'clarify the romantic feelings and the emotional closeness each person wants',
     alignment:'bring your choices into line with what you genuinely need',separation:'acknowledge the break and establish what would need to change before rebuilding',happiness:'make room for lasting fulfilment without tying it to a single outcome',
     destiny:'choose your response to a turning point that has particular meaning for you',
     retry:'make a fresh attempt while changing what caused the earlier setback',
