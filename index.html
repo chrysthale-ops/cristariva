@@ -381,6 +381,45 @@ html{scroll-padding-top:130px}
   border-radius:0;
 }
 </style>
+
+<style id="cristariva-cartouche-instabilite-r1">
+/* 2026-10-03 — Uniformisation des cartouches de l’Oracle CRISTARIVA.
+   Référence visuelle : carte 83 « Instabilité » (position, transparence, police et taille). */
+.cristariva-card-media{
+  position:relative!important;
+  container-type:inline-size;
+}
+.cristariva-card-media>.cristariva-image-title{
+  position:absolute;
+  z-index:6;
+  left:2.6%;
+  right:2.6%;
+  bottom:2.4%;
+  height:12.2%;
+  min-height:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-sizing:border-box;
+  padding:.6% 3.5% 1.1%;
+  overflow:hidden;
+  background:rgba(5,14,24,.74);
+  color:#f7f2e8;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:clamp(12px,7.4cqw,29px);
+  font-style:normal;
+  font-weight:400;
+  line-height:1;
+  letter-spacing:0;
+  text-align:center;
+  white-space:nowrap;
+  text-shadow:0 1px 2px rgba(0,0,0,.72);
+  pointer-events:none;
+}
+.card-detail-media.cristariva-card-media>.cristariva-image-title{
+  font-size:clamp(18px,7.4cqw,29px);
+}
+</style>
 </head>
 <body>
 <header class="topbar"><div class="shell nav">
@@ -619,7 +658,8 @@ function cardHTML(c,pos){
  const definition=readingEscape(reversedMeaning||(domainSpecific?domainReading(c):cardField(c,'definition')));
  const domainLabel=domainSpecific?readingEscape(state.domain):'';
  const full=state.lang==='en'?' full-card-image':'';
- return `<article class="card${reversed?' tarot-reversed':''}"><div class="art${full}" data-error="${readingEscape(t('Image indisponible'))}"><img src="${image}" alt="${name}${orientation?' — '+orientation:''}" loading="lazy" onerror="this.closest('.card').classList.add('img-error');this.style.display='none'"></div><div class="body"><div class="num">${label}${orientation?' · '+orientation:''}</div><h3>${name}${orientation?' · '+orientation:''}</h3><p>${domainLabel?`<b>${domainLabel}</b><br>`:''}${definition}</p></div></article>`;
+ const baseCristariva=DATA.main.includes(c)||DATA.relation.includes(c)||DATA.dating.includes(c);
+ return `<article class="card${reversed?' tarot-reversed':''}"><div class="art${full}${baseCristariva?' cristariva-card-media':''}" data-error="${readingEscape(t('Image indisponible'))}"><img src="${image}" alt="${name}${orientation?' — '+orientation:''}" loading="lazy" onerror="this.closest('.card').classList.add('img-error');this.style.display='none'">${baseCristariva?`<span class="cristariva-image-title" aria-hidden="true">${name}</span>`:''}</div><div class="body"><div class="num">${label}${orientation?' · '+orientation:''}</div><h3>${name}${orientation?' · '+orientation:''}</h3><p>${domainLabel?`<b>${domainLabel}</b><br>`:''}${definition}</p></div></article>`;
 }
 
 const POSITIONS_FR={
@@ -1495,7 +1535,7 @@ function renderCatalog(){
  $('#catalogGrid').innerHTML=filtered.map(c=>{
   const key=readingEscape(c.group+'-'+c.id);
   const name=readingEscape(cardName(c));
-  return `<button type="button" class="catalog-item" data-card-key="${key}" aria-label="${t('Voir la carte')}: ${name}"><span class="catalog-image"><img src="${readingEscape(cardImage(c))}" alt="${name}" loading="lazy"></span><span class="catalog-name">${name}</span></button>`;
+  return `<button type="button" class="catalog-item" data-card-key="${key}" aria-label="${t('Voir la carte')}: ${name}"><span class="catalog-image cristariva-card-media"><img src="${readingEscape(cardImage(c))}" alt="${name}" loading="lazy"><span class="cristariva-image-title" aria-hidden="true">${name}</span></span><span class="catalog-name">${name}</span></button>`;
  }).join('')||`<p class="muted">${t('Aucune carte trouvée.')}</p>`;
 }
 function renderCardDialog(){
@@ -1512,7 +1552,7 @@ function renderCardDialog(){
  details+=row(t('Catégorie'),cardField(c,'category'));
  details+=row(t('Intensité'),cardField(c,'intensity'));
  const section=c.group==='main'?(state.lang==='en'?'Main card':'Carte principale'):c.group==='relation'?(state.lang==='en'?'Relationship card':'Carte Relation'):(state.lang==='en'?'Timing card':'Carte Datation');
- $('#cardDialogBody').innerHTML=`<div class="card-detail-layout"><div class="card-detail-media"><img class="card-detail-image" src="${readingEscape(cardImage(c))}" alt="${readingEscape(cardName(c))}"></div><div><p class="muted">${section} · ${c.id}</p><h2 id="cardDialogTitle">${readingEscape(cardName(c))}</h2>${details}</div></div>`;
+ $('#cardDialogBody').innerHTML=`<div class="card-detail-layout"><div class="card-detail-media cristariva-card-media"><img class="card-detail-image" src="${readingEscape(cardImage(c))}" alt="${readingEscape(cardName(c))}"><span class="cristariva-image-title" aria-hidden="true">${readingEscape(cardName(c))}</span></div><div><p class="muted">${section} · ${c.id}</p><h2 id="cardDialogTitle">${readingEscape(cardName(c))}</h2>${details}</div></div>`;
 }
 function openCard(group,id){
  catalogSelected=DATA[group].find(c=>c.id===Number(id));
@@ -1551,7 +1591,7 @@ try{const saved=new URLSearchParams(location.search).get('lang')||localStorage.g
 applyLanguage();
 </script>
 <script>if('serviceWorker' in navigator){
-const CRISTARIVA_PWA_VERSION='2026.10.02-cross-analysis-restore-r1';
+const CRISTARIVA_PWA_VERSION='2026.10.03-cartouches-instabilite-r1';
 let cristarivaReloading=false;
 const cristarivaRefreshOnce=()=>{
  if(cristarivaReloading)return;
@@ -1565,7 +1605,7 @@ navigator.serviceWorker.addEventListener('message',event=>{
  if(event.data&&event.data.type==='CRISTARIVA_UPDATED')cristarivaRefreshOnce();
 });
 const cristarivaCheckUpdate=()=>navigator.serviceWorker.register(
- './service-worker.js?v=20261002-cross-analysis-restore-r1',
+ './service-worker.js?v=20261003-cartouches-instabilite-r1',
  {scope:'./',updateViaCache:'none'}
 ).then(reg=>{
  if(reg.waiting)reg.waiting.postMessage('SKIP_WAITING');
