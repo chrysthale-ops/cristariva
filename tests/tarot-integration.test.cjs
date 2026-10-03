@@ -162,8 +162,8 @@ test('new domain labels are visible while legacy technical values remain compati
   state.lang='fr'; w.applyLanguage();
   const select=w.document.querySelector('#domain');
   const expected=[
-    ['Relations','Relationnel'],
     ['Sentimental','Sentimental'],
+    ['Relations','Relationnel'],
     ['Professionnelle / Projet','Professionnel / projet'],
     ['Général / spirituel','Général / spirituel']
   ];

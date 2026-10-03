@@ -1,8 +1,8 @@
 /* CRISTARIVA — service worker v30 — récit professionnel développé.
    Force 22 arcanes majeurs + 56 arcanes mineurs HD sur PC et Android
    et recharge la planche validée complète des arcanes mineurs. */
-const CACHE_NAME='cristariva-v95-20261003-story630-cartouches-r4';
-const APP_VERSION='2026.10.03-story630-cartouches-r4';
+const CACHE_NAME='cristariva-v95-20261003-story630-domains-r1-cartouches-r4';
+const APP_VERSION='2026.10.03-story630-domains-r1-cartouches-r4';
 const SHELL=[
   './',
   './index.html',
@@ -16,7 +16,7 @@ const SHELL=[
   './question-context-story-v5.2.js?v=5.2.2',
   './question-intent-story-v5.3.js?v=5.6',
   './question-project-story-v5.5.js?v=5.21',
-  './oracle-selection.js?v=20260929-reversals-r1',
+  './oracle-selection.js?v=20261003-domains-restored-r1',
   './oracle-amour-data.js?v=20260923-love-story6',
   './oracle-amour-card62-fix.js?v=20260923-love-story6',
   './oracle-amour-integration.js?v=20260923-love-story6',
