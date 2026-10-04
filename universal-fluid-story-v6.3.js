@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.41';
+const VERSION='6.42';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -420,11 +420,11 @@ function developFr(card,role){
   if(!action)return '';
   const de=/^[aeiouyàâäéèêëîïôöùûü]/i.test(action)?'d’':'de ';
   return {
-    origin:`Ce point de départ explique pourquoi il faudra ${action} avant d’aller plus loin.`,
-    obstacle:`Le mouvement risque de rester freiné tant qu’il n’est pas possible ${de}${action}.`,
-    resource:`Cet appui prend tout son sens s’il permet ${de}${action}.`,
-    evolution:`Le changement se vérifiera dans la capacité à ${action}.`,
-    outcome:`La prochaine étape consisterait à ${action}.`
+    origin:`Vous pouvez ${action}.`,
+    obstacle:`La difficulté demande ${de}${action}.`,
+    resource:`Vous pouvez ${action}.`,
+    evolution:`Vous pourrez ${action}.`,
+    outcome:`Il s’agit ${de}${action}.`
   }[role]||'';
 }
 function preciseFr(card,role){
@@ -704,13 +704,11 @@ function reversedPart(card,role,sc,i,enMode){
   const symbolic={id:card.id,name:'',keywords:raw,definition:'',en:{name:'',keywords:raw}};
   let part=tarotMixedPart(symbolic,role,sc,i,enMode);
   // A reversal is a different dynamic, not a mechanical opposite.
-  const nuance=enMode
-    ?{origin:'The initial impulse has not yet found a workable form.',obstacle:'The imbalance asks for an adjustment before pushing ahead.',resource:'This support becomes useful when its limits are acknowledged.',evolution:'A change of approach can release what has remained held back.',outcome:'Progress depends on correcting the imbalance rather than forcing a result.'}
-    :{origin:'L’impulsion de départ n’a pas encore trouvé une forme qui vous convienne.',obstacle:'Ce déséquilibre demande un ajustement avant de reprendre votre avancée.',resource:'Cet appui devient utile lorsque vous en reconnaissez aussi les limites.',evolution:'Une autre manière d’aborder ce point peut débloquer ce qui restait en suspens.',outcome:'L’issue dépend d’un réajustement plutôt que d’un résultat obtenu à force d’insister.'};
   if(Number(card.id)===6)part=enMode
     ?'You can reassess the advice you have followed in light of what you actually need.'
     :'Vous pouvez réexaminer les conseils suivis jusqu’ici à la lumière de ce dont vous avez réellement besoin.';
-  return part+' '+nuance[role];
+  const adjustment=enMode?'This calls for an adjustment.':'Un réajustement est nécessaire.';
+  return part+' '+adjustment;
 }
 function sourceSentences(cards,enMode){
   const values=[];
@@ -843,19 +841,6 @@ function roleGrounded(text,role,enMode){
 }
 
 
-function outcomeDevelopment(card,cards,sc,enMode){
-  const k=motif(card,false)||theme(card,false);
-  const cautious=['separation','tension','conflict','heartbreak','loss','ambiguity','anxiety','illusion','burden','disenchantment'].includes(k);
-  const earlier=cards.slice(0,-1).some(c=>['separation','tension','conflict','heartbreak','loss','ambiguity','anxiety'].includes(motif(c,false)||theme(c,false)));
-  const focus=enMode
-    ?(sc==='relation'?'the closeness you can actually share':sc==='work'?'the project you can realistically sustain':'the path that fits your needs')
-    :(sc==='relation'?'la proximité que vous pouvez réellement vivre':sc==='work'?'le projet que vous pouvez soutenir dans la durée':'le chemin qui correspond à vos besoins');
-  const bridge=enMode
-    ?(cautious?'The earlier openings do not erase this final difficulty.':earlier?'The difficulties already described remain part of the picture, but they need not define the entire direction ahead.':'The earlier impulses and resources find their purpose in this final direction.')
-    :(cautious?'Les ouvertures précédentes n’effacent pas ce dernier point de vigilance.':earlier?'Les difficultés déjà évoquées restent à traverser, mais elles ne résument pas toute la direction qui s’ouvre.':'Les élans et les ressources précédents prennent leur sens dans cette orientation finale.');
-  const implication=enMode?semanticEn(card,'outcome',sc,cards.length-1):developFr(card,'outcome');
-  return bridge+' '+implication+' '+(enMode?`This is the deciding thread for ${focus}: it gives you a way to assess the next steps, rather than treating every earlier signal as a separate answer.`:`C’est le fil décisif pour ${focus} : cette orientation permet de juger les prochaines étapes, au lieu de considérer chaque signe précédent comme une réponse isolée.`);
-}
 function build(cards){
   if(!Array.isArray(cards)||!cards.length)return '';
   const enMode=state.lang==='en', chosen=cards.slice(), r=roles(chosen.length);
@@ -882,39 +867,10 @@ function build(cards){
       part=distinctiveFr(card,r[i],sc)||preciseFr(card,r[i])||fr(card,r[i],sc,i);
     }
     const sources=sourceSentences(chosen,enMode);
-    // Develop the implication of each position, rather than padding the
-    // story with definitions. Longer distinctive passages already do this.
-    if(!faithful&&i===chosen.length-1&&chosen.length>1&&part.split(/\s+/).length<65){
-      const semantic=reversedAt(i)?{id:card.id,name:'',keywords:window.CR_TAROT_REVERSED?.[card.id]?.fr||''}:card;
-      part+=' '+outcomeDevelopment(semantic,chosen,sc,enMode);
-    }else if(!faithful&&part.split(/\s+/).length<45){
-      const semantic=reversedAt(i)?{id:card.id,name:'',keywords:window.CR_TAROT_REVERSED?.[card.id]?.fr||''}:card;
-      const detail=enMode?semanticEn(semantic,r[i],sc,i):developFr(semantic,r[i]);
-      if(detail&&norm(detail)!==norm(part))part+=' '+detail;
-    }
     part=withoutCatalogue(part,sources);
     if(!part)part=enMode?semanticEn(card,r[i],sc,i):fr(card,r[i],sc,i);
     return roleGrounded(withoutCatalogue(part,sources),r[i],enMode);
   }).filter(Boolean);
-  // Position affects the reading, but transitions should read as one story.
-  if(chosen.length===5&&parts.length===5){
-    const lower=s=>s?s.charAt(0).toLocaleLowerCase()+s.slice(1):s;
-    parts[1]=(enMode?'However, ':'Cependant, ')+lower(parts[1]);
-    parts[2]=(enMode?'A determining element nevertheless emerges: ':'Un élément déterminant apparaît néanmoins : ')+lower(parts[2]);
-    parts[3]=(enMode?'The situation then evolves: ':'La situation évolue ensuite : ')+lower(parts[3]);
-    parts[4]=(enMode?'Finally, ':'Enfin, ')+lower(parts[4]);
-  }
-  if(chosen.length>1){
-    for(let i=1;i<parts.length;i++){
-      const left=motif(chosen[i-1],false)||theme(chosen[i-1],false);
-      const right=motif(chosen[i],false)||theme(chosen[i],false);
-      if(left===right)continue;
-      let link=state.oracle==='tarot'?tarotPairLink(chosen[i-1],chosen[i],enMode):'';
-      if(!enMode&&sc==='relation'&&left==='alignment'&&right==='separation')link='Cette recherche de justesse rend la coupure plus sensible : ce qui paraissait cohérent doit maintenant être réévalué à la lumière de ce qui se passe réellement.';
-      if(!enMode&&sc==='relation'&&left==='separation'&&right==='happiness')link='La coupure ne ferme pourtant pas toute perspective heureuse ; elle change le chemin par lequel vous pourriez y parvenir.';
-      if(link)parts[i]=link+' '+parts[i];
-    }
-  }
   const seen=new Set();
   const narrative=parts.join(' ').match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[];
   let body=narrative.filter(s=>{const key=norm(s).replace(/^(cependant|enfin|un element determinant apparait neanmoins|la situation evolue ensuite)\s*[:,]?\s*/,'').trim();if(seen.has(key))return false;seen.add(key);return true;}).join(' ').replace(/\s+/g,' ').trim();
