@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.45';
+const VERSION='6.46';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -97,6 +97,7 @@ function motif(card,enMode){
   if(/^(regrets|regret)$/.test(name))return 'regrets';
   if(/^(echeance|deadline)$/.test(name))return 'deadline';
   if(/^(intuition)$/.test(name))return 'intuition';
+  if(/^(triangle|love triangle)$/.test(name))return 'triangle';
   if(/^(eveil|awakening)$/.test(name))return 'awakening';
 
   if(/^(destin|destiny|fate)$/.test(name))return 'destiny';
@@ -237,7 +238,20 @@ function faithfulSymbol(card,role,enMode){
   const exact=exactRoleMeaning(card,role,enMode);
   if(exact)return exact;
   const key=motif(card,false);
+  if(key==='triangle'&&scope()!=='relation'){
+    const lead=enMode?{origin:'The initial situation',obstacle:'The obstacle',resource:'The available support',evolution:'The next development',outcome:'The direction ahead'}:{origin:'La situation initiale',obstacle:'La difficulté',resource:'Le point d’appui',evolution:'L’évolution',outcome:'La direction qui se dessine'};
+    return enMode
+      ?`${lead[role]} involves three competing poles, such as stakeholders, commitments or options pulling in different directions. Clarify their respective roles and decide which commitments can coexist.`
+      :`${lead[role]} met en jeu trois pôles, qu’il s’agisse de personnes, d’engagements ou de possibilités qui tirent dans des directions différentes. Préciser leurs places respectives et choisir les engagements compatibles permettrait de sortir de cette rivalité.`;
+  }
   const readings={
+    triangle:{
+      origin:['La proximité s’est construite dans une configuration où trois pôles interviennent : une autre personne, des liens qui se chevauchent ou deux attachements entre lesquels choisir. Cette configuration explique pourquoi les places de chacun demandent à être précisées.','The connection developed around three competing poles: another person, overlapping connections or a choice between two attachments. Each person’s place needs to be established.'],
+      obstacle:['La difficulté vient de la présence de trois pôles : une autre personne, une rivalité ou une hésitation entre deux liens peut empêcher une place claire pour chacun. Des choix explicites sont nécessaires pour sortir de cette configuration.','Three competing poles create the difficulty: another person, rivalry or hesitation between two connections may prevent clear roles. Explicit choices are needed.'],
+      resource:['Reconnaître les trois pôles en présence permet de comprendre les loyautés et les attentes qui se croisent. Cette lucidité aide à poser des limites et à décider quelle place vous souhaitez réellement occuper.','Recognising the three competing poles helps clarify overlapping loyalties and expectations. This awareness supports boundaries and a choice about the place you wish to occupy.'],
+      evolution:['Le rapprochement pourrait se compliquer par l’intervention d’une autre personne, une rivalité ou une hésitation entre deux liens. La prochaine étape demande de préciser les places et les choix de chacun.','Closeness may become complicated by another person, rivalry or hesitation between two connections. The next step requires clear roles and choices.'],
+      outcome:['Le rapprochement se heurte toutefois à une configuration à trois pôles : une autre personne, une relation parallèle, une rivalité ou une hésitation entre deux liens peut entrer en jeu. L’attirance ne suffit donc pas à assurer une relation disponible et clairement choisie. La suite dépend de la clarification des places et des engagements de chacun ; ce tirage ne permet pas d’affirmer qu’une troisième personne est effectivement présente.','The rapprochement nevertheless encounters three competing poles: another person, an overlapping relationship, rivalry or hesitation between two connections may be involved. Attraction alone does not establish an available, clearly chosen relationship. Progress requires clarity about each person’s place and commitments; this spread does not establish that a third person is actually present.']
+    },
     synchronicity:{
       origin:['Des coïncidences ou des motifs qui se répètent ont attiré votre attention et nourri votre recherche de sens. Ils ouvrent une réflexion sur ce que vous vivez, sans constituer à eux seuls une réponse certaine.','Coincidences or recurring patterns have drawn your attention and prompted a search for meaning. They invite reflection on your experience without providing a certain answer on their own.'],
       obstacle:['Chercher un message dans chaque coïncidence peut brouiller votre compréhension. Le discernement consiste à laisser une place au sens symbolique sans lui faire dire ce que vous espérez entendre.','Looking for a message in every coincidence can cloud your understanding. Discernment means allowing symbolic meaning without making it confirm what you hope to hear.'],
@@ -938,7 +952,10 @@ function build(cards){
     const sources=sourceSentences(chosen,enMode);
     part=withoutCatalogue(part,sources);
     if(!part)part=enMode?semanticEn(card,r[i],sc,i):fr(card,r[i],sc,i);
-    return roleGrounded(withoutCatalogue(part,sources),r[i],enMode);
+    const cleaned=withoutCatalogue(part,sources);
+    // A catalogue filter must never erase an entire position, including
+    // the final card. Preserve its role-specific interpretation as a fallback.
+    return roleGrounded(cleaned||part,r[i],enMode);
   }).filter(Boolean);
   const seen=new Set();
   const narrative=parts.join(' ').match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[];
@@ -962,7 +979,7 @@ window.CR_UNIVERSAL_ROLE_SUMMARY=function(card,role,enMode){
   const semantic=reversed?{id:card.id,name:'',keywords:window.CR_TAROT_REVERSED?.[card.id]?.fr||''}:card;
   let text=faithfulSymbol(semantic,role,enMode)||(enMode?semanticEn(semantic,role,scope(),i):developFr(semantic,role));
   if(!text)text=enMode?en(semantic,role,scope(),i):fr(semantic,role,scope(),i);
-  return withoutCatalogue(text,sourceSentences(state.draw,enMode));
+  return withoutCatalogue(text,sourceSentences(state.draw,enMode))||text;
 };
 
 function refresh(){
@@ -981,4 +998,3 @@ try{refresh();}catch(e){}
 window.addEventListener('pageshow',refresh);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refresh();});
 })();
-
