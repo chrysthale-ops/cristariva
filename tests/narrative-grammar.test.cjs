@@ -271,3 +271,24 @@ test('every reversal keeps its meaning in every position rather than classifying
     assert.doesNotMatch(summary,/Un réajustement est nécessaire|This calls for an adjustment/);
   }
 });
+
+test('Kinya return: reversed initiative, present opening and final pause stay distinct',()=>{
+ const cards=[33,20,54].map(id=>decks.tarot.find(c=>c.id===id));
+ assert.ok(cards.every(Boolean));
+ Object.assign(state,{oracle:'tarot',domain:'Sentimental',lang:'fr',question:'Le retour de kinya',draw:cards,tarotReversed:[true,false,false]});
+ const body=prose(window.CR_UNIVERSAL_FLUID_STORY(cards));
+ assert.match(body,/rapprochement.*constance/);
+ assert.match(body,/échange plus chaleureux et plus clair/);
+ assert.match(body,/pause.*repos.*silence/);
+ assert.match(body,/ni un retour immédiat ni une reprise durable/);
+ assert.doesNotMatch(body,/idée|promise|Dans le passé|Aujourd’hui|Pour l’avenir|joie partagée|confiance naissante/);
+ for(const role of ['origin','obstacle','resource','evolution','outcome']){
+  assert.match(window.CR_UNIVERSAL_ROLE_SUMMARY(cards[0],role,false),/rapprochement.*constance/);
+ }
+ state.tarotReversed=[false,false,false];
+ assert.notEqual(prose(window.CR_UNIVERSAL_FLUID_STORY(cards)),body);
+ state.tarotReversed=[true,false,true];
+ assert.doesNotMatch(prose(window.CR_UNIVERSAL_FLUID_STORY(cards)),/ni un retour immédiat ni une reprise durable/);
+ Object.assign(state,{domain:'Professionnelle / Projet',tarotReversed:[true,false,false]});
+ assert.doesNotMatch(prose(window.CR_UNIVERSAL_FLUID_STORY(cards)),/Un élan de rapprochement|Concernant le retour/);
+});
