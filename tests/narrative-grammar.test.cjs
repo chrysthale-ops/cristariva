@@ -18,6 +18,29 @@ for(const suit of ['batons','coupes','epees','deniers'])vm.runInContext(read('ta
 const base=JSON.parse(read('index.html').match(/^const DATA =(.+);$/m)[1]);
 const minors=window.CR_TAROT_MINOR_ROWS.map(r=>({id:r[0],name:r[1],category:r[2],keywords:r[4],definition:r[5],en:{name:r[9],keywords:r[12],definition:r[13]}}));
 const decks={cristariva:base.main,amour:window.AMOUR_DATA.main,tarot:[...window.TAROT_DATA.main.filter(c=>c.id<=22),...minors]};
+test('Triangle retains its three poles in every position, domain, language and spread size',()=>{
+  const triangle=decks.amour.find(c=>c.name==='Triangle');
+  assert.ok(triangle);
+  for(const oracle of Object.keys(decks))for(const domain of ['Sentimental','Relations','Professionnelle / Projet','Général / spirituel'])for(const lang of ['fr','en'])for(const n of [1,2,3,4,5,7]){
+    const cards=Array(n).fill(decks.amour.find(c=>c.name==='Amitié'));
+    cards[n-1]=triangle;
+    Object.assign(state,{oracle,domain,lang,draw:cards,tarotReversed:[]});
+    const text=prose(window.CR_UNIVERSAL_FLUID_STORY(cards));
+    assert.match(text,lang==='fr'?/trois pôles|trois-pôles|à trois pôles/:/three competing poles/);
+    assert.match(window.CR_UNIVERSAL_ROLE_SUMMARY(triangle,'outcome',lang==='en'),lang==='fr'?/trois pôles/:/three competing poles/);
+    assert.doesNotMatch(text,/\bTriangle\b/);
+    noCopy(text,cards);
+  }
+  const cards=['Amitié','Attirance réciproque','Triangle'].map(name=>decks.amour.find(c=>c.name===name));
+  Object.assign(state,{oracle:'amour',domain:'Sentimental',lang:'fr',question:'KINYA',draw:cards});
+  const text=prose(window.CR_UNIVERSAL_FLUID_STORY(cards));
+  assert.match(text,/lien amical/);assert.match(text,/désir qui circulent des deux côtés/);
+  assert.match(text,/relation parallèle/);assert.match(text,/ne permet pas d’affirmer/);
+  for(let i=0;i<3;i++){
+    state.draw=cards.map((c,j)=>j===i?triangle:decks.amour.find(c=>c.name==='Amitié'));
+    assert.match(prose(window.CR_UNIVERSAL_FLUID_STORY(state.draw)),/trois pôles|autre personne/);
+  }
+});
 test('reported emergence spread preserves the final beginning and its relationship domain',()=>{
   const cards=['Complexité','Communication','Éveil','Équité','Éclosion'].map(name=>decks.cristariva.find(c=>c.name===name));
   assert.ok(cards.every(Boolean));
