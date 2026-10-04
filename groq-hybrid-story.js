@@ -1,7 +1,7 @@
 /* CRISTARIVA: asynchronous enrichment, local reading always available. */
 (function(){
 'use strict';
-const endpoint='https://cristariva.netlify.app/.netlify/functions/interpret';
+const endpoint='https://cristariva.sauvete.workers.dev/';
 const cache=new Map(),pending=new Map();
 const local=window.CR_UNIVERSAL_FLUID_STORY;
 if(typeof local!=='function')return;
