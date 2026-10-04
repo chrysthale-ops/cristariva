@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.47';
+const VERSION='6.48';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -787,14 +787,26 @@ function tarotMixedPart(card,role,sc,i,enMode){
 function meaningPart(card,role,enMode,reversed=false){
   const sc=scope(), local=enMode?(card.en||{}):card;
   const field=sc==='relation'?'reading_relationnel':sc==='work'?'reading_professionnel':'reading_spirituel';
-  const raw=reversed?window.CR_TAROT_REVERSED?.[card.id]?.[enMode?'en':'fr']:
+  let raw=reversed?window.CR_TAROT_REVERSED?.[card.id]?.[enMode?'en':'fr']:
     (state.oracle==='tarot'&&card.id>22?local.definition:'')||local[field]||local.meaning||local.definition||(!enMode?card[field]||card.meaning||card.definition:'');
+  // Domain-specific readings keep the symbol without asserting reciprocity.
+  if(state.oracle==='tarot'&&sc==='relation'){
+    if(card.id===33&&reversed)raw=enMode?
+      'An impulse to reconnect may lack follow-through. Testing it in practice means observing whether contact becomes regular, rather than relying on an intention.':
+      'Un élan de rapprochement peut manquer de constance. Le concrétiser demande des échanges réguliers : une intention seule ne suffit pas à faire la différence.';
+    if(card.id===20&&!reversed)raw=enMode?
+      'A warmer, clearer exchange becomes possible. This opening can support an honest conversation, without establishing mutual feelings or renewed contact.':
+      'Un échange plus chaleureux et plus clair devient possible. Cette ouverture peut favoriser une conversation franche, sans établir la réciprocité des sentiments ni une reprise de contact.';
+    if(card.id===54&&!reversed)raw=enMode?
+      'A pause, rest or silence allows emotional recovery and clearer thinking. This withdrawal calls for respecting the pace, without promising renewed contact afterwards.':
+      'Une pause, du repos ou du silence permettent de récupérer et de retrouver une pensée plus claire. Ce retrait demande de respecter le rythme, sans promettre une reprise de contact ensuite.';
+  }
   if(!raw)return '';
   let text=groundedText(raw,card,enMode);
   text=text.replace(/\bElle\b/g,enMode?'This situation':'Cette situation').replace(/\belle\b/g,enMode?'this situation':'cette situation');
   text=text.replace(/\s*;\s*/g,'. ').replace(/, mais /g,' ; toutefois, ').replace(/, yet /g,'; however, ').replace(/\bde ([aeiouéèêàâîïôùû])/gi,'d’$1');
-  const context=enMode?{origin:'In the earlier situation, ',obstacle:'The obstacle to address is this: ',resource:'You can draw on this insight: ',evolution:'At present, ',outcome:'For the next step, '}:{origin:'Dans la situation passée, ',obstacle:'La difficulté à résoudre est la suivante : ',resource:'Vous pouvez vous appuyer sur ce constat : ',evolution:'Actuellement, ',outcome:'Pour la suite, '};
-  return `${context[role]}${text.charAt(0).toLocaleLowerCase()+text.slice(1)}`;
+  const context=enMode?{origin:'In the earlier situation, ',obstacle:'The obstacle to address is this: ',resource:'You can draw on this insight: ',evolution:'At present, ',outcome:'For the next step, '}:{origin:'',obstacle:'La difficulté à résoudre est la suivante : ',resource:'Vous pouvez vous appuyer sur ce constat : ',evolution:'',outcome:''};
+  return context[role]?`${context[role]}${text.charAt(0).toLocaleLowerCase()+text.slice(1)}`:text;
 }
 function reversedPart(card,role,sc,i,enMode){
   return meaningPart(card,role,enMode,true);
@@ -978,6 +990,9 @@ function build(cards){
   let body=narrative.filter(s=>{const key=norm(s).replace(/^(cependant|enfin|un element determinant apparait neanmoins|la situation evolue ensuite)\s*[:,]?\s*/,'').trim();if(seen.has(key))return false;seen.add(key);return true;}).join(' ').replace(/\s+/g,' ').trim();
   if(sc==='relation'&&/retour|revenir|revienne|return|come back/.test(norm(q))&&chosen.some(c=>motif(c,false)==='separation')){
     body+=' '+(enMode?'For the return you are asking about, the break remains a real issue: renewed contact would need mutual willingness and a different way of relating. A favourable direction does not by itself confirm that this person will come back.':'Concernant le retour que vous évoquez, la coupure reste donc un élément central : une reprise demanderait une volonté partagée et une autre manière de vivre le lien. Une direction favorable ne suffit pas, à elle seule, à confirmer le retour de cette personne.');
+  }
+  if(sc==='relation'&&/retour|revenir|revienne|return|come back/.test(norm(q))&&state.oracle==='tarot'&&chosen.at(-1)?.id===54&&!reversedAt(chosen.length-1)){
+    body+=' '+(enMode?'For the return you are asking about, the need for a pause limits the opening: a clearer understanding remains possible, but neither an immediate return nor a lasting reunion is established.':'Concernant le retour que vous évoquez, le besoin de pause limite cette ouverture : une clarification reste possible, mais ni un retour immédiat ni une reprise durable ne sont établis.');
   }
   const question=q?`<p class="reading-question">${enMode?'Your question':'Votre question'} : « ${esc(q)} »</p>`:'';
   return `<div class="story-reading" data-story-engine="universal-fluid-${VERSION}"><h3>${enMode?'The story told by your cards':'L’histoire racontée par vos cartes'}</h3>${question}<p class="story-continuous">${esc(body)}</p></div>`;

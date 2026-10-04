@@ -11,15 +11,17 @@ function requestData(cards){
  return {lang:en?'en':'fr',question:String(state.question||''),domain:String(state.domain||''),oracle:String(state.oracle||''),cards:cards.map((c,i)=>{
  const reversed=state.oracle==='tarot'&&state.draw?.[i]===c&&state.tarotReversed?.[i]===true;
  const l=en?(c.en||c):c;
+ const domain=String(state.domain||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+ const field=/profession|travail|projet|work|career/.test(domain)?'reading_professionnel':/sentiment|relation|romantic|love/.test(domain)?'reading_relationnel':'reading_spirituel';
  const rev=window.CR_TAROT_REVERSED?.[c.id];
- return {index:i,name:String(l.name||c.name||''),role:roles[i],reversed,meaning:String(reversed?(rev?.[en?'en':'fr']||l.definition||l.meaning||''):(l.definition||l.meaning||l.keywords||'')),local:String(window.CR_UNIVERSAL_ROLE_SUMMARY?.(c,roles[i],en)||'')};
+ return {index:i,name:String(l.name||c.name||''),role:roles[i],reversed,meaning:String(reversed?(rev?.[en?'en':'fr']||l.definition||l.meaning||''):(l[field]||l.definition||l.meaning||l.keywords||'')),local:String(window.CR_UNIVERSAL_ROLE_SUMMARY?.(c,roles[i],en)||'')};
  })};
 }
 function apply(key,text){
  document.querySelectorAll('[data-hybrid-key]').forEach(el=>{
  if(el.getAttribute('data-hybrid-key')!==key)return;
  const p=el.querySelector('.story-continuous');
- if(p){p.textContent=text;el.dataset.storyEngine='groq-hybrid-v1';}
+ if(p){p.textContent=text;el.dataset.storyEngine='groq-hybrid-v2';}
  });
 }
 function hybrid(cards){
@@ -39,7 +41,8 @@ function hybrid(cards){
  const response=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:key,signal:AbortSignal.timeout(22000)});
  if(!response.ok)return;
  const result=await response.json();
- if(typeof result.text!=='string'||result.text.length<40||result.text.length>50000)return;
+ // Also protect clients while an older relay deployment is still running.
+ if(!window.CR_STORY_QUALITY||window.CR_STORY_QUALITY.validate(result.text,data))return;
  cache.set(key,result.text);if(cache.size>30)cache.delete(cache.keys().next().value);
  apply(key,result.text);
  }catch{}finally{pending.delete(key);}
