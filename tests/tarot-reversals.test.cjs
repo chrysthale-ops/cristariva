@@ -183,5 +183,5 @@ test('every upright Tarot card keeps its own subject in a mixed reading without 
   state.draw=[reversed,w.TAROT_DATA.main.find(card=>card.id===37),closing];
   fragment.innerHTML=w.CR_UNIVERSAL_FLUID_STORY(state.draw).match(/<p class="story-continuous">([\s\S]*?)<\/p>/)[1];
   assert.doesNotMatch(fragment.textContent,/Cela peut signaler un sentiment/);
-  assert.match(fragment.textContent,/rapprochement|coopération|échanges/);
+  assert.match(fragment.textContent,/sentiment qui naît|disponibilité affective|rapprochement|coopération|échanges/);
 });

@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.46';
+const VERSION='6.47';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -212,10 +212,10 @@ function exactRoleMeaning(card,role,enMode){
   const lead=enMode?{
     origin:`The situation is rooted in ${idea}.`,obstacle:`The unresolved challenge concerns ${idea}.`,resource:`You can draw strength from ${idea}.`,evolution:`The next development points towards ${idea}.`,outcome:`Taken together, the spread calls for attention to ${idea}.`
   }:{
-    origin:`La situation trouve son origine dans ${idea}.`,obstacle:`Le point à résoudre concerne ${idea}.`,resource:`Vous pouvez vous appuyer sur ${idea}.`,evolution:`La suite laisse entrevoir ${idea}.`,outcome:`L’ensemble du tirage met l’accent sur ${idea}.`
+    origin:key==='complexity'&&sc==='life'?'Plusieurs éléments se sont mêlés, rendant la situation difficile à comprendre dans son ensemble.':`La situation trouve son origine dans ${idea}.`,obstacle:`Le point à résoudre concerne ${idea}.`,resource:`Vous pouvez vous appuyer sur ${idea}.`,evolution:`La suite laisse entrevoir ${idea}.`,outcome:`L’ensemble du tirage met l’accent sur ${idea}.`
   };
   const actions={
-    complexity:['Plusieurs facteurs se croisent : comprendre leurs liens évite de réduire la situation à une seule cause.','Several factors overlap; understanding their connections avoids reducing the situation to a single cause.'],
+    complexity:['Distinguer ce qui dépend de vous, des circonstances et des informations encore manquantes aide à y voir plus clair.','Several factors overlap; understanding their connections avoids reducing the situation to a single cause.'],
     communication:[role==='obstacle'?'Ce qui reste retenu, imprécis ou difficile à dire freine la compréhension ; un message ou une conversation claire pourrait lever ce point.':'Mettre les attentes en mots permet de vérifier ce qui peut réellement être convenu.','What remains unspoken or unclear needs an explicit exchange before intentions can be understood.'],
     fairness:[sc==='relation'?'La progression dépend d’une implication comparable de chacun et de compromis qui ne reposent pas toujours sur la même personne.':'La progression demande de vérifier que les contributions et les responsabilités sont réparties de façon juste.','Progress depends on a fair sharing of contributions and responsibilities.'],
     emergence:[sc==='relation'?'Quelque chose peut commencer à se révéler entre vous : une confiance naissante, un sentiment reconnu ou une proximité nouvelle. Cela décrit un début à laisser se développer, sans annoncer un engagement déjà décidé.':'Ce qui était encore latent peut devenir perceptible ; il s’agit d’un commencement à accompagner, plutôt que d’un résultat déjà acquis.','Something previously latent may become visible; this is a beginning to nurture rather than an established outcome.'],
@@ -782,16 +782,22 @@ function tarotMixedPart(card,role,sc,i,enMode){
   return enMode?semanticEn(card,role,sc,i):
     distinctiveFr(card,role,sc)||preciseFr(card,role)||fr(card,role,sc,i);
 }
+// Keep the actual reading as the semantic source. Broad keyword matching is
+// unsuitable for reversals and for cards without a dedicated narrative motif.
+function meaningPart(card,role,enMode,reversed=false){
+  const sc=scope(), local=enMode?(card.en||{}):card;
+  const field=sc==='relation'?'reading_relationnel':sc==='work'?'reading_professionnel':'reading_spirituel';
+  const raw=reversed?window.CR_TAROT_REVERSED?.[card.id]?.[enMode?'en':'fr']:
+    (state.oracle==='tarot'&&card.id>22?local.definition:'')||local[field]||local.meaning||local.definition||(!enMode?card[field]||card.meaning||card.definition:'');
+  if(!raw)return '';
+  let text=groundedText(raw,card,enMode);
+  text=text.replace(/\bElle\b/g,enMode?'This situation':'Cette situation').replace(/\belle\b/g,enMode?'this situation':'cette situation');
+  text=text.replace(/\s*;\s*/g,'. ').replace(/, mais /g,' ; toutefois, ').replace(/, yet /g,'; however, ').replace(/\bde ([aeiouéèêàâîïôùû])/gi,'d’$1');
+  const context=enMode?{origin:'In the earlier situation, ',obstacle:'The obstacle to address is this: ',resource:'You can draw on this insight: ',evolution:'At present, ',outcome:'For the next step, '}:{origin:'Dans la situation passée, ',obstacle:'La difficulté à résoudre est la suivante : ',resource:'Vous pouvez vous appuyer sur ce constat : ',evolution:'Actuellement, ',outcome:'Pour la suite, '};
+  return `${context[role]}${text.charAt(0).toLocaleLowerCase()+text.slice(1)}`;
+}
 function reversedPart(card,role,sc,i,enMode){
-  const raw=window.CR_TAROT_REVERSED?.[card.id]?.fr||'';
-  const symbolic={id:card.id,name:'',keywords:raw,definition:'',en:{name:'',keywords:raw}};
-  let part=tarotMixedPart(symbolic,role,sc,i,enMode);
-  // A reversal is a different dynamic, not a mechanical opposite.
-  if(Number(card.id)===6)part=enMode
-    ?'You can reassess the advice you have followed in light of what you actually need.'
-    :'Vous pouvez réexaminer les conseils suivis jusqu’ici à la lumière de ce dont vous avez réellement besoin.';
-  const adjustment=enMode?'This calls for an adjustment.':'Un réajustement est nécessaire.';
-  return part+' '+adjustment;
+  return meaningPart(card,role,enMode,true);
 }
 function sourceSentences(cards,enMode){
   const values=[];
@@ -867,6 +873,10 @@ function groundedText(raw,card,enMode){
   const quote=s=>String(s).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
   text=text.replace(/^(?:Sur le plan [^,]+|Dans le cadre [^,]+|Dans une relation|Dans le travail),?\s*/i,'');
   if(title)text=text.replace(new RegExp('(^|[.!?]\\s+)(?:«\\s*)?'+quote(title)+'(?:\\s*»)?(?=\\s|[,;:])','gi'),'$1Cette lecture');
+  if(title){
+    const variants=[title,title.replace(/ de É/g,' d’É'),title.replace(/ de É/g," d'É")];
+    for(const name of variants)text=text.replace(new RegExp('(?<![\\p{L}])(?:The |Le |La |L[’\'])?'+quote(name)+'(?![\\p{L}])','gu'),enMode?'this experience':'cette expérience');
+  }
   text=text.replace(/(^|[.!?]\s+)(?:cette carte|la carte|cette lecture|elle)\s+(?:vous\s+)?/gi,'$1@ ');
   const replacements=[
     [/^@ demande de ne pas /i,'Il convient de ne pas '],
@@ -894,7 +904,7 @@ function groundedText(raw,card,enMode){
     s=s.replace(/^(?=(?:Indique|Désigne|Annonce|Représente|Signale|Évoque|Symbolise|Met|Parle|Montre|Place|Décrit|Exprime|Rappelle|Favorise|Ouvre|Fait|Invite|Avertit|Confirme)\b)/,'@ ');
     for(const [pattern,replacement] of replacements)s=s.replace(pattern,replacement);
     s=s.replace(/;\s*(?:la carte|elle) invite à /gi,' ; vous pouvez ');
-    s=s.replace(/^Cela (Favorise|Ouvre|Fait|Place|Montre|Rappelle|Invite|Avertit)\b/,(m,v)=>'Cela '+v.charAt(0).toLocaleLowerCase()+v.slice(1));
+    s=s.replace(/^Cela (Favorise|Ouvre|Fait|Place|Montre|Rappelle|Invite|Avertit|Met)\b/,(m,v)=>'Cela '+v.charAt(0).toLocaleLowerCase()+v.slice(1));
     s=s.replace(/Vous pouvez se /g,'Il est possible de se ').replace(/, et que /g,', et ');
     return s?s.charAt(0).toLocaleUpperCase()+s.slice(1):'';
   }).join(' ');
@@ -931,12 +941,16 @@ function build(cards){
   const sc=scope();
   const q=String(state.question||'').trim();
   const parts=chosen.map((card,i)=>{
-    const faithful=!reversedAt(i)?faithfulSymbol(card,r[i],enMode):'';
+    const titled=motif({...card,_semanticPass:true,keywords:'',definition:'',meaning:'',category:'',en:{name:card.en?.name}},false);
+    const faithful=!reversedAt(i)?faithfulSymbol(card,r[i],enMode)||
+      (titled?(enMode?semanticEn(card,r[i],sc,i):distinctiveFr(card,r[i],sc)||preciseFr(card,r[i])):''):'';
     let part='';
     if(faithful){
       part=faithful;
     }else if(reversedAt(i)){
       part=reversedPart(card,r[i],sc,i,enMode);
+    }else if(meaningPart(card,r[i],enMode)){
+      part=meaningPart(card,r[i],enMode);
     }else if(state.oracle==='tarot'){
       part=groundedText(tarotMixedPart(card,r[i],sc,i,enMode),card,enMode);
     }else if(enMode){
@@ -950,12 +964,14 @@ function build(cards){
       part=distinctiveFr(card,r[i],sc)||preciseFr(card,r[i])||fr(card,r[i],sc,i);
     }
     const sources=sourceSentences(chosen,enMode);
-    part=withoutCatalogue(part,sources);
+    // A transformed source reading must keep every clause: deleting shared
+    // phrases here used to erase the defining meaning of a card.
+    if(!reversedAt(i)&&faithful)part=withoutCatalogue(part,sources);
     if(!part)part=enMode?semanticEn(card,r[i],sc,i):fr(card,r[i],sc,i);
-    const cleaned=withoutCatalogue(part,sources);
+    const cleaned=(!reversedAt(i)&&faithful)?withoutCatalogue(part,sources):part;
     // A catalogue filter must never erase an entire position, including
     // the final card. Preserve its role-specific interpretation as a fallback.
-    return roleGrounded(cleaned||part,r[i],enMode);
+    return roleGrounded(groundedText(cleaned||part,faithful?{name:'',en:{name:''}}:card,enMode),r[i],enMode);
   }).filter(Boolean);
   const seen=new Set();
   const narrative=parts.join(' ').match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[];
@@ -977,9 +993,9 @@ window.CR_UNIVERSAL_ROLE_SUMMARY=function(card,role,enMode){
   role=role==='movement'?'evolution':role;
   const i=state.draw.indexOf(card),reversed=state.oracle==='tarot'&&state.tarotReversed?.[i]===true;
   const semantic=reversed?{id:card.id,name:'',keywords:window.CR_TAROT_REVERSED?.[card.id]?.fr||''}:card;
-  let text=faithfulSymbol(semantic,role,enMode)||(enMode?semanticEn(semantic,role,scope(),i):developFr(semantic,role));
+  let text=(reversed?meaningPart(card,role,enMode,true):faithfulSymbol(card,role,enMode)||meaningPart(card,role,enMode))||(enMode?semanticEn(semantic,role,scope(),i):developFr(semantic,role));
   if(!text)text=enMode?en(semantic,role,scope(),i):fr(semantic,role,scope(),i);
-  return withoutCatalogue(text,sourceSentences(state.draw,enMode))||text;
+  return text;
 };
 
 function refresh(){
