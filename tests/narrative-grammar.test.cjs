@@ -97,7 +97,7 @@ test('alignment, breakup and happiness develop a connected answer about a return
   assert.ok(cards.every(Boolean));
   Object.assign(state,{oracle:'amour',domain:'Sentimental',lang:'fr',question:'Le retour de quelqu’un dans ma vie ?',draw:cards,tarotReversed:[]});
   const body=prose(window.CR_UNIVERSAL_FLUID_STORY(cards));
-  assert.ok(body.split(/\s+/).length>=150);
+  assert.doesNotMatch(body,/Les élans et les ressources précédents|C’est le fil décisif|Les ouvertures précédentes/);
   assert.match(body,/coupure/);assert.match(body,/cohérence/);assert.match(body,/épanouissement/);
   assert.match(body,/volonté partagée/);assert.match(body,/ne suffit pas/);
   noCopy(body,cards);
@@ -160,5 +160,16 @@ test('question intents share the same protected engine, including thoughts, date
     noCopy(prose(html),state.draw);
     assert.doesNotMatch(prose(html),/Kinya|Alex|Marie|<script>/);
     assert.ok(html.includes(`data-story-engine="universal-fluid-${window.CR_UNIVERSAL_FLUID_STORY_VERSION}"`));
+  }
+});
+
+
+test('all decks, domains and spread sizes avoid automatic padding and transitions',()=>{
+  for(const [oracle,deck] of Object.entries(decks))for(const domain of ['Sentimental','Relationnel','Professionnel / Projet','Général / spirituel'])for(const lang of ['fr','en'])for(const count of [1,2,3,4,5,7]){
+    const cards=deck.slice(0,count);
+    Object.assign(state,{oracle,domain,lang,question:'',draw:cards,tarotReversed:[]});
+    const body=prose(window.CR_UNIVERSAL_FLUID_STORY(cards));
+    assert.doesNotMatch(body,/Ce point de départ explique pourquoi|Cet appui prend tout son sens|Le changement se vérifiera dans la capacité|C’est le fil décisif|Les élans et les ressources précédents|Un élément déterminant apparaît néanmoins|La situation évolue ensuite|This is the deciding thread|The earlier impulses and resources/);
+    assert.ok(body.length>0);
   }
 });
