@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.44';
+const VERSION='6.45';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -89,7 +89,7 @@ function motif(card,enMode){
     if(keyed)return keyed;
   }
 
-  const exact={malentendu:'misunderstanding',misunderstanding:'misunderstanding',sincerite:'honesty',sincerity:'honesty',honesty:'honesty',plaisir:'pleasure',pleasure:'pleasure',retour:'return',return:'return',patience:'patience',fidelite:'loyalty',loyalty:'loyalty',faithfulness:'loyalty','attirance reciproque':'mutualAttraction','mutual attraction':'mutualAttraction',rencontre:'encounter',meeting:'encounter',complicite:'companionship',complicity:'companionship',soulmate:'soulmate','ame soeur':'soulmate'};
+  const exact={complexite:'complexity',complexity:'complexity',communication:'communication',equite:'fairness',fairness:'fairness',eclosion:'emergence',éclosion:'emergence',emergence:'emergence',malentendu:'misunderstanding',misunderstanding:'misunderstanding',sincerite:'honesty',sincerity:'honesty',honesty:'honesty',plaisir:'pleasure',pleasure:'pleasure',retour:'return',return:'return',patience:'patience',fidelite:'loyalty',loyalty:'loyalty',faithfulness:'loyalty','attirance reciproque':'mutualAttraction','mutual attraction':'mutualAttraction',rencontre:'encounter',meeting:'encounter',complicite:'companionship',complicity:'companionship',soulmate:'soulmate','ame soeur':'soulmate'};
   if(exact[name])return exact[name];
 
   // Keep these symbols distinct from loss, speed and generic adjustment.
@@ -172,7 +172,29 @@ function motif(card,enMode){
 // Preserve the actual symbol before broad theme classification, in every role.
 function exactRoleMeaning(card,role,enMode){
   const key=norm(card?.name).replace(/œ/g,'oe')==='ame soeur'?'soulmate':motif(card,false), sc=scope();
+  const domainConcepts={
+    relation:{
+      complexity:['des sentiments mêlés, des contraintes ou un statut du lien encore ambigu','mixed feelings, constraints or an unclear relationship status'],
+      communication:['un échange explicite sur les sentiments, les intentions et les attentes','an explicit conversation about feelings, intentions and expectations'],
+      fairness:['une répartition plus équilibrée de l’attention, des efforts et des compromis','a fairer sharing of attention, effort and compromises'],
+      emergence:['l’apparition d’un sentiment, d’une confiance ou d’une nouvelle qualité de lien encore peu exprimée','the emergence of a feeling, trust or a new quality of connection that remains little expressed'],
+      awakening:['une prise de conscience des sentiments, des besoins et de ce qui se joue entre vous','awareness of feelings, needs and what is happening between you']
+    },
+    work:{
+      complexity:['plusieurs contraintes, acteurs ou objectifs qui s’entrecroisent','several overlapping constraints, people or objectives'],
+      communication:['la circulation claire des informations et des attentes du projet','clear sharing of project information and expectations'],
+      fairness:['une répartition juste du travail, des responsabilités et de la reconnaissance','fair sharing of work, responsibilities and recognition'],
+      emergence:['un projet ou une possibilité qui commence à prendre forme','a project or possibility beginning to take shape']
+    },
+    life:{
+      complexity:['plusieurs dimensions de votre situation qui demandent à être comprises ensemble','several aspects of your situation that need to be understood together'],
+      communication:['la mise en mots de ce que vous vivez et avez besoin d’exprimer','putting experiences and needs into words'],
+      fairness:['un équilibre plus juste entre ce que vous donnez, recevez et assumez','a fairer balance between what you give, receive and take on'],
+      emergence:['une aspiration ou une possibilité nouvelle qui commence à se manifester','a new aspiration or possibility beginning to emerge']
+    }
+  };
   const concepts={
+    ...domainConcepts[sc],
     soulmate:['la recherche d’une familiarité profonde, d’une compréhension mutuelle et d’une compatibilité affective','the search for deep familiarity, mutual understanding and emotional compatibility'],
     loyalty:['la constance, la loyauté et le respect des engagements','constancy, loyalty and respect for commitments'],
     mutualAttraction:['un intérêt et un désir qui circulent des deux côtés','interest and desire shared by both people'],
@@ -192,6 +214,11 @@ function exactRoleMeaning(card,role,enMode){
     origin:`La situation trouve son origine dans ${idea}.`,obstacle:`Le point à résoudre concerne ${idea}.`,resource:`Vous pouvez vous appuyer sur ${idea}.`,evolution:`La suite laisse entrevoir ${idea}.`,outcome:`L’ensemble du tirage met l’accent sur ${idea}.`
   };
   const actions={
+    complexity:['Plusieurs facteurs se croisent : comprendre leurs liens évite de réduire la situation à une seule cause.','Several factors overlap; understanding their connections avoids reducing the situation to a single cause.'],
+    communication:[role==='obstacle'?'Ce qui reste retenu, imprécis ou difficile à dire freine la compréhension ; un message ou une conversation claire pourrait lever ce point.':'Mettre les attentes en mots permet de vérifier ce qui peut réellement être convenu.','What remains unspoken or unclear needs an explicit exchange before intentions can be understood.'],
+    fairness:[sc==='relation'?'La progression dépend d’une implication comparable de chacun et de compromis qui ne reposent pas toujours sur la même personne.':'La progression demande de vérifier que les contributions et les responsabilités sont réparties de façon juste.','Progress depends on a fair sharing of contributions and responsibilities.'],
+    emergence:[sc==='relation'?'Quelque chose peut commencer à se révéler entre vous : une confiance naissante, un sentiment reconnu ou une proximité nouvelle. Cela décrit un début à laisser se développer, sans annoncer un engagement déjà décidé.':'Ce qui était encore latent peut devenir perceptible ; il s’agit d’un commencement à accompagner, plutôt que d’un résultat déjà acquis.','Something previously latent may become visible; this is a beginning to nurture rather than an established outcome.'],
+    awakening:['Reconnaître ce qui est ressenti et ce dont chacun a besoin aide à comprendre le lien avec davantage de lucidité.','Recognising feelings and individual needs helps clarify the connection.'],
     soulmate:['Ce besoin de proximité donne son sens à votre attente, sans supposer qu’une relation existe déjà ni promettre un lien parfait.','This need for closeness gives meaning to your hopes without assuming a relationship already exists or promising a perfect bond.'],
     loyalty:[role==='obstacle'?'La difficulté est de savoir si les engagements et les comportements seront cohérents dans la durée ; cette position ne permet pas de conclure à une infidélité.':'La confiance se construit par la continuité des comportements et le respect des engagements.','Trust requires consistent behaviour and respected commitments; an obstacle position does not establish infidelity.'],
     mutualAttraction:['Cette réciprocité peut faciliter le rapprochement ; elle demande encore à se traduire en initiatives et en choix partagés.','This reciprocity can support closeness when it becomes shared initiatives and choices.'],
