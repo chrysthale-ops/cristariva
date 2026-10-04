@@ -171,7 +171,7 @@ function motif(card,enMode){
    They also feed the concise role summary, so both outputs agree. */
 // Preserve the actual symbol before broad theme classification, in every role.
 function exactRoleMeaning(card,role,enMode){
-  const key=motif(card,false), sc=scope();
+  const key=norm(card?.name).replace(/œ/g,'oe')==='ame soeur'?'soulmate':motif(card,false), sc=scope();
   const concepts={
     soulmate:['la recherche d’une familiarité profonde, d’une compréhension mutuelle et d’une compatibilité affective','the search for deep familiarity, mutual understanding and emotional compatibility'],
     loyalty:['la constance, la loyauté et le respect des engagements','constancy, loyalty and respect for commitments'],
