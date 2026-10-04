@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.43';
+const VERSION='6.44';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -89,7 +89,7 @@ function motif(card,enMode){
     if(keyed)return keyed;
   }
 
-  const exact={malentendu:'misunderstanding',misunderstanding:'misunderstanding',sincerite:'honesty',sincerity:'honesty',honesty:'honesty',plaisir:'pleasure',pleasure:'pleasure',retour:'return',return:'return',patience:'patience'};
+  const exact={malentendu:'misunderstanding',misunderstanding:'misunderstanding',sincerite:'honesty',sincerity:'honesty',honesty:'honesty',plaisir:'pleasure',pleasure:'pleasure',retour:'return',return:'return',patience:'patience',fidelite:'loyalty',loyalty:'loyalty',faithfulness:'loyalty','attirance reciproque':'mutualAttraction','mutual attraction':'mutualAttraction',rencontre:'encounter',meeting:'encounter',complicite:'companionship',complicity:'companionship',soulmate:'soulmate','ame soeur':'soulmate'};
   if(exact[name])return exact[name];
 
   // Keep these symbols distinct from loss, speed and generic adjustment.
@@ -171,8 +171,13 @@ function motif(card,enMode){
    They also feed the concise role summary, so both outputs agree. */
 // Preserve the actual symbol before broad theme classification, in every role.
 function exactRoleMeaning(card,role,enMode){
-  const key=motif(card,false), sc=scope();
+  const key=norm(card?.name).replace(/œ/g,'oe')==='ame soeur'?'soulmate':motif(card,false), sc=scope();
   const concepts={
+    soulmate:['la recherche d’une familiarité profonde, d’une compréhension mutuelle et d’une compatibilité affective','the search for deep familiarity, mutual understanding and emotional compatibility'],
+    loyalty:['la constance, la loyauté et le respect des engagements','constancy, loyalty and respect for commitments'],
+    mutualAttraction:['un intérêt et un désir qui circulent des deux côtés','interest and desire shared by both people'],
+    encounter:['l’ouverture d’un nouveau contact ou un rapprochement significatif','a new contact or a meaningful rapprochement'],
+    companionship:['une compréhension naturelle, des échanges spontanés et le plaisir d’être ensemble','natural understanding, spontaneous exchanges and enjoyment of being together'],
     misunderstanding:['un décalage entre ce qui a été exprimé et ce qui a été compris','a gap between what was expressed and what was understood'],
     honesty:['des paroles authentiques et des intentions cohérentes avec les actes','honest words and intentions consistent with actions'],
     pleasure:sc==='relation'?['la joie de partager des moments agréables, la sensualité et la légèreté','the joy of enjoyable shared moments, sensuality and lightness']:['le plaisir et le bien-être que cette expérience peut apporter','the enjoyment and wellbeing this experience can bring'],
@@ -187,6 +192,11 @@ function exactRoleMeaning(card,role,enMode){
     origin:`La situation trouve son origine dans ${idea}.`,obstacle:`Le point à résoudre concerne ${idea}.`,resource:`Vous pouvez vous appuyer sur ${idea}.`,evolution:`La suite laisse entrevoir ${idea}.`,outcome:`L’ensemble du tirage met l’accent sur ${idea}.`
   };
   const actions={
+    soulmate:['Ce besoin de proximité donne son sens à votre attente, sans supposer qu’une relation existe déjà ni promettre un lien parfait.','This need for closeness gives meaning to your hopes without assuming a relationship already exists or promising a perfect bond.'],
+    loyalty:[role==='obstacle'?'La difficulté est de savoir si les engagements et les comportements seront cohérents dans la durée ; cette position ne permet pas de conclure à une infidélité.':'La confiance se construit par la continuité des comportements et le respect des engagements.','Trust requires consistent behaviour and respected commitments; an obstacle position does not establish infidelity.'],
+    mutualAttraction:['Cette réciprocité peut faciliter le rapprochement ; elle demande encore à se traduire en initiatives et en choix partagés.','This reciprocity can support closeness when it becomes shared initiatives and choices.'],
+    encounter:['Un échange, une première rencontre ou une redécouverte pourrait faire évoluer votre vie affective, sans fixer de date précise.','An exchange, a first meeting or a rediscovery could change your emotional life without setting a precise date.'],
+    companionship:['La perspective repose sur l’humour, la coopération et une proximité vécue simplement au quotidien.','The outlook rests on humour, cooperation and simple everyday closeness.'],
     misunderstanding:['Vérifier les paroles et les faits permettrait de ne pas décider à partir d’une interprétation erronée.','Checking words and facts would help avoid decisions based on a mistaken interpretation.'],
     honesty:[role==='obstacle'?'Une franchise encore difficile à établir ou à recevoir empêche de savoir sur quoi compter ; un échange ouvert reste nécessaire.':'Exprimer clairement les attentes et vérifier leur cohérence avec les comportements permettrait de savoir sur quoi compter.','Clear expectations and openness about intentions need to be checked against behaviour.'],
     pleasure:[role==='obstacle'?'La recherche de satisfaction immédiate risque de détourner l’attention de ce qui demande à être réglé.':'Ce qui vous fait du bien constitue un appui réel, sans suffire à garantir un engagement durable.','Enjoyment can offer real support, though immediate satisfaction does not establish lasting commitment.'],

@@ -18,6 +18,23 @@ for(const suit of ['batons','coupes','epees','deniers'])vm.runInContext(read('ta
 const base=JSON.parse(read('index.html').match(/^const DATA =(.+);$/m)[1]);
 const minors=window.CR_TAROT_MINOR_ROWS.map(r=>({id:r[0],name:r[1],category:r[2],keywords:r[4],definition:r[5],en:{name:r[9],keywords:r[12],definition:r[13]}}));
 const decks={cristariva:base.main,amour:window.AMOUR_DATA.main,tarot:[...window.TAROT_DATA.main.filter(c=>c.id<=22),...minors]};
+test('reported soulmate spread retains mutual desire, loyalty, encounter and companionship',()=>{
+  const cards=['Âme sœur','Fidélité','Attirance réciproque','Rencontre','Complicité'].map(name=>decks.amour.find(c=>c.name===name));
+  assert.ok(cards.every(Boolean));
+  Object.assign(state,{oracle:'amour',domain:'Sentimental',lang:'fr',question:'Mon impatience à trouver mon bonheur sentimental',draw:cards,tarotReversed:[]});
+  const body=prose(window.CR_UNIVERSAL_FLUID_STORY(cards));
+  for(const idea of [/familiarité profonde/,/respect des engagements/,/désir qui circulent des deux côtés/,/nouveau contact/,/échanges spontanés/])assert.match(body,idea);
+  assert.doesNotMatch(body,/Au départ|compétences complémentaires|déséquilibre encore non résolu|attachement réel/);
+  assert.match(body,/sans supposer qu’une relation existe déjà/);
+  assert.match(body,/ne permet pas de conclure à une infidélité/);
+  for(const n of [1,3,5])for(const card of cards){
+    state.draw=Array(n).fill(card);
+    const text=prose(window.CR_UNIVERSAL_FLUID_STORY(state.draw));
+    noCopy(text,state.draw);
+    assert.doesNotMatch(text,/Au départ|compétences complémentaires/);
+    assert.ok(window.CR_UNIVERSAL_ROLE_SUMMARY(card,'outcome',false));
+  }
+});
 test('Destin, Seconde chance and Tentation retain their meanings and their positions',()=>{
   const cards=['Destin','Seconde chance','Tentation'].map(name=>Object.values(decks).flat().find(c=>c.name===name));
   assert.ok(cards.every(Boolean));
