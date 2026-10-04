@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.42';
+const VERSION='6.43';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -89,6 +89,9 @@ function motif(card,enMode){
     if(keyed)return keyed;
   }
 
+  const exact={malentendu:'misunderstanding',misunderstanding:'misunderstanding',sincerite:'honesty',sincerity:'honesty',honesty:'honesty',plaisir:'pleasure',pleasure:'pleasure',retour:'return',return:'return',patience:'patience'};
+  if(exact[name])return exact[name];
+
   // Keep these symbols distinct from loss, speed and generic adjustment.
   if(/^(signe|sign|signs)$/.test(name))return 'synchronicity';
   if(/^(regrets|regret)$/.test(name))return 'regrets';
@@ -166,7 +169,36 @@ function motif(card,enMode){
 
 /* These readings preserve each symbol and its position without generic padding.
    They also feed the concise role summary, so both outputs agree. */
+// Preserve the actual symbol before broad theme classification, in every role.
+function exactRoleMeaning(card,role,enMode){
+  const key=motif(card,false), sc=scope();
+  const concepts={
+    misunderstanding:['un décalage entre ce qui a été exprimé et ce qui a été compris','a gap between what was expressed and what was understood'],
+    honesty:['des paroles authentiques et des intentions cohérentes avec les actes','honest words and intentions consistent with actions'],
+    pleasure:sc==='relation'?['la joie de partager des moments agréables, la sensualité et la légèreté','the joy of enjoyable shared moments, sensuality and lightness']:['le plaisir et le bien-être que cette expérience peut apporter','the enjoyment and wellbeing this experience can bring'],
+    return:sc==='relation'?['la réapparition possible d’un contact ou d’une histoire affective du passé','the possible reappearance of a contact or an emotional connection from the past']:['la reprise possible d’un contact, d’un sujet ou d’une situation du passé','the possible return of a contact, issue or situation from the past'],
+    patience:['une progression lente qui demande du temps et ne peut pas être forcée','slow progress that takes time and cannot be forced']
+  };
+  if(!concepts[key])return '';
+  const idea=concepts[key][enMode?1:0];
+  const lead=enMode?{
+    origin:`The situation is rooted in ${idea}.`,obstacle:`The unresolved challenge concerns ${idea}.`,resource:`You can draw strength from ${idea}.`,evolution:`The next development points towards ${idea}.`,outcome:`Taken together, the spread calls for attention to ${idea}.`
+  }:{
+    origin:`La situation trouve son origine dans ${idea}.`,obstacle:`Le point à résoudre concerne ${idea}.`,resource:`Vous pouvez vous appuyer sur ${idea}.`,evolution:`La suite laisse entrevoir ${idea}.`,outcome:`L’ensemble du tirage met l’accent sur ${idea}.`
+  };
+  const actions={
+    misunderstanding:['Vérifier les paroles et les faits permettrait de ne pas décider à partir d’une interprétation erronée.','Checking words and facts would help avoid decisions based on a mistaken interpretation.'],
+    honesty:[role==='obstacle'?'Une franchise encore difficile à établir ou à recevoir empêche de savoir sur quoi compter ; un échange ouvert reste nécessaire.':'Exprimer clairement les attentes et vérifier leur cohérence avec les comportements permettrait de savoir sur quoi compter.','Clear expectations and openness about intentions need to be checked against behaviour.'],
+    pleasure:[role==='obstacle'?'La recherche de satisfaction immédiate risque de détourner l’attention de ce qui demande à être réglé.':'Ce qui vous fait du bien constitue un appui réel, sans suffire à garantir un engagement durable.','Enjoyment can offer real support, though immediate satisfaction does not establish lasting commitment.'],
+    return:['Une reprise ne garantit pas que les difficultés anciennes soient résolues : il faudra observer ce qui fonctionne réellement autrement.','Renewed contact does not establish that old difficulties have been resolved; look for what actually works differently.'],
+    patience:[role==='obstacle'?'L’attente risque de figer la situation si elle remplace les échanges ou les décisions nécessaires.':'Laisser du temps permettrait d’observer des changements réels, sans suspendre vos propres choix à une promesse de résultat.','Allow time to observe real changes without putting your own choices on hold for a promised outcome.']
+  };
+  return (lead[role]||lead.outcome)+' '+actions[key][enMode?1:0];
+}
+
 function faithfulSymbol(card,role,enMode){
+  const exact=exactRoleMeaning(card,role,enMode);
+  if(exact)return exact;
   const key=motif(card,false);
   const readings={
     synchronicity:{
@@ -912,3 +944,4 @@ try{refresh();}catch(e){}
 window.addEventListener('pageshow',refresh);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refresh();});
 })();
+

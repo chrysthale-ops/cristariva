@@ -173,3 +173,22 @@ test('all decks, domains and spread sizes avoid automatic padding and transition
     assert.ok(body.length>0);
   }
 });
+
+
+test('misunderstanding, honesty, pleasure, return and patience survive every role and format',()=>{
+  const cards=['Malentendu','Sincérité','Plaisir','Retour','Patience'].map(name=>decks.amour.find(c=>c.name===name));
+  assert.ok(cards.every(Boolean));
+  for(const oracle of Object.keys(decks))for(const domain of ['Sentimental','Relationnel','Professionnel / projet','Général / spirituel'])for(const lang of ['fr','en'])for(const count of [1,2,3,4,5,7])for(const card of cards){
+    const draw=Array(count).fill(card);
+    Object.assign(state,{oracle,domain,lang,question:'',draw,tarotReversed:[]});
+    const body=prose(window.CR_UNIVERSAL_FLUID_STORY(draw));
+    const expected=lang==='fr'?{'Malentendu':/compris/,'Sincérité':/authentiques/,'Plaisir':/plaisir|agréables/,'Retour':/réapparition|reprise/,'Patience':/progression lente/}:{'Malentendu':/understood/,'Sincérité':/honest/,'Plaisir':/enjoy/,'Retour':/reappearance|return/,'Patience':/slow progress/};
+    assert.match(body,expected[card.name]);
+    assert.doesNotMatch(body,/prise de conscience|déséquilibre encore non résolu|configuration encore/);
+  }
+  Object.assign(state,{oracle:'amour',domain:'Sentimental',lang:'fr',question:'Privilégier une nouvelle rencontre ou attendre une évolution ?',draw:cards,tarotReversed:[]});
+  const body=prose(window.CR_UNIVERSAL_FLUID_STORY(cards));
+  assert.match(body,/origine.*compris/);assert.match(body,/point à résoudre.*authentiques/);
+  assert.match(body,/appuyer.*sensualité/);assert.match(body,/suite.*réapparition/);
+  assert.match(body,/ensemble.*progression lente/);assert.doesNotMatch(body,/garantit.*retour de/);
+});
