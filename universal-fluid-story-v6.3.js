@@ -883,30 +883,6 @@ function roleGrounded(text,role,enMode){
 }
 
 
-/* Unmapped symbols retain their selected-domain reading instead of being
-   replaced by polarity or an unrelated thematic template. */
-function sourceRoleMeaning(card,role,enMode){
-  const local=enMode?(card.en||{}):card;
-  const field=scope()==='work'?'reading_professionnel':scope()==='relation'?'reading_relationnel':'reading_spirituel';
-  const raw=local[field]||local.definition||local.meaning||'';
-  if(!raw)return '';
-  const meaning=groundedText(raw,card,enMode);
-  const lead=enMode?{
-    origin:'This is the background to your question: ',
-    obstacle:'The point to clarify, rather than an established failure, is this: ',
-    resource:'The available support lies here: ',
-    evolution:'The possible next development is this: ',
-    outcome:'The spread centres its overall direction here: '
-  }:{
-    origin:'Votre question prend sens dans cette aspiration ou cette expérience : ',
-    obstacle:'Le point à clarifier, sans en déduire un échec acquis, est le suivant : ',
-    resource:'Vous disposez de cet appui pour avancer : ',
-    evolution:'La suite pourrait prendre cette direction : ',
-    outcome:'Le tirage rassemble ses perspectives autour de ce vécu : '
-  };
-  return (lead[role]||lead.outcome)+meaning;
-}
-
 function build(cards){
   if(!Array.isArray(cards)||!cards.length)return '';
   const enMode=state.lang==='en', chosen=cards.slice(), r=roles(chosen.length);
@@ -922,8 +898,6 @@ function build(cards){
       part=reversedPart(card,r[i],sc,i,enMode);
     }else if(state.oracle==='tarot'){
       part=groundedText(tarotMixedPart(card,r[i],sc,i,enMode),card,enMode);
-    }else if(sourceRoleMeaning(card,r[i],enMode)){
-      part=sourceRoleMeaning(card,r[i],enMode);
     }else if(enMode){
       /* The card definition stays in the card commentary. The story must
          interpret the card's role in the spread instead of paraphrasing it. */
@@ -935,9 +909,9 @@ function build(cards){
       part=distinctiveFr(card,r[i],sc)||preciseFr(card,r[i])||fr(card,r[i],sc,i);
     }
     const sources=sourceSentences(chosen,enMode);
-    if(!part.includes(sourceRoleMeaning(card,r[i],enMode)))part=withoutCatalogue(part,sources);
+    part=withoutCatalogue(part,sources);
     if(!part)part=enMode?semanticEn(card,r[i],sc,i):fr(card,r[i],sc,i);
-    return roleGrounded(part,r[i],enMode);
+    return roleGrounded(withoutCatalogue(part,sources),r[i],enMode);
   }).filter(Boolean);
   const seen=new Set();
   const narrative=parts.join(' ').match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[];
@@ -959,9 +933,9 @@ window.CR_UNIVERSAL_ROLE_SUMMARY=function(card,role,enMode){
   role=role==='movement'?'evolution':role;
   const i=state.draw.indexOf(card),reversed=state.oracle==='tarot'&&state.tarotReversed?.[i]===true;
   const semantic=reversed?{id:card.id,name:'',keywords:window.CR_TAROT_REVERSED?.[card.id]?.fr||''}:card;
-  let text=faithfulSymbol(semantic,role,enMode)||sourceRoleMeaning(semantic,role,enMode)||(enMode?semanticEn(semantic,role,scope(),i):developFr(semantic,role));
+  let text=faithfulSymbol(semantic,role,enMode)||(enMode?semanticEn(semantic,role,scope(),i):developFr(semantic,role));
   if(!text)text=enMode?en(semantic,role,scope(),i):fr(semantic,role,scope(),i);
-  return text;
+  return withoutCatalogue(text,sourceSentences(state.draw,enMode));
 };
 
 function refresh(){
