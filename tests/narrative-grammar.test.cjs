@@ -159,6 +159,6 @@ test('question intents share the same protected engine, including thoughts, date
     const html=window.CR_UNIVERSAL_FLUID_STORY(state.draw);
     noCopy(prose(html),state.draw);
     assert.doesNotMatch(prose(html),/Kinya|Alex|Marie|<script>/);
-    assert.match(html,/universal-fluid-6.30/);
+    assert.ok(html.includes(`data-story-engine="universal-fluid-${window.CR_UNIVERSAL_FLUID_STORY_VERSION}"`));
   }
 });

@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.40';
+const VERSION='6.41';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -88,6 +88,14 @@ function motif(card,enMode){
     const keyed=motif(primary,enMode);
     if(keyed)return keyed;
   }
+
+  // Keep these symbols distinct from loss, speed and generic adjustment.
+  if(/^(signe|sign|signs)$/.test(name))return 'synchronicity';
+  if(/^(regrets|regret)$/.test(name))return 'regrets';
+  if(/^(echeance|deadline)$/.test(name))return 'deadline';
+  if(/^(intuition)$/.test(name))return 'intuition';
+  if(/^(eveil|awakening)$/.test(name))return 'awakening';
+
   if(/^(destin|destiny|fate)$/.test(name))return 'destiny';
   if(/seconde chance|deuxieme chance|second chance/.test(name))return 'retry';
   if(/tentation|temptation/.test(name))return 'temptation';
@@ -155,6 +163,51 @@ function motif(card,enMode){
   }
   return '';
 }
+
+/* These readings preserve each symbol and its position without generic padding.
+   They also feed the concise role summary, so both outputs agree. */
+function faithfulSymbol(card,role,enMode){
+  const key=motif(card,false);
+  const readings={
+    synchronicity:{
+      origin:['Des coïncidences ou des motifs qui se répètent ont attiré votre attention et nourri votre recherche de sens. Ils ouvrent une réflexion sur ce que vous vivez, sans constituer à eux seuls une réponse certaine.','Coincidences or recurring patterns have drawn your attention and prompted a search for meaning. They invite reflection on your experience without providing a certain answer on their own.'],
+      obstacle:['Chercher un message dans chaque coïncidence peut brouiller votre compréhension. Le discernement consiste à laisser une place au sens symbolique sans lui faire dire ce que vous espérez entendre.','Looking for a message in every coincidence can cloud your understanding. Discernment means allowing symbolic meaning without making it confirm what you hope to hear.'],
+      resource:['Les motifs qui se répètent peuvent vous aider à repérer ce qui mérite votre attention. Les rapprocher de votre expérience concrète donne un appui à votre réflexion.','Recurring patterns can help you notice what deserves attention. Relating them to your actual experience supports your reflection.'],
+      evolution:['Votre attention aux coïncidences et aux répétitions peut s’affiner. Leur sens se précise en les confrontant à votre vécu plutôt qu’en recherchant une confirmation systématique.','Your attention to coincidences and repetitions may become more sensitive. Their meaning becomes clearer through lived experience rather than a constant search for confirmation.'],
+      outcome:['Le fil du tirage invite à observer les répétitions porteuses de sens tout en gardant votre discernement. Elles peuvent éclairer votre cheminement, sans décider à votre place.','The spread invites attention to meaningful repetitions while retaining discernment. They may illuminate your path without deciding for you.']
+    },
+    regrets:{
+      origin:['Votre recherche actuelle prend racine dans ce que vous auriez voulu vivre ou choisir autrement. Revenir sur cette expérience peut vous aider à comprendre ce qui compte encore pour vous.','Your present search is rooted in what you wish you had experienced or chosen differently. Revisiting that experience may help clarify what still matters to you.'],
+      obstacle:['Ce cheminement reste freiné par ce que vous auriez voulu faire autrement. Rejouer le passé entretient l’hésitation ; en tirer une décision pour le présent vous permettrait de retrouver une marge de choix.','This process is held back by what you wish you had done differently. Replaying the past sustains hesitation; turning its lessons into a present decision can restore room for choice.'],
+      resource:['Votre expérience passée peut devenir un appui si vous en tirez un enseignement précis. Ce que vous souhaiteriez changer vous aide à choisir différemment maintenant.','Past experience can support you when you draw a clear lesson from it. What you wish to change can help you choose differently now.'],
+      evolution:['Des choix anciens peuvent revenir à votre esprit. Leur utilité sera de vous conduire à une réponse présente, plutôt que de prolonger le scénario de ce qui aurait pu être.','Earlier choices may return to mind. Their value lies in helping you respond now rather than extending the story of what might have been.'],
+      outcome:['L’essentiel est de transformer ce que vous auriez voulu vivre autrement en choix actuel. Le passé apporte un enseignement ; il ne doit pas retenir toute votre attention au détriment de ce qui reste à vivre.','The central task is to turn what you wish had been different into a present choice. The past offers a lesson without needing to take all your attention away from what remains to be lived.']
+    },
+    deadline:{
+      origin:['Une étape arrivée à son terme, ou une décision devenue nécessaire, a déclenché votre réflexion. Ce passage demande de reconnaître ce qui doit être achevé avant d’ouvrir la suite.','A stage reaching its end, or a decision becoming necessary, has prompted your reflection. This passage asks you to recognize what needs completion before moving on.'],
+      obstacle:['Une clôture ou une décision reste en suspens et retarde la suite. Préciser ce qui doit être terminé vous aiderait à sortir de cette attente.','An unfinished closure or decision is delaying the next step. Clarifying what needs completion can help you move beyond waiting.'],
+      resource:['Un terme à respecter ou une décision à prendre vous offre un point d’appui concret. Achever ce qui est resté en suspens peut libérer l’espace nécessaire à une nouvelle étape.','An endpoint to respect or a decision to make offers concrete support. Completing what remains pending can make room for a new stage.'],
+      evolution:['Le cheminement vous rapproche d’un moment où il faudra conclure ou décider. Préparer cette clôture permet de franchir le passage avec davantage de conscience.','The process brings you closer to a point of closure or decision. Preparing that ending can help you cross into the next stage more consciously.'],
+      outcome:['La direction du tirage demande de mener une étape à son terme. Une clôture ou une décision claire ouvre la suite, sans que cela permette de fixer une date précise.','The direction of the spread calls for bringing a stage to completion. Clear closure or a decision opens what follows without establishing a precise date.']
+    },
+    intuition:{
+      origin:['Un ressenti intérieur a éveillé votre questionnement. L’écouter avec attention, tout en distinguant perception, désir et projection, permet de mieux comprendre ce qui vous traverse.','An inner feeling has prompted your questioning. Listening carefully while distinguishing perception, desire and projection can clarify your experience.'],
+      obstacle:['La difficulté tient à la distinction entre ce que vous percevez et ce que vous souhaitez. Un ressenti mérite d’être écouté, puis confronté à votre expérience avant de devenir une certitude.','The difficulty lies in distinguishing what you perceive from what you wish for. A feeling deserves attention and comparison with experience before becoming a certainty.'],
+      resource:['Votre écoute intérieure constitue une ressource. Elle devient plus fiable lorsque vous prenez le temps de distinguer un ressenti calme d’un désir pressant ou d’une projection.','Inner listening is a resource. It becomes more reliable when you distinguish a calm feeling from an urgent wish or a projection.'],
+      evolution:['Votre écoute intérieure peut devenir plus fine. L’enjeu est de reconnaître ce que vous percevez réellement, sans le confondre avec vos désirs ou vos projections.','Your inner listening may become more sensitive. The task is to recognize what you actually perceive without confusing it with desires or projections.'],
+      outcome:['La suite invite à vous appuyer sur une écoute intérieure attentive et discernante. Vos ressentis peuvent orienter votre réflexion, en restant ouverts à ce que l’expérience vient confirmer ou corriger.','The direction ahead invites attentive and discerning inner listening. Feelings can guide reflection while remaining open to what experience confirms or corrects.']
+    },
+    awakening:{
+      origin:['Une sensibilité accrue ou une prise de conscience a ouvert votre exploration intérieure. Vous commencez à percevoir votre expérience avec davantage de finesse.','Heightened sensitivity or awareness has opened an inner exploration. You are beginning to perceive your experience more closely.'],
+      obstacle:['Une sensibilité nouvelle peut être difficile à accueillir ou à comprendre. Prendre le temps de l’intégrer vous aiderait à ne pas exiger immédiatement une explication à chaque ressenti.','New sensitivity can be difficult to receive or understand. Giving it time to settle can help you avoid demanding an immediate explanation for every feeling.'],
+      resource:['Une conscience plus fine de ce que vous vivez soutient votre cheminement. Cette ouverture vous aide à explorer votre monde intérieur et à reconnaître ce qui change dans votre perception.','A finer awareness of your experience supports your path. This opening helps you explore your inner world and recognize changes in perception.'],
+      evolution:['Une conscience plus fine de vos réactions et de vos ressentis peut se développer. Cette ouverture se construit en intégrant progressivement ce que votre exploration intérieure vous apprend.','A finer awareness of reactions and feelings may develop. This opening grows through gradual integration of what inner exploration teaches you.'],
+      outcome:['L’ensemble dessine une ouverture de conscience et une sensibilité plus fine. Votre exploration intérieure peut vous aider à mieux percevoir ce que vous vivez et à l’intégrer à vos choix quotidiens.','The overall picture suggests greater awareness and sensitivity. Inner exploration may help you perceive your experience more clearly and integrate it into everyday choices.']
+    }
+  };
+  return readings[key]?.[role]?.[enMode?1:0]||'';
+}
+
 function distinctiveFr(card,role,sc){
   const m=motif(card,false);
   const project=sc==='work';
@@ -810,8 +863,11 @@ function build(cards){
   const sc=scope();
   const q=String(state.question||'').trim();
   const parts=chosen.map((card,i)=>{
+    const faithful=!reversedAt(i)?faithfulSymbol(card,r[i],enMode):'';
     let part='';
-    if(reversedAt(i)){
+    if(faithful){
+      part=faithful;
+    }else if(reversedAt(i)){
       part=reversedPart(card,r[i],sc,i,enMode);
     }else if(state.oracle==='tarot'){
       part=groundedText(tarotMixedPart(card,r[i],sc,i,enMode),card,enMode);
@@ -828,10 +884,10 @@ function build(cards){
     const sources=sourceSentences(chosen,enMode);
     // Develop the implication of each position, rather than padding the
     // story with definitions. Longer distinctive passages already do this.
-    if(i===chosen.length-1&&chosen.length>1&&part.split(/\s+/).length<65){
+    if(!faithful&&i===chosen.length-1&&chosen.length>1&&part.split(/\s+/).length<65){
       const semantic=reversedAt(i)?{id:card.id,name:'',keywords:window.CR_TAROT_REVERSED?.[card.id]?.fr||''}:card;
       part+=' '+outcomeDevelopment(semantic,chosen,sc,enMode);
-    }else if(part.split(/\s+/).length<45){
+    }else if(!faithful&&part.split(/\s+/).length<45){
       const semantic=reversedAt(i)?{id:card.id,name:'',keywords:window.CR_TAROT_REVERSED?.[card.id]?.fr||''}:card;
       const detail=enMode?semanticEn(semantic,r[i],sc,i):developFr(semantic,r[i]);
       if(detail&&norm(detail)!==norm(part))part+=' '+detail;
@@ -879,7 +935,7 @@ window.CR_UNIVERSAL_ROLE_SUMMARY=function(card,role,enMode){
   role=role==='movement'?'evolution':role;
   const i=state.draw.indexOf(card),reversed=state.oracle==='tarot'&&state.tarotReversed?.[i]===true;
   const semantic=reversed?{id:card.id,name:'',keywords:window.CR_TAROT_REVERSED?.[card.id]?.fr||''}:card;
-  let text=enMode?semanticEn(semantic,role,scope(),i):developFr(semantic,role);
+  let text=faithfulSymbol(semantic,role,enMode)||(enMode?semanticEn(semantic,role,scope(),i):developFr(semantic,role));
   if(!text)text=enMode?en(semantic,role,scope(),i):fr(semantic,role,scope(),i);
   return withoutCatalogue(text,sourceSentences(state.draw,enMode));
 };
