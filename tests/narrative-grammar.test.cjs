@@ -18,6 +18,21 @@ for(const suit of ['batons','coupes','epees','deniers'])vm.runInContext(read('ta
 const base=JSON.parse(read('index.html').match(/^const DATA =(.+);$/m)[1]);
 const minors=window.CR_TAROT_MINOR_ROWS.map(r=>({id:r[0],name:r[1],category:r[2],keywords:r[4],definition:r[5],en:{name:r[9],keywords:r[12],definition:r[13]}}));
 const decks={cristariva:base.main,amour:window.AMOUR_DATA.main,tarot:[...window.TAROT_DATA.main.filter(c=>c.id<=22),...minors]};
+test('reported emergence spread preserves the final beginning and its relationship domain',()=>{
+  const cards=['Complexité','Communication','Éveil','Équité','Éclosion'].map(name=>decks.cristariva.find(c=>c.name===name));
+  assert.ok(cards.every(Boolean));
+  Object.assign(state,{oracle:'cristariva',domain:'Sentimental',lang:'fr',question:'Quelles décisions concrètes Kinya va-t-il prendre ?',draw:cards,tarotReversed:[]});
+  const body=prose(window.CR_UNIVERSAL_FLUID_STORY(cards));
+  for(const word of ['sentiments mêlés','conversation claire','prise de conscience des sentiments','attention, des efforts et des compromis','confiance naissante','sentiment reconnu','proximité nouvelle'])assert.ok(body.includes(word),word);
+  assert.doesNotMatch(body,/ralentissement|surcharge|monde intérieur|Rien ne semble entièrement figé|Kinya/);
+  for(const domain of ['Sentimental','Relations','Professionnelle / Projet','Général / spirituel'])for(const lang of ['fr','en'])for(const n of [1,3,5]){
+    Object.assign(state,{domain,lang,draw:cards.slice(0,n-1).concat(cards[4])});
+    const text=prose(window.CR_UNIVERSAL_FLUID_STORY(state.draw));
+    assert.match(text,lang==='fr'?/commence|apparition/:/beginning|emergence/);
+    noCopy(text,state.draw);
+    assert.ok(window.CR_UNIVERSAL_ROLE_SUMMARY(cards[4],'outcome',lang==='en').length>50);
+  }
+});
 test('reported soulmate spread retains mutual desire, loyalty, encounter and companionship',()=>{
   const cards=['Âme sœur','Fidélité','Attirance réciproque','Rencontre','Complicité'].map(name=>decks.amour.find(c=>c.name===name));
   assert.ok(cards.every(Boolean));
