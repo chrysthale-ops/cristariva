@@ -63,8 +63,5 @@
     }
   }
 
-  appendScript('./immersive-reading-ui.js?v=20261005-r1').catch(e=>{
-    console.warn('CRISTARIVA : interface de tirage immersive non chargée.',e);
-  });
   activateTarot78();
 })();

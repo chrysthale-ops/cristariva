@@ -1,11 +1,12 @@
 /* CRISTARIVA — service worker v32 — contrôle qualité externe assoupli.
    Force 22 arcanes majeurs + 56 arcanes mineurs HD sur PC et Android
    et recharge la planche validée complète des arcanes mineurs. */
-const CACHE_NAME='cristariva-v102-20261005-quality-softening';
-const APP_VERSION='2026.10.05-quality-softening';
+const CACHE_NAME='cristariva-v103-20261005-immersive-r2';
+const APP_VERSION='2026.10.05-immersive-r2';
 const SHELL=[
   './',
   './index.html',
+  './immersive-reading-ui.js?v=20261005-r2',
   './story-quality.js?v=2-soft-editorial',
   './groq-hybrid-story.js?v=5-external-diagnostics',
   './manifest.webmanifest',

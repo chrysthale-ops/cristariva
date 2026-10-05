@@ -2,7 +2,7 @@
 (function(){
   'use strict';
 
-  const VERSION='20261005-immersive-r1';
+  const VERSION='20261005-immersive-r2';
 
   function enhance(){
     const question=document.getElementById('question');
@@ -18,7 +18,7 @@
     panel.dataset.crImmersiveReading=VERSION;
     panel.classList.add('cr-reading-immersive');
 
-    const title=[...panel.querySelectorAll('h1,h2,h3')].find(el=>/espace de tirage|reading space/i.test(el.textContent||''));
+    const title=panel.querySelector('[data-i18n="s29"]')||panel.querySelector('h2');
     if(title){
       title.classList.add('cr-reading-immersive-title');
       if(!panel.querySelector('.cr-reading-immersive-subtitle')){
@@ -38,14 +38,14 @@
     question.parentElement?.classList.add('cr-immersive-question-field');
 
     const domain=document.getElementById('domain');
-    const oracle=document.getElementById('oracle');
+    const oracle=document.getElementById('oracleChoice');
     const selectParents=[domain?.parentElement,oracle?.parentElement].filter(Boolean);
     selectParents.forEach(el=>el.classList.add('cr-immersive-select-field'));
     if(selectParents.length===2&&selectParents[0].parentElement===selectParents[1].parentElement){
       selectParents[0].parentElement.classList.add('cr-immersive-select-grid');
     }
 
-    const spreads=['spread1','spread3','spread5'].map(id=>document.getElementById(id)).filter(Boolean);
+    const spreads=[...panel.querySelectorAll('.choice[data-group="format"]')];
     spreads.forEach(el=>el.classList.add('cr-immersive-spread-choice'));
     if(spreads.length>1&&spreads.every(el=>el.parentElement===spreads[0].parentElement)){
       spreads[0].parentElement.classList.add('cr-immersive-spread-grid');
@@ -237,6 +237,14 @@
     `;
     document.head.appendChild(style);
   }
+
+  function updateSubtitle(){
+    const subtitle=document.querySelector('.cr-reading-immersive-subtitle');
+    if(subtitle)subtitle.textContent=(document.documentElement.lang||'').toLowerCase().startsWith('en')
+      ? 'Ask your question and let the cards guide you through the Reflections of the Lake.'
+      : 'Posez votre question et laissez les cartes vous guider au cœur des Reflets du Lac.';
+  }
+  new MutationObserver(updateSubtitle).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',enhance,{once:true});
   else enhance();
