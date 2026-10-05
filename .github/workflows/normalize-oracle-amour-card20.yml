@@ -7,6 +7,10 @@ on:
       - '.github/workflows/normalize-oracle-amour-card20.yml'
   workflow_dispatch:
 
+concurrency:
+  group: normalize-oracle-amour-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -49,7 +53,7 @@ jobs:
           import re
           p=Path('oracle-amour-data.js')
           s=p.read_text(encoding='utf-8')
-          s2=re.sub(r'(cards/amour/\d{3}\.webp)\?v=[^\"\']+', r'\1?v=20261005-sizefix2', s)
+          s2=re.sub(r'(cards/amour/\d{3}\.webp)\?v=[^\"\']+', r'\1?v=20261005-sizefix3', s)
           if s2==s:
               print('Cache-buster Oracle Amour déjà à jour')
           else:
@@ -57,15 +61,15 @@ jobs:
               print('Cache-buster Oracle Amour mis à jour')
           PY
 
-      - name: Préparer le contrôle visuel 19 à 24
+      - name: Préparer le contrôle visuel 1 à 24
         run: |
           mkdir -p /tmp/oracle-amour-size-check
-          cp cards/amour/019.webp cards/amour/020.webp cards/amour/021.webp cards/amour/022.webp cards/amour/023.webp cards/amour/024.webp /tmp/oracle-amour-size-check/
+          cp cards/amour/{001..024}.webp /tmp/oracle-amour-size-check/
 
       - name: Joindre les cartes de contrôle
         uses: actions/upload-artifact@v4
         with:
-          name: oracle-amour-cartes-19-24
+          name: oracle-amour-cartes-01-24
           path: /tmp/oracle-amour-size-check
           if-no-files-found: error
 
@@ -77,7 +81,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "Aucune modification à publier."
           else
-            git commit -m "Uniformiser les 80 cartes Amour sur le gabarit de la carte 20"
+            git commit -m "Uniformiser la longueur visible des 80 cartes Amour"
             git pull --rebase origin "${GITHUB_REF_NAME}"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
