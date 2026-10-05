@@ -1,0 +1,7 @@
+Carte 39 source: (1024, 1536)
+Bbox utile initiale: (47, 41, 983, 1489)
+Recadrage retenu: (54, 66, 976, 1449)
+Fraction blanche périmètre source: 0.011714
+Carte 39 finale: (1024, 1536)
+Carte 40: (1024, 1536)
+Fraction blanche bord final: 0.010937
