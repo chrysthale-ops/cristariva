@@ -27,7 +27,7 @@ test('both relays reject the reported malformed response and accept grammatical 
  }
  }finally{global.fetch=original;if(secret===undefined)delete process.env.GROQ_API_KEY;else process.env.GROQ_API_KEY=secret;}
 });
-test('browser keeps local prose after a malformed legacy relay response and uses domain meaning',async()=>{
+test('browser rejects malformed external prose and uses domain meaning',async()=>{
  for(const text of [broken,valid]){
  const dom=new JSDOM('<div id="reading"></div>',{runScripts:'outside-only'}),w=dom.window;
  try{
@@ -44,7 +44,7 @@ test('browser keeps local prose after a malformed legacy relay response and uses
  w.document.getElementById('reading').innerHTML=w.CR_UNIVERSAL_FLUID_STORY(cards);
  await fetched;await new Promise(resolve=>setImmediate(resolve));
  assert.equal(sent.cards[0].meaning,cards[0].reading_relationnel);
- assert.equal(w.document.querySelector('.story-continuous').textContent,text===valid?valid:'Récit local complet.');
+ assert.equal(w.document.querySelector('.story-continuous').textContent,text===valid?valid:'Le récit ne satisfait pas aux exigences de qualité. Veuillez réessayer.');
  }finally{w.close();}
  }
 });
