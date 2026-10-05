@@ -7,6 +7,10 @@ on:
       - '.github/workflows/normalize-oracle-amour-card20.yml'
   workflow_dispatch:
 
+concurrency:
+  group: normalize-oracle-amour-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
