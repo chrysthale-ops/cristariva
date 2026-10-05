@@ -40,12 +40,10 @@ def detect_visual_bbox(im: Image.Image):
 
     h, w = mask.shape
 
-    # Largeur : corps principal sur la zone verticale centrale.
     y0, y1 = int(h * 0.10), int(h * 0.90)
     frac_x = mask[y0:y1].mean(axis=0)
     xs = np.flatnonzero(frac_x >= 0.55)
 
-    # Hauteur : bandes latérales du corps de carte, hors cartouche central.
     left = mask[:, int(w * 0.05):int(w * 0.35)]
     right = mask[:, int(w * 0.65):int(w * 0.95)]
     side_bands = np.concatenate([left, right], axis=1)
@@ -79,17 +77,12 @@ def normalize_one(path: Path, ref_size, ref_box):
     dst_w, dst_h = dimensions(ref_box)
     scale_x, scale_y = dst_w / src_w, dst_h / src_h
 
-    # La correction doit rester légère : elle harmonise uniquement les marges et
-    # la hauteur/largeur apparente du cadre, sans recadrer l'illustration.
     if not (0.90 <= scale_x <= 1.10 and 0.90 <= scale_y <= 1.10):
         raise RuntimeError(
             f"{path.name}: écart visuel trop important ({before} -> {ref_box}, "
             f"échelles {scale_x:.3f}/{scale_y:.3f})"
         )
 
-    # Transformation affine de tout le canevas : le corps visuel détecté est
-    # envoyé exactement sur celui de la carte 20. Cela corrige notamment les
-    # cartes 21+ qui restaient plus courtes malgré un canevas 512x768 identique.
     inv_x = 1.0 / scale_x
     inv_y = 1.0 / scale_y
     src_x0, src_y0 = before[0], before[1]
@@ -108,7 +101,7 @@ def normalize_one(path: Path, ref_size, ref_box):
         ref_size,
         Image.Transform.AFFINE,
         coeffs,
-        resample=Image.Resampling.LANCZOS,
+        resample=Image.Resampling.BICUBIC,
         fillcolor=bg,
     )
     result.save(path, "WEBP", quality=95, method=6)
