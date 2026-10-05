@@ -1,0 +1,8 @@
+Carte: cards/039-patience-final.webp
+Bbox titre détecté: (300, 1458, 355, 72)
+Centre vertical initial: 1500.9
+Centre vertical cible: 1418.0
+Déplacement appliqué: -83px
+Pixels du masque titre: 5976
+Format final: (1024, 1536)
+Correction: titre/cartouche Patience remonté uniquement; décor, cadre et dimensions conservés.
