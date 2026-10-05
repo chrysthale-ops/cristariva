@@ -2,12 +2,6 @@ name: Harmoniser luminosité Oracle CRISTARIVA
 
 on:
   workflow_dispatch:
-  pull_request:
-    branches:
-      - main
-    paths:
-      - 'tools/harmonize_oracle_luminosity.py'
-      - '.github/workflows/harmonize-oracle-luminosity.yml'
   push:
     paths:
       - 'tools/harmonize_oracle_luminosity.py'
@@ -18,13 +12,13 @@ permissions:
 
 jobs:
   harmonize:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Récupérer le dépôt et la branche de travail
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Préparer Python
         uses: actions/setup-python@v5
@@ -46,21 +40,19 @@ jobs:
           assert report.exists(), 'Rapport de luminosité absent'
           rows = list(csv.DictReader(report.open(encoding='utf-8')))
           assert len(rows) == 130, len(rows)
+          assert [int(r['id']) for r in rows] == list(range(1, 131))
           assert rows[2]['path'] == 'cards/003-joie-final.webp'
           assert rows[2]['status'] == 'reference_inchangee'
-          active = {row['path'] for row in rows}
-          assert all(not p.startswith('cards/amour/') for p in active)
-          assert all(not p.startswith('cards/tarot/') for p in active)
+          assert all(not r['path'].startswith('cards/amour/') for r in rows)
+          assert all(not r['path'].startswith('cards/tarot/') for r in rows)
           worse = [r for r in rows if float(r['distance_after']) > float(r['distance_before']) + 1e-8]
           assert not worse, worse[:5]
           print(f'{len(rows)} cartes actives contrôlées; Joie est inchangée.')
           print(f"{sum(r['status'] == 'harmonisee' for r in rows)} cartes ont reçu un ajustement individualisé.")
           PY
 
-      - name: Publier les images harmonisées sur la branche source
+      - name: Publier les cartes harmonisées sur la branche courante
         shell: bash
-        env:
-          TARGET_BRANCH: ${{ github.head_ref || github.ref_name }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -69,6 +61,6 @@ jobs:
             echo "Aucune modification à publier."
           else
             git commit -m "Harmoniser la luminosité des 130 cartes sur Joie"
-            git pull --rebase origin "${TARGET_BRANCH}"
-            git push origin "HEAD:${TARGET_BRANCH}"
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
