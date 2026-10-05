@@ -15,6 +15,16 @@ test('quality gate rejects damaged or unsupported prose but only flags repairabl
  assert.equal(quality.validate('La joie partagée et la confiance naissante permettent aux sentiments de s’exprimer simplement.',{...input,cards:[{...input.cards[0],local:'Sans établir la réciprocité des sentiments.'}]}),'unsupported_reciprocity');
  assert.equal(quality.validate('A promising idea needs to be tried in practice before making a lasting commitment.',{...input,lang:'en'}),'');
 });
+test('natural multiword card-title phrases are allowed but explicit card labels are rejected',()=>{
+ const sample={lang:'fr',question:'ma sexualité',domain:'Sentimental',oracle:'cristariva',cards:[
+  {index:0,name:'Âme jumelle',role:'obstacle',reversed:false,meaning:'Relation miroir.',local:''},
+  {index:1,name:'Nouveau départ',role:'resource',reversed:false,meaning:'Cycle neuf.',local:''}
+ ]};
+ const natural='Votre désir peut s’ouvrir à un nouveau départ sans effacer vos besoins actuels. L’idée d’une âme jumelle peut aussi inviter à distinguer fantasme, projection et relation vécue.';
+ assert.equal(quality.validate(natural,sample),'');
+ assert.equal(quality.validate('La carte Nouveau départ indique une ouverture possible dans votre rapport au désir et à l’intimité.',sample),'card_names');
+ assert.equal(quality.validate('Âme jumelle : cette image peut inviter à observer les projections affectives dans votre intimité.',sample),'card_names');
+});
 test('both relays reject the reported malformed response and accept grammatical prose',async()=>{
  const {default:worker}=await import('../cloudflare/groq-worker.mjs');
  const original=global.fetch,secret=process.env.GROQ_API_KEY;
@@ -27,6 +37,20 @@ test('both relays reject the reported malformed response and accept grammatical 
  const req=new Request('https://relay.workers.dev/',{method:'POST',headers:{Origin:event.headers.origin},body:event.body});
  assert.equal((await worker.fetch(req,{GROQ_API_KEY:'test-only'})).status,text===valid?200:502);
  }
+ }finally{global.fetch=original;if(secret===undefined)delete process.env.GROQ_API_KEY;else process.env.GROQ_API_KEY=secret;}
+});
+test('both relays accept a natural phrase that matches a multiword card title',async()=>{
+ const {default:worker}=await import('../cloudflare/groq-worker.mjs');
+ const original=global.fetch,secret=process.env.GROQ_API_KEY;
+ const sample={lang:'fr',question:'ma sexualité',domain:'Sentimental',oracle:'cristariva',cards:[{index:0,name:'Nouveau départ',role:'outcome',reversed:false,meaning:'Ouvre un cycle neuf.',local:'Une évolution intime peut ouvrir un cycle neuf.'}]};
+ const text='Votre rapport au désir peut s’ouvrir à un nouveau départ, à votre rythme, sans transformer cette possibilité symbolique en certitude.';
+ try{
+  process.env.GROQ_API_KEY='test-only';
+  global.fetch=async()=>({ok:true,json:async()=>({choices:[{finish_reason:'stop',message:{content:JSON.stringify({segments:[{index:0,text}]})}}]})});
+  const event={httpMethod:'POST',headers:{origin:'https://chrysthale-ops.github.io'},body:JSON.stringify(sample)};
+  assert.equal((await handler(event)).statusCode,200);
+  const req=new Request('https://relay.workers.dev/',{method:'POST',headers:{Origin:event.headers.origin},body:event.body});
+  assert.equal((await worker.fetch(req,{GROQ_API_KEY:'test-only'})).status,200);
  }finally{global.fetch=original;if(secret===undefined)delete process.env.GROQ_API_KEY;else process.env.GROQ_API_KEY=secret;}
 });
 test('browser rejects malformed external prose and uses domain meaning',async()=>{

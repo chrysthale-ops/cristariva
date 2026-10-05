@@ -1,13 +1,13 @@
-/* CRISTARIVA — service worker v33 — carte 39 Patience livrée.
+/* CRISTARIVA — service worker v34 — contrôle qualité des noms de cartes.
    Force 22 arcanes majeurs + 56 arcanes mineurs HD sur PC et Android
    et recharge la planche validée complète des arcanes mineurs. */
-const CACHE_NAME='cristariva-v104-20261005-patience39-live';
-const APP_VERSION='2026.10.05-patience39-live';
+const CACHE_NAME='cristariva-v105-20261005-card-name-quality';
+const APP_VERSION='2026.10.05-card-name-quality';
 const SHELL=[
   './',
   './index.html',
   './immersive-reading-ui.js?v=20261005-r2',
-  './story-quality.js?v=2-soft-editorial',
+  './story-quality.js?v=3-card-name-context',
   './groq-hybrid-story.js?v=5-external-diagnostics',
   './manifest.webmanifest',
   './manifest-en.webmanifest',

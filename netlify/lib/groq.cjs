@@ -1,7 +1,6 @@
 const quality=require('../../story-quality.js');
 'use strict';
 const ALLOWED = new Set(['https://cristariva.netlify.app','https://chrysthale-ops.github.io']);
-const normalize=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 exports.handler=async function(event){
  const origin=event.headers.origin||event.headers.Origin;
  const headers={'Content-Type':'application/json','Cache-Control':'no-store','Vary':'Origin'};
@@ -26,8 +25,7 @@ exports.handler=async function(event){
  const result=JSON.parse(data.choices[0].message.content);
  if(!Array.isArray(result.segments)||result.segments.length!==input.cards.length||result.segments.some((s,i)=>s.index!==i||!bounded(s.text,3500)||s.text.trim().length<40))return reply(502,{error:'coverage'});
  const text=result.segments.map(s=>s.text.trim()).join(' ');
- // Multiword card titles must not leak into the continuous story.
- if(input.cards.some(c=>c.name.trim().split(/\s+/).length>1&&normalize(text).includes(normalize(c.name))))return reply(502,{error:'card_names'});
+ // Explicit card labels remain forbidden; natural wording that happens to match a title is allowed.
  const qualityError=quality.validate(text,input);
  if(qualityError)return reply(502,{error:'quality',reason:qualityError});
  return reply(200,{text,engine:'groq-hybrid-v2'});

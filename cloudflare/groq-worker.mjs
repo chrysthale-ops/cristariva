@@ -76,7 +76,6 @@ async function interpret(event,env){
    const issues=editorialIssues(text,input);
    const sharedError=quality.validate(text,input);
    if(sharedError)issues.push('shared_'+sharedError);
-   if(input.cards.some(c=>c.name.trim().split(/\s+/).length>1&&normalize(text).includes(normalize(c.name))))issues.push('card_names');
    if(issues.length){
     // Editorial defects trigger one corrective pass. Only meaning/safety failures can reject the final prose.
     const sentenceFeedback=(text.match(/[^.!?…]+[.!?…]*/g)||[]).map(sentence=>({sentence:sentence.trim(),issues:editorialIssues(sentence,input)})).filter(item=>item.issues.length);
@@ -87,8 +86,7 @@ async function interpret(event,env){
     if(!text)return reply(502,{error:'coverage'});
    }
   }
-  // Hard rejections: missing/invalid language, card-name leakage, unsupported reciprocity or clearly invented factual events.
-  if(input.cards.some(c=>c.name.trim().split(/\s+/).length>1&&normalize(text).includes(normalize(c.name))))return reply(502,{error:'card_names'});
+  // Hard rejections: missing/invalid language, explicit card-label leakage, unsupported reciprocity or clearly invented factual events.
   const qualityError=quality.validate(text,input);
   if(qualityError)return reply(502,{error:'quality',reason:qualityError});
   if(externalOnly&&criticalExternalIssues(text).length)return reply(502,{error:'quality',reason:'external_grounding'});
