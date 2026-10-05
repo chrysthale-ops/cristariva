@@ -10,6 +10,8 @@ class LocalResources extends ResourceLoader {
     const u = new URL(url);
     if (u.origin !== 'https://cristariva.test') return null;
     const file = path.join(root, decodeURIComponent(u.pathname).replace(/^\/cristariva\//, ''));
+    // Preserve the legacy engine for its own regression tests; production uses the external wrapper.
+    if(u.pathname.endsWith('/groq-hybrid-story.js')) return Promise.resolve(Buffer.from('window.legacyStoryForTest=window.CR_UNIVERSAL_FLUID_STORY;\n'+fs.readFileSync(file,'utf8')));
     return fs.existsSync(file) ? Promise.resolve(fs.readFileSync(file)) : null;
   }
 }
@@ -146,7 +148,7 @@ test('the reported mixed cross spread keeps orientations and uses an independent
   const fragment=w.document.createElement('div');
   for(const lang of ['fr','en']){
     state.lang=lang;
-    fragment.innerHTML=w.CR_UNIVERSAL_FLUID_STORY(state.draw);
+    fragment.innerHTML=w.legacyStoryForTest(state.draw);
     const prose=fragment.querySelector('.story-continuous').textContent;
     assert.ok(prose.length>400);
     for(const card of state.draw){
@@ -172,7 +174,7 @@ test('every upright Tarot card keeps its own subject in a mixed reading without 
     state.draw=[reversed,card,closing];
     for(const lang of ['fr','en']){
       state.lang=lang;
-      fragment.innerHTML=w.CR_UNIVERSAL_FLUID_STORY(state.draw).match(/<p class="story-continuous">([\s\S]*?)<\/p>/)[1];
+      fragment.innerHTML=w.legacyStoryForTest(state.draw).match(/<p class="story-continuous">([\s\S]*?)<\/p>/)[1];
       const prose=fragment.textContent;
       assert.ok(prose.length>230,`${card.id} ${lang}`);
       assert.ok(!prose.includes(lang==='en'?card.en.name:card.name),`${card.id} ${lang}: ${prose}`);
@@ -181,7 +183,7 @@ test('every upright Tarot card keeps its own subject in a mixed reading without 
   }
   state.lang='fr';
   state.draw=[reversed,w.TAROT_DATA.main.find(card=>card.id===37),closing];
-  fragment.innerHTML=w.CR_UNIVERSAL_FLUID_STORY(state.draw).match(/<p class="story-continuous">([\s\S]*?)<\/p>/)[1];
+  fragment.innerHTML=w.legacyStoryForTest(state.draw).match(/<p class="story-continuous">([\s\S]*?)<\/p>/)[1];
   assert.doesNotMatch(fragment.textContent,/Cela peut signaler un sentiment/);
   assert.match(fragment.textContent,/sentiment qui naît|disponibilité affective|rapprochement|coopération|échanges/);
 });
