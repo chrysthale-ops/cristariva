@@ -25,6 +25,7 @@ test('external-only readings get stricter grounding without changing the hybrid 
   global.fetch=async(_url,options)=>{prompts.push(JSON.parse(options.body).messages[0].content);return {ok:true,json:async()=>({choices:[{finish_reason:'stop',message:{content:JSON.stringify({segments:[{index:0,text:'Une clarification pourrait devenir possible si une parole nette permet de dissiper la confusion actuelle.'}]})}}]})};};
   assert.equal((await worker.fetch(request(makeData('Une clarification possible.')),{GROQ_API_KEY:'test-key'})).status,200);
   assert.equal((await worker.fetch(request(makeData('')),{GROQ_API_KEY:'test-key'})).status,200);
+  assert.equal(prompts.length,2);
   assert.equal(prompts[0],quality.system);
   assert.match(prompts[1],/^You write CRISTARIVA/);
   assert.match(prompts[1],/External-only test profile/);
@@ -39,5 +40,29 @@ test('external-only readings get stricter grounding without changing the hybrid 
   assert.match(prompts[1],/il faut/);
   assert.match(prompts[1],/Le point de départ/);
   assert.match(prompts[1],/Sentimental or Relations/);
+ }finally{global.fetch=original;}
+});
+
+test('external-only risky draft is rewritten once before it is returned',async()=>{
+ const {default:worker}=await import('../cloudflare/groq-worker.mjs');
+ const data={lang:'fr',question:'Quelle évolution de ce lien ?',domain:'Sentimental',oracle:'tarot',cards:[{index:0,name:'Direction',role:'outcome',meaning:'Une perspective plus large invite à considérer une direction et un choix.',local:'',reversed:false}]};
+ const request=new Request('https://relay.workers.dev/',{method:'POST',headers:{Origin:'https://chrysthale-ops.github.io','Content-Type':'application/json'},body:JSON.stringify(data)});
+ const calls=[],original=global.fetch;
+ try{
+  global.fetch=async(_url,options)=>{
+   const payload=JSON.parse(options.body);calls.push(payload);
+   const text=calls.length===1
+    ? 'Vous bénéficiez d’un horizon nouveau et il faut préparer une expansion plus ambitieuse du lien.'
+    : 'Le tirage peut évoquer un moment où la direction du lien demande davantage de clarté. Une possibilité consiste à regarder ce qui pourrait évoluer sans présumer du choix final.';
+   return {ok:true,json:async()=>({choices:[{finish_reason:'stop',message:{content:JSON.stringify({segments:[{index:0,text}]})}}]})};
+  };
+  const response=await worker.fetch(request,{GROQ_API_KEY:'test-key'});
+  assert.equal(response.status,200);
+  const body=await response.json();
+  assert.equal(calls.length,2);
+  assert.match(calls[1].messages[0].content,/Corrective editing pass/);
+  assert.match(calls[1].messages[1].content,/draft_to_rewrite/);
+  assert.doesNotMatch(body.text,/horizon|expansion|il faut|vous bénéficiez/i);
+  assert.match(body.text,/pourrait évoluer/);
  }finally{global.fetch=original;}
 });
