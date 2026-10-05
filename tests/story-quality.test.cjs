@@ -7,9 +7,11 @@ const {handler}=require('../netlify/lib/groq.cjs');
 const input={lang:'fr',question:'Le retour de Kinya',domain:'Sentimental',oracle:'tarot',cards:[{index:0,name:'Valet de Bâtons',role:'origin',reversed:true,meaning:'Une initiative manque de constance.',local:'Un élan de rapprochement manque de constance.'}]};
 const valid='Un élan de rapprochement peut manquer de constance. Des échanges réguliers permettraient de savoir si cette ouverture peut se concrétiser.';
 const broken='Dans le passé, une idée pleine d promise a manqué de constance, créant une dynamique hésitante.';
-test('quality gate rejects damaged language, stock transitions, repetitions and unsupported mutual feelings',()=>{
- for(const text of [broken,valid.replace('rapprochement','rapprochement d promise'),valid.slice(0,-1),'Aujourd’hui, '+valid,'Un échange semble possible. Pour l’avenir, le silence reste nécessaire.',valid+' '+valid,'La joie partagée et la confiance naissante permettent aux sentiments de s’exprimer simplement.'])assert.ok(quality.validate(text,input),text);
- for(const text of [valid,'Une idée pleine de promesses peut avoir un coût élevé. Il reste utile de vérifier son intérêt concret.',"L'élan d’un rapprochement mérite d’être observé avant de conclure."])assert.equal(quality.validate(text,input),'',text);
+test('quality gate rejects damaged or unsupported prose but only flags repairable editorial defects',()=>{
+ for(const text of [broken,valid.replace('rapprochement','rapprochement d promise'),valid.slice(0,-1),'La joie partagée et la confiance naissante permettent aux sentiments de s’exprimer simplement.'])assert.ok(quality.validate(text,input),text);
+ for(const text of [valid,'Aujourd’hui, '+valid,'Un échange semble possible. Pour l’avenir, le silence reste nécessaire.',valid+' '+valid,'Une idée pleine de promesses peut avoir un coût élevé. Il reste utile de vérifier son intérêt concret.',"L'élan d’un rapprochement mérite d’être observé avant de conclure."])assert.equal(quality.validate(text,input),'',text);
+ assert.deepEqual(quality.editorialIssues('Aujourd’hui, '+valid),['stock_opening']);
+ assert.deepEqual(quality.editorialIssues(valid+' '+valid),['repetition']);
  assert.equal(quality.validate('La joie partagée et la confiance naissante permettent aux sentiments de s’exprimer simplement.',{...input,cards:[{...input.cards[0],local:'Sans établir la réciprocité des sentiments.'}]}),'unsupported_reciprocity');
  assert.equal(quality.validate('A promising idea needs to be tried in practice before making a lasting commitment.',{...input,lang:'en'}),'');
 });

@@ -72,15 +72,35 @@ test('external-only risky draft is rewritten once before it is returned',async()
  }finally{global.fetch=original;}
 });
 
-test('all external grounding rules still reject a failed rewrite with no local fallback',async()=>{
+test('repairable editorial defects no longer reject a reading after the corrective pass',async()=>{
  const {default:worker}=await import('../cloudflare/groq-worker.mjs');
  const drafts=[
   'Une expansion du lien pourrait offrir une direction à envisager avec prudence.',
   'Il faut envisager la suite du lien avec prudence et sans présumer de la réponse.',
   'Une position renforcée pourrait donner une autre lecture de ce lien.',
   'Un malaise persiste dans ce lien et demande de regarder la situation avec attention.',
-  'Un rapprochement se profile dans ce lien et pourrait permettre un échange.',
-  'Vous avez reçu une réponse qui change la façon de regarder ce lien.'
+  'Un rapprochement se profile dans ce lien et pourrait permettre un échange.'
+ ];
+ const original=global.fetch;
+ try{
+  for(const text of drafts){
+   let calls=0;
+   global.fetch=async()=>{calls++;return {ok:true,json:async()=>({choices:[{finish_reason:'stop',message:{content:JSON.stringify({segments:[{index:0,text}]})}}]})};};
+   const data={lang:'fr',question:'Quelle évolution ?',domain:'Sentimental',oracle:'tarot',cards:[{index:0,name:'Direction',role:'outcome',meaning:'Choix et clarification.',local:'',reversed:false}]};
+   const request=new Request('https://relay.workers.dev/',{method:'POST',headers:{Origin:'https://chrysthale-ops.github.io'},body:JSON.stringify(data)});
+   const response=await worker.fetch(request,{GROQ_API_KEY:'test-key'});
+   assert.equal(response.status,200,text);
+   assert.equal((await response.json()).text,text);
+   assert.equal(calls,2,'One corrective call is attempted before accepting a residual editorial defect');
+  }
+ }finally{global.fetch=original;}
+});
+
+test('clearly invented factual events still reject a failed rewrite',async()=>{
+ const {default:worker}=await import('../cloudflare/groq-worker.mjs');
+ const drafts=[
+  'Vous avez reçu une réponse qui change la façon de regarder ce lien.',
+  'Votre effort a été remarqué et cela a renforcé le lien entre vous.'
  ];
  const original=global.fetch;
  try{
