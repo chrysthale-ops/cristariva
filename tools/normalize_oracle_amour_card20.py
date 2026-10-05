@@ -147,7 +147,8 @@ def normalize_one(path: Path, ref_size, ref_box):
         ref_size,
         Image.Transform.AFFINE,
         coeffs,
-        resample=Image.Resampling.LANCZOS,
+        # PIL n'accepte pas LANCZOS pour une transformation affine.
+        resample=Image.Resampling.BICUBIC,
         fillcolor=bg,
     )
     result.save(path, "WEBP", quality=96, method=6)
