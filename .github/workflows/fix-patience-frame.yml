@@ -1,0 +1,108 @@
+name: Corriger cadre Patience
+
+on:
+  push:
+    branches:
+      - fix/patience-frame-39-v2
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/patience-frame-39-v2
+          fetch-depth: 0
+      - run: pip install pillow numpy opencv-python-headless
+      - name: Reposer le cadre standard de la carte 38 sur Patience
+        run: |
+          python - <<'PY'
+          from PIL import Image, ImageDraw
+          import numpy as np, cv2
+          from pathlib import Path
+
+          ref_path=Path('cards/038.webp')
+          dst_path=Path('cards/039-patience-final.webp')
+          ref=np.array(Image.open(ref_path).convert('RGB'))
+          src=np.array(Image.open(dst_path).convert('RGB'))
+          h,w=src.shape[:2]
+          assert (w,h)==(1024,1536) and ref.shape[:2]==src.shape[:2]
+
+          # Conserver le médaillon 39 intact : le cadre supérieur doit passer derrière lui.
+          med=src[0:105,430:594].copy()
+
+          hsv=cv2.cvtColor(src,cv2.COLOR_RGB2HSV)
+          H,S,V=cv2.split(hsv)
+          gold=((H>=6)&(H<=42)&(S>=55)&(V>=95)).astype(np.uint8)*255
+
+          # Retirer les lignes de cadre décalées/tronquées de la version actuelle.
+          # On ne masque que des pixels dorés dans les bandes où les anciennes lignes ont été détectées.
+          region=np.zeros((h,w),np.uint8)
+          region[:,10:41]=255
+          region[:,997:1017]=255
+          region[0:18,:]=255
+          region[1519:h,:]=255
+          old=cv2.bitwise_and(gold,region)
+          old=cv2.dilate(old,np.ones((3,3),np.uint8),iterations=1)
+          repaired=cv2.inpaint(src,old,3,cv2.INPAINT_TELEA)
+
+          # Couleurs prélevées sur le cadre standard de Soutien (38).
+          def frame_color(xa,xb):
+              band=ref[180:1370,xa:xb]
+              hsv_b=cv2.cvtColor(band,cv2.COLOR_RGB2HSV)
+              hh,ss,vv=cv2.split(hsv_b)
+              m=(hh>=6)&(hh<=42)&(ss>=45)&(vv>=105)
+              pix=band[m]
+              if len(pix)==0:
+                  return (218,172,58)
+              return tuple(int(v) for v in np.median(pix,axis=0))
+
+          outer=frame_color(20,24)
+          inner=frame_color(30,33)
+
+          pil=Image.fromarray(repaired)
+          d=ImageDraw.Draw(pil)
+
+          # Géométrie mesurée directement sur la carte 38 :
+          # extérieur x≈20–23 / 1000–1003, y≈22–24 / 1511–1513
+          # intérieur x≈30–32 / 992–994, y≈31–33 / 1502–1504
+          # Les rectangles sont tracés entièrement à l'intérieur du canevas, donc jamais tronqués.
+          d.rectangle([21,23,1002,1512],outline=outer,width=3)
+          d.rectangle([31,32,992,1503],outline=inner,width=2)
+
+          out=np.array(pil)
+          out[0:105,430:594]=med
+
+          Image.fromarray(out).save(dst_path,'WEBP',quality=98,method=6)
+
+          # Aperçu côte à côte pour contrôle visuel.
+          preview=Image.new('RGB',(2048,1536),(245,243,238))
+          preview.paste(Image.fromarray(ref),(0,0))
+          preview.paste(Image.fromarray(out),(1024,0))
+          preview.save('patience-frame-preview.jpg',quality=94)
+
+          Path('patience-frame-report.txt').write_text(
+              'Référence: cards/038.webp\n'
+              'Carte corrigée: cards/039-patience-final.webp\n'
+              'Cadre extérieur: [21,23,1002,1512], largeur 3\n'
+              'Cadre intérieur: [31,32,992,1503], largeur 2\n'
+              'Médaillon 39 conservé intact.\n'
+              'Titre Patience et format 1024x1536 conservés.\n',encoding='utf-8')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: patience-frame-preview
+          path: |
+            patience-frame-preview.jpg
+            patience-frame-report.txt
+      - name: Committer uniquement la carte corrigée et nettoyer les workflows temporaires
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add cards/039-patience-final.webp
+          git rm -f .github/workflows/fix-patience-frame.yml .github/workflows/diag-patience-frame.yml .github/workflows/diag-patience-frame-v2.yml
+          git commit -m "Corriger le cadre de la carte 39 Patience"
+          git push origin HEAD:fix/patience-frame-39-v2
