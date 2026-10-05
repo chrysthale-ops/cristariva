@@ -49,7 +49,7 @@ jobs:
           import re
           p=Path('oracle-amour-data.js')
           s=p.read_text(encoding='utf-8')
-          s2=re.sub(r'(cards/amour/\d{3}\.webp)\?v=[^\"\']+', r'\1?v=20261005-sizefix1', s)
+          s2=re.sub(r'(cards/amour/\d{3}\.webp)\?v=[^\"\']+', r'\1?v=20261005-sizefix2', s)
           if s2==s:
               print('Cache-buster Oracle Amour déjà à jour')
           else:
