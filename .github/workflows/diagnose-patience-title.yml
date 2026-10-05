@@ -16,87 +16,76 @@ jobs:
         with:
           ref: fix/patience-cartouche-position
           fetch-depth: 0
-      - run: pip install pillow numpy opencv-python-headless
+      - run: pip install pillow numpy opencv-python-headless pytesseract
       - name: Mesurer les titres des cartes 37 a 42
         run: |
           python - <<'PY'
           from pathlib import Path
-          from PIL import Image
+          from PIL import Image, ImageEnhance, ImageFilter
           import numpy as np
           import cv2
-          import statistics
+          import pytesseract
 
           def find_card(n):
-              exts = {'.webp','.png','.jpg','.jpeg'}
-              candidates = [p for p in Path('cards').glob(f'{n:03d}*') if p.suffix.lower() in exts]
-              if not candidates:
+              exts={'.webp','.png','.jpg','.jpeg'}
+              c=[p for p in Path('cards').glob(f'{n:03d}*') if p.suffix.lower() in exts]
+              if not c:
                   raise SystemExit(f'Carte {n} introuvable')
-              exact = [p for p in candidates if p.stem == f'{n:03d}']
-              return exact[0] if exact else sorted(candidates)[0]
-
-          def detect_title(path):
-              im = np.array(Image.open(path).convert('RGB'))
-              h,w = im.shape[:2]
-              hsv = cv2.cvtColor(im, cv2.COLOR_RGB2HSV)
-              y0,y1 = int(h*0.78), int(h*0.985)
-              x0,x1 = int(w*0.12), int(w*0.88)
-              roi = hsv[y0:y1, x0:x1]
-              # Teintes claires / peu à moyennement saturées correspondant au lettrage ivoire-or.
-              mask = ((roi[:,:,2] >= 155) & (roi[:,:,1] <= 135)).astype(np.uint8)*255
-              # Regrouper les lettres d'un mot sans fusionner tout l'arrière-plan.
-              kclose = cv2.getStructuringElement(cv2.MORPH_RECT,(17,3))
-              kdil = cv2.getStructuringElement(cv2.MORPH_RECT,(5,3))
-              m = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kclose)
-              m = cv2.dilate(m, kdil, iterations=1)
-              num, labels, stats, cents = cv2.connectedComponentsWithStats(m, 8)
-              best = None
-              for i in range(1,num):
-                  x,y,bw,bh,area = stats[i]
-                  cx,cy = cents[i]
-                  gx,gy = x+x0,y+y0
-                  gcx,gcy = cx+x0,cy+y0
-                  if bw < 120 or bw > int(w*0.8):
-                      continue
-                  if bh < 18 or bh > 130:
-                      continue
-                  if gcy < h*0.82 or gcy > h*0.975:
-                      continue
-                  if abs(gcx-w/2) > w*0.22:
-                      continue
-                  ratio = bw/max(bh,1)
-                  if ratio < 2.0:
-                      continue
-                  score = bw + 0.15*area - 0.7*abs(gcx-w/2) - 0.25*abs(gcy-h*0.90)
-                  if best is None or score > best[0]:
-                      best=(score,(gx,gy,bw,bh),(gcx,gcy),i)
-              if best is None:
-                  raise RuntimeError(f'Titre non detecte pour {path}')
-              return im.shape[1], im.shape[0], best[1], best[2]
+              e=[p for p in c if p.stem==f'{n:03d}']
+              return e[0] if e else sorted(c)[0]
 
           lines=[]
-          centers=[]
           for n in range(37,43):
               p=find_card(n)
-              w,h,bbox,center=detect_title(p)
-              lines.append(f'{n}: {p} size={w}x{h} bbox={bbox} center=({center[0]:.1f},{center[1]:.1f})')
-              if n != 39:
-                  centers.append(center[1])
-          target=statistics.median(centers)
-          p39=find_card(39)
-          _,_,b39,c39=detect_title(p39)
-          delta=round(target-c39[1])
-          lines.append(f'target_y_median_neighbors={target:.1f}')
-          lines.append(f'patience_y={c39[1]:.1f}')
-          lines.append(f'delta_y_recommended={delta}')
+              pil=Image.open(p).convert('RGB')
+              im=np.array(pil)
+              h,w=im.shape[:2]
+              y0,y1=int(h*0.78),int(h*0.985)
+              x0,x1=int(w*0.10),int(w*0.90)
+              roi=im[y0:y1,x0:x1]
+              hsv=cv2.cvtColor(roi,cv2.COLOR_RGB2HSV)
+              mask=((hsv[:,:,2]>=145)&(hsv[:,:,1]<=170)).astype(np.uint8)
+              row=mask.sum(axis=1).astype(float)
+              smooth=np.convolve(row,np.ones(9)/9,mode='same')
+              order=np.argsort(smooth)[::-1]
+              peaks=[]
+              for idx in order:
+                  gy=idx+y0
+                  if all(abs(gy-q)>12 for q,_ in peaks):
+                      peaks.append((int(gy),float(smooth[idx])))
+                  if len(peaks)>=8: break
+
+              # OCR sur le tiers inférieur, agrandi et contrasté.
+              crop=pil.crop((0,int(h*0.72),w,h))
+              crop=crop.resize((w*2,int(h*0.28)*2),Image.Resampling.LANCZOS)
+              crop=ImageEnhance.Contrast(crop).enhance(1.5)
+              data=pytesseract.image_to_data(crop,config='--psm 11',output_type=pytesseract.Output.DICT)
+              ocr=[]
+              for i,t in enumerate(data['text']):
+                  t=t.strip()
+                  if not t: continue
+                  conf=float(data['conf'][i]) if str(data['conf'][i]).replace('.','',1).lstrip('-').isdigit() else -1
+                  if conf<10: continue
+                  top=data['top'][i]/2+int(h*0.72)
+                  height=data['height'][i]/2
+                  left=data['left'][i]/2
+                  width=data['width'][i]/2
+                  ocr.append(f'{t}@x{left:.0f},y{top:.0f},w{width:.0f},h{height:.0f},c{conf:.0f}')
+
+              lines.append(f'{n}: {p} size={w}x{h}')
+              lines.append('  row_peaks=' + ', '.join(f'{y}:{v:.1f}' for y,v in peaks))
+              lines.append('  ocr=' + (' | '.join(ocr) if ocr else 'NONE'))
+
           Path('reports').mkdir(exist_ok=True)
           Path('reports/patience-title-diagnostic.txt').write_text('\n'.join(lines)+'\n',encoding='utf-8')
           print('\n'.join(lines))
           PY
       - name: Committer le diagnostic et retirer le workflow temporaire
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add reports/patience-title-diagnostic.txt
+          git add reports/patience-title-diagnostic.txt 2>/dev/null || true
           git commit -m "Mesurer la position du titre Patience" || true
           git rm .github/workflows/diagnose-patience-title.yml
           git commit -m "Retirer le diagnostic temporaire Patience" || true
