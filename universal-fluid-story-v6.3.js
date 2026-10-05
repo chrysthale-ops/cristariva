@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.48';
+const VERSION='6.49';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -803,7 +803,9 @@ function meaningPart(card,role,enMode,reversed=false){
   }
   if(!raw)return '';
   let text=groundedText(raw,card,enMode);
-  text=text.replace(/\bElle\b/g,enMode?'This situation':'Cette situation').replace(/\belle\b/g,enMode?'this situation':'cette situation');
+  // JavaScript \b treats accented letters as non-word characters: it matched
+  // the end of « réelle ». Match standalone pronouns with Unicode boundaries.
+  text=text.replace(/(?<![\p{L}\p{M}\p{N}_])Elle(?![\p{L}\p{M}\p{N}_])/gu,enMode?'This situation':'Cette situation').replace(/(?<![\p{L}\p{M}\p{N}_])elle(?![\p{L}\p{M}\p{N}_])/gu,enMode?'this situation':'cette situation');
   text=text.replace(/\s*;\s*/g,'. ').replace(/, mais /g,' ; toutefois, ').replace(/, yet /g,'; however, ').replace(/\bde ([aeiouéèêàâîïôùû])/gi,'d’$1');
   const context=enMode?{origin:'In the earlier situation, ',obstacle:'The obstacle to address is this: ',resource:'You can draw on this insight: ',evolution:'At present, ',outcome:'For the next step, '}:{origin:'',obstacle:'La difficulté à résoudre est la suivante : ',resource:'Vous pouvez vous appuyer sur ce constat : ',evolution:'',outcome:''};
   return context[role]?`${context[role]}${text.charAt(0).toLocaleLowerCase()+text.slice(1)}`:text;
