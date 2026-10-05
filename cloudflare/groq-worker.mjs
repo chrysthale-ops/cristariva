@@ -21,9 +21,15 @@ function externalOnlyIssues(text,input){
  }
  return issues;
 }
-function criticalExternalIssues(text,input){
- const n=normalize(text),issues=externalOnlyIssues(text,input),critical=[];
- if(issues.includes('unqualified_fact'))critical.push('unqualified_fact');
+function criticalExternalIssues(text){
+ const n=normalize(text),critical=[];
+ // After the corrective pass, reject only assertions that claim a concrete past event or state as fact.
+ // Purely editorial wording ("il faut", "se profile", "récemment", persistence wording, project vocabulary) is no longer fatal.
+ for(const sentence of n.split(/[.!?…]+/)){
+  const s=sentence.trim();if(!s)continue;
+  const hedged=/\b(?:peut|pourrait|pourraient|semble|suggere|invite|possibilite|serait|seraient|si)\b/.test(s);
+  if(!hedged&&/\b(?:a ete|ont ete|a renforce|ont renforce|s'est produit|a eu lieu|vous avez|vous etes)\b/.test(s))critical.push('unqualified_fact');
+ }
  if(/\b(?:votre effort a ete remarque|cela a renforce le lien|premiere reconnaissance du lien)\b/.test(n))critical.push('unsupported_fact');
  return [...new Set(critical)];
 }
@@ -85,7 +91,7 @@ async function interpret(event,env){
   if(input.cards.some(c=>c.name.trim().split(/\s+/).length>1&&normalize(text).includes(normalize(c.name))))return reply(502,{error:'card_names'});
   const qualityError=quality.validate(text,input);
   if(qualityError)return reply(502,{error:'quality',reason:qualityError});
-  if(externalOnly&&criticalExternalIssues(text,input).length)return reply(502,{error:'quality',reason:'external_grounding'});
+  if(externalOnly&&criticalExternalIssues(text).length)return reply(502,{error:'quality',reason:'external_grounding'});
   return reply(200,{text,engine:'groq-hybrid-v2'});
  }catch{return reply(502,{error:'provider_unavailable'});}
 };
