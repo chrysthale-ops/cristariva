@@ -1,0 +1,103 @@
+name: Diagnostiquer position titre Patience
+
+on:
+  push:
+    branches:
+      - fix/patience-cartouche-position
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/patience-cartouche-position
+          fetch-depth: 0
+      - run: pip install pillow numpy opencv-python-headless
+      - name: Mesurer les titres des cartes 37 a 42
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import numpy as np
+          import cv2
+          import statistics
+
+          def find_card(n):
+              exts = {'.webp','.png','.jpg','.jpeg'}
+              candidates = [p for p in Path('cards').glob(f'{n:03d}*') if p.suffix.lower() in exts]
+              if not candidates:
+                  raise SystemExit(f'Carte {n} introuvable')
+              exact = [p for p in candidates if p.stem == f'{n:03d}']
+              return exact[0] if exact else sorted(candidates)[0]
+
+          def detect_title(path):
+              im = np.array(Image.open(path).convert('RGB'))
+              h,w = im.shape[:2]
+              hsv = cv2.cvtColor(im, cv2.COLOR_RGB2HSV)
+              y0,y1 = int(h*0.78), int(h*0.985)
+              x0,x1 = int(w*0.12), int(w*0.88)
+              roi = hsv[y0:y1, x0:x1]
+              # Teintes claires / peu à moyennement saturées correspondant au lettrage ivoire-or.
+              mask = ((roi[:,:,2] >= 155) & (roi[:,:,1] <= 135)).astype(np.uint8)*255
+              # Regrouper les lettres d'un mot sans fusionner tout l'arrière-plan.
+              kclose = cv2.getStructuringElement(cv2.MORPH_RECT,(17,3))
+              kdil = cv2.getStructuringElement(cv2.MORPH_RECT,(5,3))
+              m = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kclose)
+              m = cv2.dilate(m, kdil, iterations=1)
+              num, labels, stats, cents = cv2.connectedComponentsWithStats(m, 8)
+              best = None
+              for i in range(1,num):
+                  x,y,bw,bh,area = stats[i]
+                  cx,cy = cents[i]
+                  gx,gy = x+x0,y+y0
+                  gcx,gcy = cx+x0,cy+y0
+                  if bw < 120 or bw > int(w*0.8):
+                      continue
+                  if bh < 18 or bh > 130:
+                      continue
+                  if gcy < h*0.82 or gcy > h*0.975:
+                      continue
+                  if abs(gcx-w/2) > w*0.22:
+                      continue
+                  ratio = bw/max(bh,1)
+                  if ratio < 2.0:
+                      continue
+                  score = bw + 0.15*area - 0.7*abs(gcx-w/2) - 0.25*abs(gcy-h*0.90)
+                  if best is None or score > best[0]:
+                      best=(score,(gx,gy,bw,bh),(gcx,gcy),i)
+              if best is None:
+                  raise RuntimeError(f'Titre non detecte pour {path}')
+              return im.shape[1], im.shape[0], best[1], best[2]
+
+          lines=[]
+          centers=[]
+          for n in range(37,43):
+              p=find_card(n)
+              w,h,bbox,center=detect_title(p)
+              lines.append(f'{n}: {p} size={w}x{h} bbox={bbox} center=({center[0]:.1f},{center[1]:.1f})')
+              if n != 39:
+                  centers.append(center[1])
+          target=statistics.median(centers)
+          p39=find_card(39)
+          _,_,b39,c39=detect_title(p39)
+          delta=round(target-c39[1])
+          lines.append(f'target_y_median_neighbors={target:.1f}')
+          lines.append(f'patience_y={c39[1]:.1f}')
+          lines.append(f'delta_y_recommended={delta}')
+          Path('reports').mkdir(exist_ok=True)
+          Path('reports/patience-title-diagnostic.txt').write_text('\n'.join(lines)+'\n',encoding='utf-8')
+          print('\n'.join(lines))
+          PY
+      - name: Committer le diagnostic et retirer le workflow temporaire
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/patience-title-diagnostic.txt
+          git commit -m "Mesurer la position du titre Patience" || true
+          git rm .github/workflows/diagnose-patience-title.yml
+          git commit -m "Retirer le diagnostic temporaire Patience" || true
+          git push origin HEAD:fix/patience-cartouche-position
