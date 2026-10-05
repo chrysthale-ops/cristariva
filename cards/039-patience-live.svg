@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1024" height="1536" viewBox="0 0 1024 1536">
+  <defs>
+    <clipPath id="cardClip"><rect x="0" y="0" width="1024" height="1536" rx="31" ry="31"/></clipPath>
+    <linearGradient id="titleShade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#05080c" stop-opacity="0"/>
+      <stop offset="0.42" stop-color="#05080c" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#05080c" stop-opacity="0.42"/>
+    </linearGradient>
+  </defs>
+  <g clip-path="url(#cardClip)">
+    <image x="-41" y="-61" width="1106" height="1659" preserveAspectRatio="none" xlink:href="039-patience-base.webp" href="039-patience-base.webp"/>
+    <rect x="0" y="1260" width="1024" height="276" fill="url(#titleShade)"/>
+  </g>
+  <rect x="20" y="22" width="984" height="1492" rx="25" ry="25" fill="none" stroke="#e6bd4f" stroke-width="3"/>
+  <rect x="31" y="33" width="962" height="1470" rx="18" ry="18" fill="none" stroke="#e6bd4f" stroke-width="2"/>
+  <g fill="none" stroke="#e6bd4f" stroke-linecap="round">
+    <path d="M25 22 H447" stroke-width="3"/>
+    <path d="M32 31 H440" stroke-width="2"/>
+    <path d="M46 42 H426" stroke-width="1.5"/>
+    <path d="M577 22 H999" stroke-width="3"/>
+    <path d="M584 31 H992" stroke-width="2"/>
+    <path d="M598 42 H978" stroke-width="1.5"/>
+  </g>
+  <circle cx="512" cy="53" r="47" fill="#173b60" stroke="#e6bd4f" stroke-width="3"/>
+  <text x="512" y="69" text-anchor="middle" fill="#f8f1df" font-family="Georgia, 'Times New Roman', serif" font-size="55">39</text>
+  <text x="512" y="1434" text-anchor="middle" fill="#fff8e8" stroke="#3b2717" stroke-opacity="0.38" stroke-width="1.1" paint-order="stroke" font-family="Georgia, 'Times New Roman', serif" font-size="72">Patience</text>
+</svg>
