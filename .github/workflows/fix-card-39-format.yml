@@ -1,0 +1,84 @@
+name: Corriger format carte 39 Patience
+
+on:
+  push:
+    branches:
+      - fix/patience-card-39-format
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+        with:
+          ref: fix/patience-card-39-format
+          fetch-depth: 0
+      - name: Installer Pillow
+        run: pip install pillow
+      - name: Identifier et corriger Patience sur le gabarit de la carte 40
+        run: |
+          python - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          import re
+
+          # Le site utilise la carte 39 = Patience et la carte 40 comme gabarit visuel.
+          # On recherche d'abord les chemins réellement utilisés par index.html.
+          text = Path('index.html').read_text(encoding='utf-8', errors='ignore')
+          candidates = []
+          for m in re.finditer(r'cards/[^"\'<>\s]+', text):
+              p = m.group(0).split('?')[0]
+              if p not in candidates:
+                  candidates.append(p)
+
+          def card_num(path):
+              name = Path(path).name
+              m = re.match(r'0*(\d+)', name)
+              return int(m.group(1)) if m else None
+
+          p39 = next((p for p in candidates if card_num(p) == 39 and Path(p).exists()), None)
+          p40 = next((p for p in candidates if card_num(p) == 40 and Path(p).exists()), None)
+          if not p39 or not p40:
+              raise SystemExit(f'Chemins non trouvés: carte39={p39}, carte40={p40}')
+
+          im39 = Image.open(p39).convert('RGB')
+          im40 = Image.open(p40).convert('RGB')
+          print('Carte 39:', p39, im39.size)
+          print('Carte 40:', p40, im40.size)
+
+          if im39.size != im40.size:
+              # Mise au gabarit exact de la carte 40 par cover crop centré.
+              tw, th = im40.size
+              sw, sh = im39.size
+              scale = max(tw/sw, th/sh)
+              nw, nh = round(sw*scale), round(sh*scale)
+              resized = im39.resize((nw, nh), Image.Resampling.LANCZOS)
+              left = max(0, (nw-tw)//2)
+              top = max(0, (nh-th)//2)
+              fixed = resized.crop((left, top, left+tw, top+th))
+              ext = Path(p39).suffix.lower()
+              kwargs = {'quality': 95, 'method': 6} if ext == '.webp' else {'quality': 95}
+              fixed.save(p39, **kwargs)
+              print('Carte 39 corrigée vers', fixed.size)
+          else:
+              print('Dimensions déjà identiques; aucune transformation binaire nécessaire.')
+
+          Path('reports').mkdir(exist_ok=True)
+          Path('reports/card-39-format-check.txt').write_text(
+              f'Carte 39: {p39}\nCarte 40: {p40}\nTaille 39 finale: {Image.open(p39).size}\nTaille 40: {im40.size}\n',
+              encoding='utf-8'
+          )
+          PY
+      - name: Committer la correction et retirer le workflow temporaire
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Corriger le format de la carte 39 Patience" || true
+          git rm .github/workflows/fix-card-39-format.yml
+          git commit -m "Retirer le workflow temporaire carte 39" || true
+          git push origin HEAD:fix/patience-card-39-format
