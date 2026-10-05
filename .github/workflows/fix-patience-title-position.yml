@@ -1,0 +1,134 @@
+name: Corriger position cartouche Patience
+
+on:
+  push:
+    branches:
+      - fix/patience-cartouche-position
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/patience-cartouche-position
+          fetch-depth: 0
+      - run: pip install pillow numpy opencv-python-headless
+      - name: Remonter uniquement le titre Patience
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import numpy as np
+          import cv2
+
+          p=Path('cards/039-patience-final.webp')
+          orig=np.array(Image.open(p).convert('RGB'))
+          h,w=orig.shape[:2]
+          if (w,h)!=(1024,1536):
+              raise SystemExit(f'Format inattendu: {w}x{h}')
+
+          # Zone où se trouve actuellement le mot « Patience ».
+          x0,x1=180,844
+          y0,y1=1400,1530
+          roi=orig[y0:y1,x0:x1]
+          hsv=cv2.cvtColor(roi,cv2.COLOR_RGB2HSV)
+          light=((hsv[:,:,2]>=150)&(hsv[:,:,1]<=170)).astype(np.uint8)*255
+          morph=cv2.morphologyEx(light,cv2.MORPH_CLOSE,cv2.getStructuringElement(cv2.MORPH_RECT,(11,3)))
+          morph=cv2.dilate(morph,cv2.getStructuringElement(cv2.MORPH_RECT,(5,3)),iterations=1)
+          num,labels,stats,cents=cv2.connectedComponentsWithStats(morph,8)
+
+          candidates=[]
+          for i in range(1,num):
+              x,y,bw,bh,area=map(int,stats[i])
+              cx,cy=cents[i]
+              gx,gy=x+x0,y+y0
+              gcx,gcy=cx+x0,cy+y0
+              if 250<=bw<=450 and 45<=bh<=90 and 400<=gcx<=620 and 1460<=gcy<=1520:
+                  candidates.append((area,i,(gx,gy,bw,bh),(gcx,gcy)))
+          if not candidates:
+              raise SystemExit('Le titre Patience n’a pas été identifié de façon sûre.')
+          area,idx,bbox,center=max(candidates)
+          gx,gy,bw,bh=bbox
+          current_y=center[1]
+
+          # Les cartes voisines placent leur titre autour de cette ligne.
+          # Sur la carte 40, les deux pics principaux du lettrage sont vers 1407 et 1434 px.
+          target_y=1418.0
+          delta=int(round(target_y-current_y))
+          if not (-105<=delta<=-60):
+              raise SystemExit(f'Déplacement inattendu: {delta}px (centre actuel {current_y:.1f})')
+
+          # Extraire les pixels clairs du titre, sans déplacer le décor ni le cadre.
+          word_zone=(labels==idx).astype(np.uint8)
+          word_zone=cv2.dilate(word_zone,cv2.getStructuringElement(cv2.MORPH_RECT,(3,3)),iterations=1)
+          hsv2=cv2.cvtColor(roi,cv2.COLOR_RGB2HSV)
+          raw=((hsv2[:,:,2]>=155)&(hsv2[:,:,1]<=160)).astype(np.uint8)
+          raw=raw & word_zone
+
+          # Écarter les traits longs du cadre et les poussières isolées.
+          n2,l2,s2,c2=cv2.connectedComponentsWithStats((raw*255).astype(np.uint8),8)
+          clean=np.zeros_like(raw,dtype=np.uint8)
+          for j in range(1,n2):
+              x,y,cw,ch,ca=map(int,s2[j])
+              if ca<3 or cw>95 or ch>72:
+                  continue
+              clean[l2==j]=1
+          if int(clean.sum())<1200:
+              raise SystemExit(f'Masque du titre insuffisant: {int(clean.sum())} pixels')
+
+          full=np.zeros((h,w),dtype=np.uint8)
+          full[y0:y1,x0:x1]=clean*255
+          copy_mask=cv2.dilate(full,cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(3,3)),iterations=1)
+          erase_mask=cv2.dilate(copy_mask,cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5)),iterations=1)
+
+          # Effacer l'ancien titre par interpolation locale.
+          bg=cv2.inpaint(cv2.cvtColor(orig,cv2.COLOR_RGB2BGR),erase_mask,3,cv2.INPAINT_TELEA)
+          bg=cv2.cvtColor(bg,cv2.COLOR_BGR2RGB)
+
+          # Reposer exactement les pixels du lettrage, 82 px environ plus haut.
+          alpha=cv2.GaussianBlur(copy_mask.astype(np.float32)/255.0,(0,0),0.8)
+          shifted_alpha=np.zeros_like(alpha)
+          shifted_rgb=np.zeros_like(orig)
+          if delta<0:
+              shifted_alpha[:h+delta,:]=alpha[-delta:,:]
+              shifted_rgb[:h+delta,:,:]=orig[-delta:,:,:]
+          else:
+              shifted_alpha[delta:,:]=alpha[:h-delta,:]
+              shifted_rgb[delta:,:,:]=orig[:h-delta,:,:]
+          a=shifted_alpha[:,:,None]
+          out=np.clip(bg*(1-a)+shifted_rgb*a,0,255).astype(np.uint8)
+
+          Image.fromarray(out).save(p,'WEBP',quality=98,method=6)
+          final=Image.open(p)
+          if final.size!=(1024,1536):
+              raise SystemExit(f'Format final incorrect: {final.size}')
+
+          # Rapport de contrôle : aucune autre carte n'est modifiée par ce script.
+          report=(
+              f'Carte: {p}\n'
+              f'Bbox titre détecté: {bbox}\n'
+              f'Centre vertical initial: {current_y:.1f}\n'
+              f'Centre vertical cible: {target_y:.1f}\n'
+              f'Déplacement appliqué: {delta}px\n'
+              f'Pixels du masque titre: {int(clean.sum())}\n'
+              f'Format final: {final.size}\n'
+              'Correction: titre/cartouche Patience remonté uniquement; décor, cadre et dimensions conservés.\n'
+          )
+          Path('reports').mkdir(exist_ok=True)
+          Path('reports/patience-title-fix.txt').write_text(report,encoding='utf-8')
+          print(report)
+          PY
+      - name: Committer la correction et retirer le workflow temporaire
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add cards/039-patience-final.webp reports/patience-title-fix.txt
+          git commit -m "Remonter le cartouche Patience" || true
+          git rm .github/workflows/fix-patience-title-position.yml
+          git commit -m "Retirer le workflow temporaire du cartouche Patience" || true
+          git pull --rebase origin fix/patience-cartouche-position
+          git push origin HEAD:fix/patience-cartouche-position
