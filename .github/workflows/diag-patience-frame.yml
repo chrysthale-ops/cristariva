@@ -29,23 +29,15 @@ jobs:
               im=np.array(Image.open(f).convert('RGB'))
               h,w=im.shape[:2]
               hsv=cv2.cvtColor(im,cv2.COLOR_RGB2HSV)
-              # masque or assez strict; on analyse uniquement les bandes de bord
               H,S,V=cv2.split(hsv)
               gold=((H>=7)&(H<=38)&(S>=70)&(V>=105)).astype(np.uint8)
-              # exclure le médaillon central et le titre pour l'analyse des longues lignes
-              vm=gold.copy()
-              vm[:90,:]=0; vm[h-90:,:]=0
-              vm[:,100:w-100]=0
-              # nombres de pixels or par colonne dans les bords
+              vm=gold.copy(); vm[:90,:]=0; vm[h-90:,:]=0; vm[:,100:w-100]=0
               col=vm.sum(axis=0)
-              hm=gold.copy()
-              hm[:,:110]=0; hm[:,w-110:]=0
-              hm[:,int(w*.40):int(w*.60)]=0  # évite le médaillon / titre central
+              hm=gold.copy(); hm[:,:110]=0; hm[:,w-110:]=0; hm[:,int(w*.40):int(w*.60)]=0
               row=hm.sum(axis=1)
 
-              def peaks(arr, n=20, sep=3):
-                  order=np.argsort(arr)[::-1]
-                  keep=[]
+              def peaks(arr, n=30, sep=2):
+                  order=np.argsort(arr)[::-1]; keep=[]
                   for i in order:
                       if arr[i] <= 0: break
                       if all(abs(int(i)-j)>=sep for j,_ in keep):
@@ -54,15 +46,13 @@ jobs:
                   return keep
 
               out.append(f'FILE {f} size={w}x{h}')
-              out.append('COL_PEAKS '+repr(peaks(col,30,2)))
-              out.append('ROW_PEAKS '+repr(peaks(row,30,2)))
-
-              # Hough sur lignes or dans les bandes de bord
+              out.append('COL_PEAKS '+repr(peaks(col)))
+              out.append('ROW_PEAKS '+repr(peaks(row)))
               edge=(gold*255)
               lines=cv2.HoughLinesP(edge,1,np.pi/180,threshold=180,minLineLength=int(min(w,h)*0.45),maxLineGap=25)
               found=[]
               if lines is not None:
-                  for l in lines[:,0,:]:
+                  for l in np.asarray(lines).reshape(-1,4):
                       x1,y1,x2,y2=map(int,l)
                       if abs(x1-x2)<=3 or abs(y1-y2)<=3:
                           found.append((x1,y1,x2,y2))
