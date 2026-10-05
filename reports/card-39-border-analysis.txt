@@ -1,0 +1,18 @@
+cards/039-patience-final.webp: size=(1024, 1536) nonwhite_bbox=(47, 41, 983, 1489)
+  white_fraction 1px: top=1.0000 bottom=1.0000 left=1.0000 right=1.0000
+  white_fraction 3px: top=1.0000 bottom=1.0000 left=1.0000 right=1.0000
+  white_fraction 5px: top=1.0000 bottom=1.0000 left=1.0000 right=1.0000
+  white_fraction 10px: top=1.0000 bottom=1.0000 left=1.0000 right=1.0000
+  white_fraction 20px: top=1.0000 bottom=1.0000 left=1.0000 right=1.0000
+  white_fraction 30px: top=1.0000 bottom=1.0000 left=1.0000 right=1.0000
+  white_fraction 40px: top=1.0000 bottom=1.0000 left=1.0000 right=1.0000
+  corners=[[254, 254, 254], [254, 254, 254], [254, 254, 254], [254, 254, 254]]
+cards/040.webp: size=(1024, 1536) nonwhite_bbox=(0, 0, 1024, 1536)
+  white_fraction 1px: top=0.0000 bottom=0.0000 left=0.0000 right=0.0000
+  white_fraction 3px: top=0.0000 bottom=0.0000 left=0.0000 right=0.0000
+  white_fraction 5px: top=0.0000 bottom=0.0000 left=0.0000 right=0.0000
+  white_fraction 10px: top=0.0000 bottom=0.0000 left=0.0000 right=0.0000
+  white_fraction 20px: top=0.0000 bottom=0.0000 left=0.0000 right=0.0004
+  white_fraction 30px: top=0.0000 bottom=0.0000 left=0.0000 right=0.0003
+  white_fraction 40px: top=0.0008 bottom=0.0000 left=0.0000 right=0.0003
+  corners=[[49, 32, 22], [70, 49, 35], [17, 17, 22], [21, 20, 25]]
