@@ -6,7 +6,9 @@ Cible minimale: 0.36547 (95 % de Joie)
 Gain maximal: 1.10
 Cartes actives examinées: 130
 Cartes éclaircies: 26
+Cartes inchangées: 104
 Règle: aucune carte n’est assombrie; les hautes lumières sont protégées.
+Carte 97: version originale conservée, aucune correction appliquée.
 Cartes modifiées:
 - cards/002.webp
 - cards/007-tempete-final.webp
