@@ -29,6 +29,14 @@ test('external-only readings get stricter grounding without changing the hybrid 
   assert.match(prompts[1],/^You write CRISTARIVA/);
   assert.match(prompts[1],/External-only test profile/);
   assert.match(prompts[1],/Never turn symbolic possibilities into factual history/);
+  assert.match(prompts[1],/card role is an interpretive lens/);
+  assert.match(prompts[1],/la situation a commencé/);
+  assert.match(prompts[1],/cela a renforcé le lien/);
+  assert.match(prompts[1],/un malaise persiste/);
+  assert.match(prompts[1],/prise de conscience récente/);
+  assert.match(prompts[1],/Never create causality between cards/);
+  assert.match(prompts[1],/expansion du lien/);
+  assert.match(prompts[1],/il faut/);
   assert.match(prompts[1],/Le point de départ/);
   assert.match(prompts[1],/Sentimental or Relations/);
  }finally{global.fetch=original;}
