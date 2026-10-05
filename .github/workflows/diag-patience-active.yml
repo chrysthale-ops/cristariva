@@ -1,0 +1,75 @@
+name: Diagnostiquer cartouche actif Patience
+
+on:
+  push:
+    branches:
+      - fix/patience-cartouche-position
+
+permissions:
+  contents: write
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/patience-cartouche-position
+          fetch-depth: 0
+      - run: pip install pillow numpy opencv-python-headless
+      - name: Analyser Patience actif et carte 40
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import numpy as np
+          import cv2
+
+          paths=[Path('cards/039-patience-final.webp'),Path('cards/040.webp')]
+          lines=[]
+          for p in paths:
+              im=np.array(Image.open(p).convert('RGB'))
+              h,w=im.shape[:2]
+              y0,y1=1200,1525
+              x0,x1=180,844
+              roi=im[y0:y1,x0:x1]
+              hsv=cv2.cvtColor(roi,cv2.COLOR_RGB2HSV)
+              mask=((hsv[:,:,2]>=150)&(hsv[:,:,1]<=170)).astype(np.uint8)*255
+              m=cv2.morphologyEx(mask,cv2.MORPH_CLOSE,cv2.getStructuringElement(cv2.MORPH_RECT,(11,3)))
+              m=cv2.dilate(m,cv2.getStructuringElement(cv2.MORPH_RECT,(5,3)),iterations=1)
+              num,labels,stats,cents=cv2.connectedComponentsWithStats(m,8)
+              comps=[]
+              for i in range(1,num):
+                  x,y,bw,bh,area=map(int,stats[i])
+                  cx,cy=cents[i]
+                  gx,gy=x+x0,y+y0
+                  gcx,gcy=cx+x0,cy+y0
+                  if area<80: continue
+                  comps.append((area,gx,gy,bw,bh,gcx,gcy))
+              comps=sorted(comps,reverse=True)[:40]
+              lines.append(f'{p} size={w}x{h}')
+              for c in comps:
+                  area,gx,gy,bw,bh,gcx,gcy=c
+                  lines.append(f'  area={area} bbox=({gx},{gy},{bw},{bh}) center=({gcx:.1f},{gcy:.1f}) ratio={bw/max(bh,1):.2f}')
+              row=(mask>0).sum(axis=1).astype(float)
+              smooth=np.convolve(row,np.ones(7)/7,mode='same')
+              peaks=[]
+              for idx in np.argsort(smooth)[::-1]:
+                  gy=int(idx+y0)
+                  if all(abs(gy-q)>10 for q,_ in peaks): peaks.append((gy,float(smooth[idx])))
+                  if len(peaks)>=15: break
+              lines.append('  row_peaks='+', '.join(f'{y}:{v:.1f}' for y,v in peaks))
+          Path('reports').mkdir(exist_ok=True)
+          Path('reports/patience-active-components.txt').write_text('\n'.join(lines)+'\n',encoding='utf-8')
+          print('\n'.join(lines))
+          PY
+      - name: Committer et nettoyer le workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/patience-active-components.txt
+          git commit -m "Mesurer le cartouche actif Patience" || true
+          git rm .github/workflows/diag-patience-active.yml
+          git commit -m "Retirer le diagnostic actif Patience" || true
+          git pull --rebase origin fix/patience-cartouche-position
+          git push origin HEAD:fix/patience-cartouche-position
