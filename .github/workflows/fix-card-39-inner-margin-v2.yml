@@ -1,0 +1,97 @@
+name: Finaliser format carte 39 Patience
+
+on:
+  push:
+    branches:
+      - fix/patience-card-39-format
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/patience-card-39-format
+          fetch-depth: 0
+      - run: pip install pillow numpy
+      - name: Trouver le plus grand recadrage 2 sur 3 sans bord blanc
+        run: |
+          python - <<'PY'
+          from PIL import Image
+          import numpy as np
+          from pathlib import Path
+
+          p = Path('cards/039-patience-final.webp')
+          ref = Path('cards/040.webp')
+          im = Image.open(p).convert('RGB')
+          target = Image.open(ref).convert('RGB').size
+          a = np.asarray(im)
+          white = (a[:,:,0] > 235) & (a[:,:,1] > 235) & (a[:,:,2] > 235)
+          ys, xs = np.where(~white)
+          if len(xs) == 0:
+              raise SystemExit('Carte 39 vide')
+          bx0, by0, bx1, by1 = int(xs.min()), int(ys.min()), int(xs.max())+1, int(ys.max())+1
+          cx, cy = (bx0+bx1)/2, (by0+by1)/2
+          maxw = min(bx1-bx0, int((by1-by0)/1.5))
+
+          def perimeter_white(x0,y0,x1,y1):
+              e = np.concatenate((white[y0, x0:x1], white[y1-1, x0:x1], white[y0:y1, x0], white[y0:y1, x1-1]))
+              return float(e.mean())
+
+          best = None
+          # Cherche le plus grand rectangle 2:3, avec petits décalages possibles
+          # pour respecter au mieux le cadrage initial sans conserver les coins blancs.
+          for w in range(maxw, int(maxw*0.72), -2):
+              h = int(round(w*1.5))
+              if h > by1-by0:
+                  continue
+              found = []
+              for dx in range(-24, 25, 4):
+                  for dy in range(-32, 33, 4):
+                      x0 = int(round(cx-w/2+dx)); y0 = int(round(cy-h/2+dy))
+                      x1=x0+w; y1=y0+h
+                      if x0 < bx0 or y0 < by0 or x1 > bx1 or y1 > by1:
+                          continue
+                      frac = perimeter_white(x0,y0,x1,y1)
+                      if frac <= 0.015:
+                          found.append((frac, abs(dx)+abs(dy), x0,y0,x1,y1))
+              if found:
+                  found.sort()
+                  best = found[0]
+                  break
+          if best is None:
+              raise SystemExit('Aucun recadrage 2:3 suffisamment propre trouvé')
+
+          frac, _, x0,y0,x1,y1 = best
+          cropped = im.crop((x0,y0,x1,y1))
+          fixed = cropped.resize(target, Image.Resampling.LANCZOS)
+          fixed.save(p, 'WEBP', quality=96, method=6)
+
+          # Vérification sur le fichier final.
+          b = np.asarray(Image.open(p).convert('RGB'))
+          edge = np.concatenate([b[0,:,:], b[-1,:,:], b[:,0,:], b[:,-1,:]], axis=0)
+          edge_white = ((edge[:,0] > 245) & (edge[:,1] > 245) & (edge[:,2] > 245)).mean()
+          if edge_white > 0.02:
+              raise SystemExit(f'Bordure blanche résiduelle trop importante: {edge_white:.4f}')
+
+          Path('reports').mkdir(exist_ok=True)
+          Path('reports/card-39-final-check.txt').write_text(
+              f'Carte 39 source: {im.size}\nBbox utile initiale: {(bx0,by0,bx1,by1)}\nRecadrage retenu: {(x0,y0,x1,y1)}\nFraction blanche périmètre source: {frac:.6f}\nCarte 39 finale: {Image.open(p).size}\nCarte 40: {target}\nFraction blanche bord final: {edge_white:.6f}\n',
+              encoding='utf-8'
+          )
+          print('crop', (x0,y0,x1,y1), 'source edge', frac, 'final edge', edge_white)
+          PY
+      - name: Nettoyer et committer
+        run: |
+          rm -f reports/card-39-fix-request.txt reports/card-39-fix-note.txt reports/card-39-fix-trigger.txt reports/card-39-border-analysis.txt reports/card-39-format-check.txt
+          rm -f .github/workflows/fix-card-39-inner-margin.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Corriger définitivement le format de Patience" || true
+          git rm .github/workflows/fix-card-39-inner-margin-v2.yml
+          git commit -m "Retirer le workflow temporaire Patience" || true
+          git push origin HEAD:fix/patience-card-39-format
