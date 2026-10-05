@@ -1,0 +1,83 @@
+name: Normaliser Oracle Amour sur carte 20
+
+on:
+  push:
+    paths:
+      - 'tools/normalize_oracle_amour_card20.py'
+      - '.github/workflows/normalize-oracle-amour-card20.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  normalize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Préparer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Installer Pillow et NumPy
+        run: python -m pip install --disable-pip-version-check pillow numpy
+
+      - name: Aligner les 80 cartes sur la carte 20
+        run: python tools/normalize_oracle_amour_card20.py
+
+      - name: Vérifier les 80 fichiers
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          cards=sorted(Path('cards/amour').glob('*.webp'))
+          assert len(cards)==80, len(cards)
+          ref=Image.open('cards/amour/020.webp')
+          assert all(Image.open(p).size==ref.size for p in cards)
+          print('80 cartes présentes, canevas commun:', ref.size)
+          PY
+
+      - name: Forcer le rafraîchissement des images dans le navigateur
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('oracle-amour-data.js')
+          s=p.read_text(encoding='utf-8')
+          s2=re.sub(r'(cards/amour/\d{3}\.webp)\?v=[^\"\']+', r'\1?v=20261005-sizefix1', s)
+          if s2==s:
+              print('Cache-buster Oracle Amour déjà à jour')
+          else:
+              p.write_text(s2, encoding='utf-8')
+              print('Cache-buster Oracle Amour mis à jour')
+          PY
+
+      - name: Préparer le contrôle visuel 19 à 24
+        run: |
+          mkdir -p /tmp/oracle-amour-size-check
+          cp cards/amour/019.webp cards/amour/020.webp cards/amour/021.webp cards/amour/022.webp cards/amour/023.webp cards/amour/024.webp /tmp/oracle-amour-size-check/
+
+      - name: Joindre les cartes de contrôle
+        uses: actions/upload-artifact@v4
+        with:
+          name: oracle-amour-cartes-19-24
+          path: /tmp/oracle-amour-size-check
+          if-no-files-found: error
+
+      - name: Publier les cartes normalisées sur la branche
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add cards/amour/*.webp oracle-amour-data.js
+          if git diff --cached --quiet; then
+            echo "Aucune modification à publier."
+          else
+            git commit -m "Uniformiser les 80 cartes Amour sur le gabarit de la carte 20"
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
