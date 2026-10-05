@@ -1,0 +1,4 @@
+Carte 39: cards/039-patience-final.webp
+Carte 40: cards/040.webp
+Taille 39 finale: (1024, 1536)
+Taille 40: (1024, 1536)
