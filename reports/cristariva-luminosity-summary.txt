@@ -1,0 +1,38 @@
+Correction conservatrice PR #40
+Référence: cards/003-joie-final.webp
+Médiane Joie: 0.38470
+Seuil de correction: 0.32700 (85 % de Joie)
+Cible minimale: 0.36547 (95 % de Joie)
+Gain maximal: 1.10
+Cartes actives examinées: 130
+Cartes éclaircies: 26
+Cartes inchangées: 104
+Règle: aucune carte n’est assombrie; les hautes lumières sont protégées.
+Carte 97: version originale conservée, aucune correction appliquée.
+Cartes modifiées:
+- cards/002.webp
+- cards/007-tempete-final.webp
+- cards/011.webp
+- cards/014.webp
+- cards/017.webp
+- cards/018.webp
+- cards/024.png
+- cards/028.webp
+- cards/031.webp
+- cards/036-blocage-final.webp
+- cards/048.webp
+- cards/051.webp
+- cards/058.webp
+- cards/060.webp
+- cards/062.webp
+- cards/067.webp
+- cards/071.webp
+- cards/074.webp
+- cards/075.webp
+- cards/081.webp
+- cards/093.webp
+- cards/098.webp
+- cards/104.webp
+- cards/113.webp
+- cards/115.webp
+- cards/130.webp
