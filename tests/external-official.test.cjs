@@ -5,7 +5,8 @@ const fs=require('node:fs');
 const path=require('node:path');
 const source=fs.readFileSync(path.join(__dirname,'../groq-hybrid-story.js'),'utf8');
 const quality=require('../story-quality.js');
-test('official story uses only external prose, handles rejection and keeps roles and reversals',async()=>{
+
+test('official external story exposes status, retries temporary failures and keeps roles and reversals',async()=>{
  const dom=new JSDOM('<main></main>',{runScripts:'outside-only'}),w=dom.window;
  const cards=[{id:1,name:'Première',reading_relationnel:'Initiative'},{id:2,name:'Deuxième',reading_relationnel:'Clarté'},{id:3,name:'Dernière',reading_relationnel:'Pause'}];
  w.state={lang:'fr',question:'<img src=x onerror=alert(1)>',domain:'Sentimental',oracle:'tarot',draw:cards,tarotReversed:[true,false,false]};
@@ -14,26 +15,74 @@ test('official story uses only external prose, handles rejection and keeps roles
  w.CR_UNIVERSAL_ROLE_SUMMARY=()=>{throw Error('Internal summary must not run');};
  w.storyInterpretation=()=>{};w.interpretation=()=>{};
  w.CR_STORY_QUALITY=quality;w.AbortSignal=AbortSignal;
- const timers=[];w.setTimeout=fn=>timers.push(fn);
+ const timers=[];w.setTimeout=(fn,delay)=>{timers.push({fn,delay});return timers.length;};
+ const runNext=async()=>{const item=timers.shift();assert.ok(item,'expected a scheduled attempt');await item.fn();};
  const good='Une clarification pourrait aider à envisager le lien avec davantage de recul.';
  let sent,calls=0;
- w.fetch=async(_url,options)=>{calls++;sent=JSON.parse(options.body);return {ok:true,json:async()=>({text:good})};};
+ w.fetch=async(_url,options)=>{calls++;sent=JSON.parse(options.body);return {ok:true,status:200,json:async()=>({text:good})};};
  w.eval(source);
  const render=()=>{w.document.querySelector('main').innerHTML=w.CR_UNIVERSAL_FLUID_STORY(cards);};
- render();assert.match(w.document.body.textContent,/cours de rédaction/);
+
+ render();
+ assert.match(w.document.body.textContent,/Moteur externe : connexion/);
+ assert.match(w.document.body.textContent,/cours de rédaction/);
  assert.equal(w.document.querySelector('img'),null);
- await timers.shift()();
+ await runNext();
  assert.equal(w.document.querySelector('.story-continuous').textContent,good);
+ assert.match(w.document.querySelector('.story-engine-status').textContent,/actif/);
+ assert.equal(w.CR_EXTERNAL_ENGINE_LAST_STATUS.state,'active');
  assert.deepEqual(sent.cards.map(c=>c.local),['','','']);
  assert.deepEqual(sent.cards.map(c=>c.role),['origin','evolution','outcome']);
- assert.equal(sent.cards[0].reversed,true);assert.equal(sent.cards[0].meaning,'Une initiative irrégulière.');
- render();assert.equal(calls,1);assert.equal(w.document.querySelector('.story-continuous').textContent,good);
- for(const status of [429,502,503]){
-  w.state.question='Échec '+status;w.fetch=async()=>({ok:false,status});render();await timers.shift()();
-  assert.equal(w.document.querySelector('.story-reading').dataset.storyEngine,'external-error');
-  assert.doesNotMatch(w.document.querySelector('.story-continuous').textContent,/cours de rédaction/);
- }
- w.state.question='Texte invalide';w.fetch=async()=>({ok:true,json:async()=>({text:'fragment'})});render();await timers.shift()();
+ assert.equal(sent.cards[0].reversed,true);
+ assert.equal(sent.cards[0].meaning,'Une initiative irrégulière.');
+ render();
+ assert.equal(calls,1);
+ assert.equal(w.document.querySelector('.story-continuous').textContent,good);
+ assert.match(w.document.querySelector('.story-engine-status').textContent,/actif/);
+
+ w.state.question='Relance 429';calls=0;
+ w.fetch=async(_url,options)=>{
+  calls++;sent=JSON.parse(options.body);
+  if(calls===1)return {ok:false,status:429,json:async()=>({error:'rate_limit'})};
+  return {ok:true,status:200,json:async()=>({text:good})};
+ };
+ render();await runNext();
+ assert.equal(calls,1);
+ assert.equal(w.document.querySelector('.story-reading').dataset.externalStatus,'retrying');
+ assert.match(w.document.querySelector('.story-engine-status').textContent,/seconde tentative/);
+ assert.equal(w.CR_EXTERNAL_ENGINE_LAST_STATUS.state,'retrying');
+ await runNext();
+ assert.equal(calls,2);
+ assert.equal(w.document.querySelector('.story-reading').dataset.storyEngine,'external');
+ assert.equal(w.CR_EXTERNAL_ENGINE_LAST_STATUS.state,'active');
+
+ w.state.question='Configuration absente';calls=0;
+ w.fetch=async()=>{calls++;return {ok:false,status:503,json:async()=>({error:'not_configured'})};};
+ render();await runNext();
+ assert.equal(calls,1);
  assert.equal(w.document.querySelector('.story-reading').dataset.storyEngine,'external-error');
+ assert.equal(w.document.querySelector('.story-reading').dataset.externalStatus,'config');
+ assert.equal(w.CR_EXTERNAL_ENGINE_LAST_STATUS.reason,'not_configured');
+ assert.equal(timers.length,0);
+
+ w.state.question='Erreur réseau';calls=0;
+ w.fetch=async()=>{calls++;throw Object.assign(new Error('offline'),{name:'TypeError'});};
+ render();await runNext();
+ assert.equal(w.document.querySelector('.story-reading').dataset.externalStatus,'retrying');
+ await runNext();
+ assert.equal(calls,2);
+ assert.equal(w.document.querySelector('.story-reading').dataset.storyEngine,'external-error');
+ assert.equal(w.document.querySelector('.story-reading').dataset.externalStatus,'network');
+ assert.equal(w.CR_EXTERNAL_ENGINE_LAST_STATUS.state,'network');
+
+ w.state.question='Texte invalide';calls=0;
+ w.fetch=async()=>{calls++;return {ok:true,status:200,json:async()=>({text:'fragment'})};};
+ render();await runNext();
+ assert.equal(calls,1);
+ assert.equal(w.document.querySelector('.story-reading').dataset.storyEngine,'external-error');
+ assert.equal(w.document.querySelector('.story-reading').dataset.externalStatus,'quality');
+ assert.match(w.document.querySelector('.story-engine-status').textContent,/contrôle qualité/);
+ assert.equal(w.CR_EXTERNAL_ENGINE_LAST_STATUS.state,'quality');
+
  dom.window.close();
 });
