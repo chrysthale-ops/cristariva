@@ -51,10 +51,23 @@ jobs:
           s=p.read_text(encoding='utf-8')
           s2=re.sub(r'(cards/amour/\d{3}\.webp)\?v=[^\"\']+', r'\1?v=20261005-sizefix1', s)
           if s2==s:
-              raise SystemExit('Aucune URL Oracle Amour à actualiser')
-          p.write_text(s2, encoding='utf-8')
-          print('Cache-buster Oracle Amour mis à jour')
+              print('Cache-buster Oracle Amour déjà à jour')
+          else:
+              p.write_text(s2, encoding='utf-8')
+              print('Cache-buster Oracle Amour mis à jour')
           PY
+
+      - name: Préparer le contrôle visuel 19 à 24
+        run: |
+          mkdir -p /tmp/oracle-amour-size-check
+          cp cards/amour/019.webp cards/amour/020.webp cards/amour/021.webp cards/amour/022.webp cards/amour/023.webp cards/amour/024.webp /tmp/oracle-amour-size-check/
+
+      - name: Joindre les cartes de contrôle
+        uses: actions/upload-artifact@v4
+        with:
+          name: oracle-amour-cartes-19-24
+          path: /tmp/oracle-amour-size-check
+          if-no-files-found: error
 
       - name: Publier les cartes normalisées sur la branche
         run: |
