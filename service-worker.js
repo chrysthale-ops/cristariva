@@ -1,13 +1,13 @@
-/* CRISTARIVA — service worker v30 — récit professionnel développé.
+/* CRISTARIVA — service worker v31 — moteur externe diagnostiqué.
    Force 22 arcanes majeurs + 56 arcanes mineurs HD sur PC et Android
    et recharge la planche validée complète des arcanes mineurs. */
-const CACHE_NAME='cristariva-v100-20261005-external-only';
-const APP_VERSION='2026.10.05-unicode-649';
+const CACHE_NAME='cristariva-v101-20261005-external-diagnostics';
+const APP_VERSION='2026.10.05-external-diagnostics';
 const SHELL=[
   './',
   './index.html',
   './story-quality.js?v=1',
-  './groq-hybrid-story.js?v=4-external-only',
+  './groq-hybrid-story.js?v=5-external-diagnostics',
   './manifest.webmanifest',
   './manifest-en.webmanifest',
   './icon-192.png',
