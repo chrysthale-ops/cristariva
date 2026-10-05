@@ -62,7 +62,72 @@ test('external-only risky draft is rewritten once before it is returned',async()
   assert.equal(calls.length,2);
   assert.match(calls[1].messages[0].content,/Corrective editing pass/);
   assert.match(calls[1].messages[1].content,/draft_to_rewrite/);
+  const edit=JSON.parse(calls[1].messages[1].content);
+  assert.equal(edit.sentence_feedback.length,1);
+  assert.deepEqual(edit.sentence_feedback[0].issues,['domain_vocabulary','prescriptive_wording','unsupported_fact']);
+  assert.match(calls[1].messages[0].content,/Rewrite each flagged sentence completely/);
+  assert.doesNotMatch(calls[1].messages[0].content,/all five card contributions/);
   assert.doesNotMatch(body.text,/horizon|expansion|il faut|vous bénéficiez/i);
   assert.match(body.text,/pourrait évoluer/);
+ }finally{global.fetch=original;}
+});
+
+test('all external grounding rules still reject a failed rewrite with no local fallback',async()=>{
+ const {default:worker}=await import('../cloudflare/groq-worker.mjs');
+ const drafts=[
+  'Une expansion du lien pourrait offrir une direction à envisager avec prudence.',
+  'Il faut envisager la suite du lien avec prudence et sans présumer de la réponse.',
+  'Une position renforcée pourrait donner une autre lecture de ce lien.',
+  'Un malaise persiste dans ce lien et demande de regarder la situation avec attention.',
+  'Un rapprochement se profile dans ce lien et pourrait permettre un échange.',
+  'Vous avez reçu une réponse qui change la façon de regarder ce lien.'
+ ];
+ const original=global.fetch;
+ try{
+  for(const text of drafts){
+   let calls=0;
+   global.fetch=async()=>{calls++;return {ok:true,json:async()=>({choices:[{finish_reason:'stop',message:{content:JSON.stringify({segments:[{index:0,text}]})}}]})};};
+   const data={lang:'fr',question:'Quelle évolution ?',domain:'Sentimental',oracle:'tarot',cards:[{index:0,name:'Direction',role:'outcome',meaning:'Choix et clarification.',local:'',reversed:false}]};
+   const request=new Request('https://relay.workers.dev/',{method:'POST',headers:{Origin:'https://chrysthale-ops.github.io'},body:JSON.stringify(data)});
+   const response=await worker.fetch(request,{GROQ_API_KEY:'test-key'});
+   assert.equal(response.status,502,text);
+   assert.deepEqual(await response.json(),{error:'quality',reason:'external_grounding'});
+   assert.equal(calls,2,'Only one corrective call is allowed');
+  }
+ }finally{global.fetch=original;}
+});
+
+test('targeted editing preserves three cards, their roles, reversal and final contribution',async()=>{
+ const {default:worker}=await import('../cloudflare/groq-worker.mjs');
+ const data={lang:'fr',question:'Quelle évolution ?',domain:'Sentimental',oracle:'tarot',cards:[
+  {index:0,name:'Initiative',role:'origin',meaning:'Un élan irrégulier.',local:'',reversed:true},
+  {index:1,name:'Clarté',role:'evolution',meaning:'Clarté et chaleur.',local:'',reversed:false},
+  {index:2,name:'Repos',role:'outcome',meaning:'Pause et recul.',local:'',reversed:false}
+ ]};
+ const accepted=[
+  'Un élan irrégulier pourrait inviter à examiner la constance de votre démarche.',
+  'Une parole plus claire pourrait aider à envisager ce lien avec davantage de chaleur.',
+  'Cette ouverture invite toutefois à respecter une pause pour retrouver du recul.'
+ ];
+ const original=global.fetch;let calls=0;
+ try{
+  global.fetch=async(_url,options)=>{
+   calls++;
+   const payload=JSON.parse(options.body);
+   if(calls===2){
+    const edit=JSON.parse(payload.messages[1].content);
+    assert.deepEqual(edit.cards,data.cards.map(({local,...card})=>card));
+    assert.equal(edit.sentence_feedback.length,1);
+    assert.deepEqual(edit.sentence_feedback[0].issues,['unsupported_time']);
+    assert.equal(edit.cards.length,3);
+   }
+   const texts=calls===1?[accepted[0],'Une clarté pourrait récemment ouvrir une perspective plus chaleureuse pour ce lien.',accepted[2]]:accepted;
+   return {ok:true,json:async()=>({choices:[{finish_reason:'stop',message:{content:JSON.stringify({segments:texts.map((text,index)=>({index,text}))})}}]})};
+  };
+  const request=new Request('https://relay.workers.dev/',{method:'POST',headers:{Origin:'https://chrysthale-ops.github.io'},body:JSON.stringify(data)});
+  const response=await worker.fetch(request,{GROQ_API_KEY:'test-key'});
+  assert.equal(response.status,200);
+  assert.equal((await response.json()).text,accepted.join(' '));
+  assert.equal(calls,2);
  }finally{global.fetch=original;}
 });
