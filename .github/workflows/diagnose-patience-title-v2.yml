@@ -1,0 +1,92 @@
+name: Diagnostiquer position titre Patience v2
+
+on:
+  push:
+    branches:
+      - fix/patience-cartouche-position
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/patience-cartouche-position
+          fetch-depth: 0
+      - run: pip install pillow numpy opencv-python-headless pytesseract
+      - name: Mesurer les bandes de texte des cartes 37 a 42
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageEnhance
+          import numpy as np
+          import cv2
+          import pytesseract
+
+          def find_card(n):
+              exts={'.webp','.png','.jpg','.jpeg'}
+              c=[p for p in Path('cards').glob(f'{n:03d}*') if p.suffix.lower() in exts]
+              if not c: raise SystemExit(f'Carte {n} introuvable')
+              e=[p for p in c if p.stem==f'{n:03d}']
+              return e[0] if e else sorted(c)[0]
+
+          lines=[]
+          for n in range(37,43):
+              p=find_card(n)
+              pil=Image.open(p).convert('RGB')
+              im=np.array(pil); h,w=im.shape[:2]
+              y0,y1=int(h*0.76),int(h*0.985)
+              x0,x1=int(w*0.10),int(w*0.90)
+              roi=im[y0:y1,x0:x1]
+              hsv=cv2.cvtColor(roi,cv2.COLOR_RGB2HSV)
+              mask=((hsv[:,:,2]>=135)&(hsv[:,:,1]<=190)).astype(np.uint8)
+              row=mask.sum(axis=1).astype(float)
+              smooth=np.convolve(row,np.ones(11)/11,mode='same')
+              peaks=[]
+              for idx in np.argsort(smooth)[::-1]:
+                  gy=int(idx+y0)
+                  if all(abs(gy-q)>14 for q,_ in peaks):
+                      peaks.append((gy,float(smooth[idx])))
+                  if len(peaks)>=10: break
+
+              crop=pil.crop((0,int(h*0.70),w,h)).resize((w*2,int(h*0.30)*2),Image.Resampling.LANCZOS)
+              crop=ImageEnhance.Contrast(crop).enhance(1.6)
+              try:
+                  data=pytesseract.image_to_data(crop,config='--psm 11',output_type=pytesseract.Output.DICT)
+                  ocr=[]
+                  for i,t in enumerate(data['text']):
+                      t=t.strip()
+                      if not t: continue
+                      try: conf=float(data['conf'][i])
+                      except: conf=-1
+                      if conf<5: continue
+                      top=data['top'][i]/2+int(h*0.70)
+                      hh=data['height'][i]/2
+                      left=data['left'][i]/2
+                      ww=data['width'][i]/2
+                      if top < h*0.78: continue
+                      ocr.append(f'{t}@x{left:.0f},y{top:.0f},w{ww:.0f},h{hh:.0f},c{conf:.0f}')
+              except Exception as e:
+                  ocr=[f'OCR_ERROR:{e}']
+
+              lines.append(f'{n}: {p} size={w}x{h}')
+              lines.append('  row_peaks=' + ', '.join(f'{y}:{v:.1f}' for y,v in peaks))
+              lines.append('  ocr=' + (' | '.join(ocr) if ocr else 'NONE'))
+
+          Path('reports').mkdir(exist_ok=True)
+          Path('reports/patience-title-diagnostic.txt').write_text('\n'.join(lines)+'\n',encoding='utf-8')
+          print('\n'.join(lines))
+          PY
+      - name: Committer le diagnostic et nettoyer
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/patience-title-diagnostic.txt 2>/dev/null || true
+          git commit -m "Mesurer précisément le titre Patience" || true
+          git rm -f .github/workflows/diagnose-patience-title.yml .github/workflows/diagnose-patience-title-v2.yml
+          git commit -m "Retirer les diagnostics temporaires Patience" || true
+          git push origin HEAD:fix/patience-cartouche-position
