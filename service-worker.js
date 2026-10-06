@@ -1,10 +1,10 @@
-/* CRISTARIVA — service worker v36 — rafraîchissement UI du cartouche d’introduction. */
-const CACHE_NAME='cristariva-v107-20261006-approche-typography-r3';
-const APP_VERSION='2026.10.06-approche-typography-r3';
+/* CRISTARIVA — service worker v37 — rafraîchissement du panneau de tirage compact. */
+const CACHE_NAME='cristariva-v108-20261006-reading-panel-compact-r4';
+const APP_VERSION='2026.10.06-reading-panel-compact-r4';
 const SHELL=[
   './',
   './index.html',
-  './immersive-reading-ui.js?v=20261006-approche-typography-r3',
+  './immersive-reading-ui.js?v=20261006-reading-panel-compact-r4',
   './story-quality.js?v=3-card-name-context',
   './groq-hybrid-story.js?v=5-external-diagnostics',
   './manifest.webmanifest',
