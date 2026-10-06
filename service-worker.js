@@ -1,10 +1,10 @@
-/* CRISTARIVA — service worker v37 — rafraîchissement du panneau de tirage compact. */
-const CACHE_NAME='cristariva-v108-20261006-reading-panel-compact-r4';
-const APP_VERSION='2026.10.06-reading-panel-compact-r4';
+/* CRISTARIVA — service worker v38 — rafraîchissement du panneau de tirage compact r5. */
+const CACHE_NAME='cristariva-v109-20261006-reading-panel-compact-r5';
+const APP_VERSION='2026.10.06-reading-panel-compact-r5';
 const SHELL=[
   './',
   './index.html',
-  './immersive-reading-ui.js?v=20261006-reading-panel-compact-r4',
+  './immersive-reading-ui.js?v=20261006-reading-panel-compact-r5',
   './story-quality.js?v=3-card-name-context',
   './groq-hybrid-story.js?v=5-external-diagnostics',
   './manifest.webmanifest',
