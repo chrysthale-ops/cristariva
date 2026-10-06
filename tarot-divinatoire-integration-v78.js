@@ -16,7 +16,7 @@ const tarotCards=window.TAROT_DATA.main;
 const tarotCount=tarotCards.length;
 const domainSelect=document.querySelector('#domain');
 const isTarot=()=>typeof state==='object'&&state&&state.oracle==='tarot';
-const esc=value=>typeof readingEscape==='function'?readingEscape(value):String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+const esc=value=>typeof readingEscape==='function'?readingEscape(value):String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[char]));
 
 /* La refonte conserve les anciennes valeurs techniques afin de ne casser
    aucune lecture existante, mais tous les libellés visibles utilisent les
@@ -92,6 +92,77 @@ function ensureContext(){
   }
   return c;
 }
+
+function ensureReversalCompactStyles(){
+  if(document.querySelector('#cr-tarot-reversal-compact-styles'))return;
+  const style=document.createElement('style');
+  style.id='cr-tarot-reversal-compact-styles';
+  style.textContent=`
+    #tarotReversalOption.cr-tarot-reversal-compact{
+      width:100%!important;
+      min-height:0!important;
+      box-sizing:border-box!important;
+      margin:7px 0 0!important;
+      padding:7px 9px!important;
+      border-radius:12px!important;
+      background:rgba(255,248,232,.95)!important;
+      border:1px solid rgba(229,173,85,.58)!important;
+      box-shadow:0 5px 14px rgba(2,16,35,.14)!important;
+    }
+    #tarotReversalOption.cr-tarot-reversal-compact label,
+    #tarotReversalOption.cr-tarot-reversal-compact #tarotReversalLabel{
+      color:#162a43!important;
+      text-shadow:none!important;
+      font-size:.82rem!important;
+      font-weight:750!important;
+      line-height:1.15!important;
+    }
+    #tarotReversalOption.cr-tarot-reversal-compact label{
+      display:flex!important;
+      align-items:center!important;
+      gap:7px!important;
+      margin:0!important;
+    }
+    #tarotReversalOption.cr-tarot-reversal-compact input[type="checkbox"]{
+      width:17px!important;
+      height:17px!important;
+      min-width:17px!important;
+      margin:0!important;
+      box-shadow:none!important;
+      accent-color:#c88c32;
+    }
+    #tarotReversalOption.cr-tarot-reversal-compact #tarotReversalHint{
+      display:block!important;
+      margin:3px 0 0 24px!important;
+      color:#41516a!important;
+      text-shadow:none!important;
+      font-size:.72rem!important;
+      line-height:1.22!important;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function positionReversalOption(){
+  const oracleSelect=document.querySelector('#oracleChoice');
+  const reversalOption=document.querySelector('#tarotReversalOption');
+  if(!oracleSelect||!reversalOption)return;
+  const oracleField=oracleSelect.parentElement;
+  if(!oracleField)return;
+
+  ensureReversalCompactStyles();
+  reversalOption.classList.add('cr-tarot-reversal-compact');
+
+  const oracleContext=document.querySelector('#oracleContext');
+  if(oracleContext&&oracleContext.parentElement===oracleField){
+    if(reversalOption.parentElement!==oracleField||reversalOption.nextElementSibling!==oracleContext){
+      oracleField.insertBefore(reversalOption,oracleContext);
+    }
+  }else if(reversalOption.parentElement!==oracleField){
+    oracleField.appendChild(reversalOption);
+  }
+}
+
 function updateContext(){
   syncDomainDisplayLabels();
   const reversalOption=document.querySelector('#tarotReversalOption');
@@ -101,6 +172,8 @@ function updateContext(){
     document.querySelector('#tarotReversalHint').textContent=state?.lang==='en'
       ?'Each card has an equal chance of being upright or reversed. Its orientation changes the interpretation.'
       :'Chaque carte peut sortir à l’endroit ou renversée, avec une chance sur deux. L’interprétation tient compte de son orientation.';
+    positionReversalOption();
+    setTimeout(positionReversalOption,0);
   }
   const c=ensureContext();if(!c)return;
   c.hidden=!isTarot();
@@ -199,5 +272,5 @@ if(typeof renderSynthesis==='function'){
 syncDomainDisplayLabels();
 updateContext();renderTarotCatalog();
 window.__CRISTARIVA_TAROT_READY__=true;
-window.CR_TAROT_INTEGRATION_VERSION='2026.09.29-tarot78-reversals-r1';
+window.CR_TAROT_INTEGRATION_VERSION='2026.10.06-tarot78-reversal-cartouche-r2';
 })();
