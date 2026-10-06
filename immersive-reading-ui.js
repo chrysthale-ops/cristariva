@@ -2,18 +2,18 @@
 (function(){
   'use strict';
 
-  const VERSION='20261006-format-two-lines-r15';
+  const VERSION='20261006-remove-active-label-r16';
 
   const ORACLE_DESCRIPTIONS={
     fr:{
-      cristariva:{title:'Jeu actif : Oracle CRISTARIVA',text:'130 cartes pour une lecture symbolique, relationnelle, professionnelle ou spirituelle, complétée par les cartes de relation et de datation.'},
-      amour:{title:'Jeu actif : Oracle sentimental CRISTARIVA',text:'80 cartes consacrées aux liens, aux émotions, aux attirances, aux obstacles et aux évolutions sentimentales.'},
-      tarot:{title:'Jeu actif : Tarot divinatoire CRISTARIVA',text:'78 cartes : 22 arcanes majeurs et 56 arcanes mineurs · Bâtons, Coupes, Épées et Deniers.'}
+      cristariva:{title:'Oracle CRISTARIVA',text:'130 cartes pour une lecture symbolique, relationnelle, professionnelle ou spirituelle, complétée par les cartes de relation et de datation.'},
+      amour:{title:'Oracle sentimental CRISTARIVA',text:'80 cartes consacrées aux liens, aux émotions, aux attirances, aux obstacles et aux évolutions sentimentales.'},
+      tarot:{title:'Tarot divinatoire CRISTARIVA',text:'78 cartes : 22 arcanes majeurs et 56 arcanes mineurs · Bâtons, Coupes, Épées et Deniers.'}
     },
     en:{
-      cristariva:{title:'Active deck: CRISTARIVA Oracle',text:'130 cards for symbolic, relationship, professional or spiritual readings, complemented by relationship and timing cards.'},
-      amour:{title:'Active deck: CRISTARIVA Love Oracle',text:'80 cards devoted to bonds, emotions, attraction, obstacles and romantic developments.'},
-      tarot:{title:'Active deck: CRISTARIVA Divinatory Tarot',text:'78 cards: 22 Major Arcana and 56 Minor Arcana · Wands, Cups, Swords and Pentacles.'}
+      cristariva:{title:'CRISTARIVA Oracle',text:'130 cards for symbolic, relationship, professional or spiritual readings, complemented by relationship and timing cards.'},
+      amour:{title:'CRISTARIVA Love Oracle',text:'80 cards devoted to bonds, emotions, attraction, obstacles and romantic developments.'},
+      tarot:{title:'CRISTARIVA Divinatory Tarot',text:'78 cards: 22 Major Arcana and 56 Minor Arcana · Wands, Cups, Swords and Pentacles.'}
     }
   };
 
@@ -54,7 +54,7 @@
     const selected=oracle.value||'cristariva';
     const selectedLabel=oracle.selectedOptions?.[0]?.textContent?.trim()||selected;
     const copy=ORACLE_DESCRIPTIONS[lang][selected]||{
-      title:lang==='en'?`Active deck: ${selectedLabel}`:`Jeu actif : ${selectedLabel}`,
+      title:selectedLabel,
       text:lang==='en'?'This deck is used for the current reading.':'Ce jeu est utilisé pour le tirage en cours.'
     };
     context.hidden=false;
