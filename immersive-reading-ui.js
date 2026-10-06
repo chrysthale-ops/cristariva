@@ -2,7 +2,7 @@
 (function(){
   'use strict';
 
-  const VERSION='20261006-reading-entry-after-stats-r8';
+  const VERSION='20261006-reading-entry-approche-top-r9';
 
   function enhance(){
     const question=document.getElementById('question');
@@ -278,15 +278,13 @@
   }
 
   function positionReadingEntry(behavior='smooth'){
-    const stats=document.getElementById('gamesOverview');
-    if(stats){
-      const top=Math.max(0,window.scrollY+stats.getBoundingClientRect().bottom+10);
-      window.scrollTo({top,behavior});
-      return;
-    }
     const target=document.getElementById('approche')||document.getElementById('tirage');
     if(!target)return;
-    const top=Math.max(0,window.scrollY+target.getBoundingClientRect().top-12);
+    const topbar=document.querySelector('.topbar');
+    const topbarHeight=topbar&&getComputedStyle(topbar).position==='sticky'
+      ? topbar.getBoundingClientRect().height
+      : 0;
+    const top=Math.max(0,window.scrollY+target.getBoundingClientRect().top-topbarHeight-12);
     window.scrollTo({top,behavior});
   }
 
