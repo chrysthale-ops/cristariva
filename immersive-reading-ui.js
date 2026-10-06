@@ -2,7 +2,7 @@
 (function(){
   'use strict';
 
-  const VERSION='20261006-reading-panel-height-r7';
+  const VERSION='20261006-reading-entry-after-stats-r8';
 
   function enhance(){
     const question=document.getElementById('question');
@@ -278,6 +278,12 @@
   }
 
   function positionReadingEntry(behavior='smooth'){
+    const stats=document.getElementById('gamesOverview');
+    if(stats){
+      const top=Math.max(0,window.scrollY+stats.getBoundingClientRect().bottom+10);
+      window.scrollTo({top,behavior});
+      return;
+    }
     const target=document.getElementById('approche')||document.getElementById('tirage');
     if(!target)return;
     const top=Math.max(0,window.scrollY+target.getBoundingClientRect().top-12);
@@ -294,11 +300,11 @@
       event.preventDefault();
       if(window.location.hash==='#tirage')history.replaceState(null,'','#tirage');
       else history.pushState(null,'','#tirage');
-      requestAnimationFrame(()=>positionReadingEntry('smooth'));
+      requestAnimationFrame(()=>requestAnimationFrame(()=>positionReadingEntry('smooth')));
     });
 
     window.addEventListener('hashchange',()=>{
-      if(window.location.hash==='#tirage')requestAnimationFrame(()=>positionReadingEntry('smooth'));
+      if(window.location.hash==='#tirage')requestAnimationFrame(()=>requestAnimationFrame(()=>positionReadingEntry('smooth')));
     });
 
     if(window.location.hash==='#tirage'){
