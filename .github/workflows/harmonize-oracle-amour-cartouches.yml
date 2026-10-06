@@ -30,33 +30,6 @@ jobs:
           mkdir -p /tmp/oracle-amour-cartouches-check/sources
           cp cards/amour/*.webp /tmp/oracle-amour-cartouches-check/sources/
 
-      - name: Affiner le gabarit maître r10
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          p=Path('tools/harmonize_oracle_amour_cartouches.py')
-          s=p.read_text(encoding='utf-8')
-          replacements={
-            'TOP_OUTER = (194, -23, 318, 54)':'TOP_OUTER = (198, -22, 314, 53)',
-            'TOP_INNER = (200, -17, 312, 47)':'TOP_INNER = (204, -16, 308, 46)',
-            'TOP_RADIUS = 22':'TOP_RADIUS = 21',
-            'TOP_INNER_RADIUS = 17':'TOP_INNER_RADIUS = 16',
-            'BOTTOM_BODY = (62, 688, 450, 741)':'BOTTOM_BODY = (76, 689, 436, 741)',
-            'BOTTOM_INNER = (69, 694, 443, 735)':'BOTTOM_INNER = (83, 695, 429, 735)',
-            'BOTTOM_LEFT_TIP = (52, 714)':'BOTTOM_LEFT_TIP = (66, 715)',
-            'BOTTOM_RIGHT_TIP = (460, 714)':'BOTTOM_RIGHT_TIP = (446, 715)',
-            'TITLE_CENTER = (256, 714)':'TITLE_CENTER = (256, 715)',
-            'draw.line((76, cy, 111, cy), fill=GOLD, width=1)':'draw.line((90, cy, 119, cy), fill=GOLD, width=1)',
-            'draw.polygon([(70, cy), (76, cy - 3), (82, cy), (76, cy + 3)], fill=GOLD)':'draw.polygon([(84, cy), (90, cy - 3), (96, cy), (90, cy + 3)], fill=GOLD)',
-            'draw.line((401, cy, 436, cy), fill=GOLD, width=1)':'draw.line((393, cy, 422, cy), fill=GOLD, width=1)',
-            'draw.polygon([(430, cy), (436, cy - 3), (442, cy), (436, cy + 3)], fill=GOLD)':'draw.polygon([(416, cy), (422, cy - 3), (428, cy), (422, cy + 3)], fill=GOLD)',
-          }
-          for old,new in replacements.items():
-              if old in s:
-                  s=s.replace(old,new)
-          p.write_text(s,encoding='utf-8')
-          PY
-
       - name: Préparer Python
         uses: actions/setup-python@v5
         with:
@@ -71,7 +44,7 @@ jobs:
           sudo fc-cache -f
           python -m pip install --disable-pip-version-check pillow numpy
 
-      - name: Appliquer le modèle externe validé aux 80 cartes
+      - name: Appliquer la correction r11 aux 80 cartes
         run: python tools/harmonize_oracle_amour_cartouches.py
 
       - name: Mettre à jour le cache-buster des cartes
@@ -81,12 +54,24 @@ jobs:
           import re
           p=Path('oracle-amour-data.js')
           s=p.read_text(encoding='utf-8')
-          s2=re.sub(r'(cards/amour/\d{3}\.webp)\?v=[^\"\']+', r'\1?v=20261006-modele-valide-r10', s)
+          s2=re.sub(r'(cards/amour/\d{3}\.webp)\?v=[^\"\']+', r'\1?v=20261006-modele-valide-r11', s)
           if s2!=s:
               p.write_text(s2, encoding='utf-8')
               print('Cache-buster mis à jour')
           else:
               print('Cache-buster déjà à jour')
+          PY
+
+      - name: Vérifier que le cartouche haut reste dans le canevas
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          text=Path('tools/harmonize_oracle_amour_cartouches.py').read_text(encoding='utf-8')
+          if 'TOP_OUTER = (198, 2, 314, 54)' not in text:
+              raise SystemExit('Position du cartouche haut inattendue')
+          if 'TOP_INNER = (204, 7, 308, 48)' not in text:
+              raise SystemExit('Position interne du cartouche haut inattendue')
+          print('Cartouche haut r11 entièrement contenu dans le canevas')
           PY
 
       - name: Générer le contrôle visuel global
@@ -124,7 +109,7 @@ jobs:
               last=sheet_start+len(subset)
               canvas.save(out/f'controle-{first:03d}-{last:03d}.png')
 
-          for n in (1,2,3,4,5,6,20,31,32,33,34,35,36,37,38,40,48,52,54,60,80):
+          for n in (1,2,3,4,5,6,7,8,9,10,11,12,19,20,21,22,23,24,25,26,27,28,29,30,31,40,48,60,80):
               p=Path('cards/amour')/f'{n:03d}.webp'
               (out/p.name).write_bytes(p.read_bytes())
           PY
@@ -132,19 +117,19 @@ jobs:
       - name: Joindre le contrôle visuel
         uses: actions/upload-artifact@v4
         with:
-          name: oracle-amour-cartouches-controle-modele-valide-r10
+          name: oracle-amour-cartouches-controle-modele-valide-r11
           path: /tmp/oracle-amour-cartouches-check
           if-no-files-found: error
 
-      - name: Publier les cartes harmonisées sur la branche de contrôle
+      - name: Publier les cartes corrigées sur la branche de contrôle
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add cards/amour/*.webp oracle-amour-data.js tools/harmonize_oracle_amour_cartouches.py
+          git add cards/amour/*.webp oracle-amour-data.js
           if git diff --cached --quiet; then
             echo "Aucune modification à publier."
           else
-            git commit -m "Appliquer le modèle validé r10 aux 80 cartes de l’Oracle Amour"
+            git commit -m "Corriger débordement haut et lignes blanches Oracle Amour"
             git pull --rebase origin "${GITHUB_REF_NAME}"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
