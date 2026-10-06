@@ -1,7 +1,7 @@
-/* CRISTARIVA — service worker v49 — espacement double autour du format et jeu actif sur deux lignes. */
-const CACHE_NAME='cristariva-v120-20261006-format-two-lines-r15';
-const APP_VERSION='2026.10.06-format-two-lines-r15';
-const IMMERSIVE_URL='./immersive-reading-ui.js?v=20261006-format-two-lines-r15';
+/* CRISTARIVA — service worker v50 — retrait du libellé Jeu actif. */
+const CACHE_NAME='cristariva-v121-20261006-remove-active-label-r16';
+const APP_VERSION='2026.10.06-remove-active-label-r16';
+const IMMERSIVE_URL='./immersive-reading-ui.js?v=20261006-remove-active-label-r16';
 const TAROT_INTEGRATION_URL='./tarot-divinatoire-integration-v78.js?v=20261006-reversal-cartouche-r2';
 const SHELL=[
   './',
