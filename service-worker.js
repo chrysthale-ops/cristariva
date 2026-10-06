@@ -1,7 +1,7 @@
-/* CRISTARIVA — service worker v46 — espacement resserré avant le format du tirage. */
-const CACHE_NAME='cristariva-v117-20261006-format-spacing-r12';
-const APP_VERSION='2026.10.06-format-spacing-r12';
-const IMMERSIVE_URL='./immersive-reading-ui.js?v=20261006-format-spacing-r12';
+/* CRISTARIVA — service worker v47 — format du tirage légèrement remonté. */
+const CACHE_NAME='cristariva-v118-20261006-format-up-r13';
+const APP_VERSION='2026.10.06-format-up-r13';
+const IMMERSIVE_URL='./immersive-reading-ui.js?v=20261006-format-up-r13';
 const TAROT_INTEGRATION_URL='./tarot-divinatoire-integration-v78.js?v=20261006-reversal-cartouche-r2';
 const SHELL=[
   './',
