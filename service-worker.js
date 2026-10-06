@@ -1,12 +1,10 @@
-/* CRISTARIVA — service worker v35 — carte Patience servie directement en WebP.
-   Force 22 arcanes majeurs + 56 arcanes mineurs HD sur PC et Android
-   et recharge la planche validée complète des arcanes mineurs. */
-const CACHE_NAME='cristariva-v106-20261006-patience-image-r1';
-const APP_VERSION='2026.10.06-patience-image-r1';
+/* CRISTARIVA — service worker v36 — rafraîchissement UI du cartouche d’introduction. */
+const CACHE_NAME='cristariva-v107-20261006-approche-typography-r3';
+const APP_VERSION='2026.10.06-approche-typography-r3';
 const SHELL=[
   './',
   './index.html',
-  './immersive-reading-ui.js?v=20261005-r2',
+  './immersive-reading-ui.js?v=20261006-approche-typography-r3',
   './story-quality.js?v=3-card-name-context',
   './groq-hybrid-story.js?v=5-external-diagnostics',
   './manifest.webmanifest',
