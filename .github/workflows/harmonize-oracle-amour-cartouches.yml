@@ -1,6 +1,10 @@
 name: Harmoniser cartouches Oracle Amour
 
 on:
+  push:
+    paths:
+      - 'tools/harmonize_oracle_amour_cartouches.py'
+      - '.github/workflows/harmonize-oracle-amour-cartouches.yml'
   workflow_dispatch:
 
 concurrency:
