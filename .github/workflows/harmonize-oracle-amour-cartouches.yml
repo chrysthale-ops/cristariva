@@ -54,7 +54,7 @@ jobs:
           import re
           p=Path('oracle-amour-data.js')
           s=p.read_text(encoding='utf-8')
-          s2=re.sub(r'(cards/amour/\d{3}\.webp)\?v=[^\"\']+', r'\1?v=20261006-cartouches-compact-r6', s)
+          s2=re.sub(r'(cards/amour/\d{3}\.webp)\?v=[^\"\']+', r'\1?v=20261006-modele-valide-r7', s)
           if s2!=s:
               p.write_text(s2, encoding='utf-8')
               print('Cache-buster mis à jour')
@@ -97,7 +97,7 @@ jobs:
               last=sheet_start+len(subset)
               canvas.save(out/f'controle-{first:03d}-{last:03d}.png')
 
-          for n in (1,2,3,4,5,6,20,31,32,33,34,35,36,37,38,40,52,54,60,80):
+          for n in (1,2,3,4,5,6,20,31,32,33,34,35,36,37,38,40,48,52,54,60,80):
               p=Path('cards/amour')/f'{n:03d}.webp'
               (out/p.name).write_bytes(p.read_bytes())
           PY
@@ -105,7 +105,7 @@ jobs:
       - name: Joindre le contrôle visuel
         uses: actions/upload-artifact@v4
         with:
-          name: oracle-amour-cartouches-controle-compact-r6
+          name: oracle-amour-cartouches-controle-modele-valide-r7
           path: /tmp/oracle-amour-cartouches-check
           if-no-files-found: error
 
@@ -117,7 +117,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "Aucune modification à publier."
           else
-            git commit -m "Réduire les cartouches haut et bas des 80 cartes de l’Oracle Amour"
+            git commit -m "Appliquer le modèle validé aux 80 cartes de l’Oracle Amour"
             git pull --rebase origin "${GITHUB_REF_NAME}"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
