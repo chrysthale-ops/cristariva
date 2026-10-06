@@ -2,7 +2,7 @@
 (function(){
   'use strict';
 
-  const VERSION='20261006-reading-panel-compact-r4';
+  const VERSION='20261006-reading-panel-compact-r5';
 
   function enhance(){
     const question=document.getElementById('question');
@@ -82,8 +82,8 @@
         position:relative!important;
         isolation:isolate;
         overflow:hidden;
-        padding-top:clamp(26px,2.4vw,34px)!important;
-        padding-bottom:clamp(26px,2.4vw,34px)!important;
+        padding-top:clamp(20px,2vw,28px)!important;
+        padding-bottom:clamp(20px,2vw,28px)!important;
         color:var(--cr-ivory)!important;
         background:
           linear-gradient(180deg,rgba(5,23,45,.48),rgba(5,24,48,.72)),
@@ -117,18 +117,18 @@
       .cr-reading-immersive-title::after{
         content:"✧  ◇  ✧";
         display:block;
-        margin:.25rem auto .35rem;
+        margin:.2rem auto .28rem;
         color:var(--cr-gold-light);
         font-size:.72em;
         letter-spacing:.38em;
       }
       .cr-reading-immersive-subtitle{
         max-width:820px;
-        margin:-.05rem auto .9rem!important;
+        margin:-.05rem auto .7rem!important;
         text-align:center;
         color:rgba(255,248,232,.90)!important;
         font-size:clamp(.95rem,1.35vw,1.1rem);
-        line-height:1.42;
+        line-height:1.38;
         text-shadow:0 2px 14px rgba(0,10,25,.82);
       }
       .cr-reading-immersive label,
@@ -147,7 +147,7 @@
         box-shadow:0 8px 24px rgba(2,16,35,.13)!important;
       }
       .cr-reading-immersive textarea{
-        min-height:80px!important;
+        min-height:74px!important;
       }
       .cr-reading-immersive input:focus,
       .cr-reading-immersive textarea:focus,
@@ -159,9 +159,9 @@
       .cr-reading-immersive .cr-immersive-steps,
       .cr-reading-immersive .steps{
         justify-content:center!important;
-        gap:.55rem!important;
+        gap:.5rem!important;
         flex-wrap:wrap!important;
-        margin-bottom:16px!important;
+        margin-bottom:12px!important;
       }
       .cr-reading-immersive .step{
         color:rgba(255,248,232,.92)!important;
@@ -179,16 +179,16 @@
         box-shadow:0 0 0 3px rgba(255,218,142,.13),0 8px 24px rgba(0,15,38,.24)!important;
       }
       .cr-reading-immersive .cr-immersive-select-grid{
-        gap:.85rem!important;
+        gap:.75rem!important;
       }
       .cr-reading-immersive .cr-immersive-spread-grid{
         display:grid!important;
         grid-template-columns:repeat(3,minmax(0,1fr))!important;
-        gap:.85rem!important;
+        gap:.75rem!important;
       }
       .cr-reading-immersive .cr-immersive-spread-choice{
-        min-height:100px;
-        padding:14px 16px!important;
+        min-height:92px;
+        padding:12px 14px!important;
         color:#fff8e8!important;
         background:linear-gradient(180deg,rgba(8,40,72,.66),rgba(6,29,56,.60))!important;
         border:1px solid rgba(255,255,255,.27)!important;
@@ -213,7 +213,7 @@
         color:inherit!important;
       }
       .cr-reading-immersive .cr-reading-immersive-cta{
-        margin-top:.2rem!important;
+        margin-top:0!important;
         color:#12223b!important;
         background:linear-gradient(135deg,#ffe09a 0%,#e6ad56 58%,#d4933f 100%)!important;
         border:1px solid rgba(255,232,181,.9)!important;
@@ -246,8 +246,8 @@
           line-height:1.2!important;
         }
         .cr-reading-immersive{
-          padding-top:22px!important;
-          padding-bottom:22px!important;
+          padding-top:18px!important;
+          padding-bottom:18px!important;
           border-radius:22px!important;
           background-position:58% center!important;
         }
@@ -255,8 +255,8 @@
           grid-template-columns:1fr!important;
         }
         .cr-reading-immersive .cr-immersive-spread-choice{
-          min-height:82px;
-          padding:12px 14px!important;
+          min-height:76px;
+          padding:10px 12px!important;
         }
         .cr-reading-immersive .cr-immersive-steps,
         .cr-reading-immersive .steps{
@@ -264,8 +264,8 @@
           flex-wrap:nowrap!important;
           overflow-x:auto;
           scrollbar-width:thin;
-          padding-bottom:.35rem;
-          margin-bottom:14px!important;
+          padding-bottom:.3rem;
+          margin-bottom:11px!important;
         }
         .cr-reading-immersive .step{flex:0 0 auto}
       }
