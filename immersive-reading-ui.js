@@ -2,7 +2,7 @@
 (function(){
   'use strict';
 
-  const VERSION='20261006-active-game-footer-r14';
+  const VERSION='20261006-format-two-lines-r15';
 
   const ORACLE_DESCRIPTIONS={
     fr:{
@@ -211,7 +211,7 @@
         text-shadow:0 2px 12px rgba(0,10,25,.78);
       }
       .cr-reading-immersive > h3[data-i18n="s37"]{
-        margin:-6px 0 8px!important;
+        margin:2em 0 2em!important;
         line-height:1.15!important;
       }
       .cr-reading-immersive input,
@@ -238,14 +238,18 @@
         margin-top:14px!important;
       }
       .cr-reading-immersive .cr-oracle-description{
-        display:block!important;
+        display:-webkit-box!important;
         flex:1 1 auto;
         min-width:0;
         margin:0!important;
         color:rgba(255,248,232,.94)!important;
         font-size:clamp(.72rem,.92vw,.8rem)!important;
         line-height:1.25!important;
-        white-space:nowrap;
+        white-space:normal;
+        overflow:hidden;
+        -webkit-box-orient:vertical;
+        -webkit-line-clamp:2;
+        line-clamp:2;
         text-shadow:0 2px 12px rgba(0,10,25,.82);
       }
       .cr-reading-immersive .cr-oracle-description b{
