@@ -1,10 +1,10 @@
-/* CRISTARIVA — service worker v42 — positionnement complet du cartouche de lecture. */
-const CACHE_NAME='cristariva-v113-20261006-reading-entry-approche-top-r9';
-const APP_VERSION='2026.10.06-reading-entry-approche-top-r9';
+/* CRISTARIVA — service worker v43 — descriptifs des jeux sous le sélecteur d’oracle. */
+const CACHE_NAME='cristariva-v114-20261006-oracle-description-r10';
+const APP_VERSION='2026.10.06-oracle-description-r10';
 const SHELL=[
   './',
   './index.html',
-  './immersive-reading-ui.js?v=20261006-reading-entry-approche-top-r9',
+  './immersive-reading-ui.js?v=20261006-oracle-description-r10',
   './story-quality.js?v=3-card-name-context',
   './groq-hybrid-story.js?v=5-external-diagnostics',
   './manifest.webmanifest',
