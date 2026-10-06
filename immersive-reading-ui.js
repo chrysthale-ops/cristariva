@@ -2,7 +2,7 @@
 (function(){
   'use strict';
 
-  const VERSION='20261006-oracle-description-r10';
+  const VERSION='20261006-oracle-description-r11';
 
   const ORACLE_DESCRIPTIONS={
     fr:{
@@ -16,6 +16,16 @@
       tarot:{title:'Active deck: CRISTARIVA Divinatory Tarot',text:'78 cards: 22 Major Arcana and 56 Minor Arcana · Wands, Cups, Swords and Pentacles.'}
     }
   };
+
+  function hideLegacyTarotContext(){
+    const legacy=document.getElementById('tarotContext');
+    if(!legacy)return;
+    if(!legacy.hidden)legacy.hidden=true;
+    if(legacy.getAttribute('aria-hidden')!=='true')legacy.setAttribute('aria-hidden','true');
+    if(legacy.style.getPropertyValue('display')!=='none'||legacy.style.getPropertyPriority('display')!=='important'){
+      legacy.style.setProperty('display','none','important');
+    }
+  }
 
   function updateOracleDescription(){
     const oracle=document.getElementById('oracleChoice');
@@ -41,10 +51,18 @@
       title:lang==='en'?`Active deck: ${selectedLabel}`:`Jeu actif : ${selectedLabel}`,
       text:lang==='en'?'This deck is used for the current reading.':'Ce jeu est utilisé pour le tirage en cours.'
     };
+    context.hidden=false;
+    context.removeAttribute('aria-hidden');
     context.innerHTML=`<b>${copy.title}</b><br>${copy.text}`;
+    hideLegacyTarotContext();
+  }
 
-    const legacy=document.getElementById('tarotContext');
-    if(legacy){legacy.hidden=true;legacy.setAttribute('aria-hidden','true');}
+  window.CR_UPDATE_ORACLE_DESCRIPTION=updateOracleDescription;
+
+  function scheduleOracleDescriptionRefresh(){
+    updateOracleDescription();
+    setTimeout(updateOracleDescription,0);
+    setTimeout(updateOracleDescription,80);
   }
 
   function enhance(){
@@ -87,8 +105,9 @@
     if(selectParents.length===2&&selectParents[0].parentElement===selectParents[1].parentElement){
       selectParents[0].parentElement.classList.add('cr-immersive-select-grid');
     }
-    updateOracleDescription();
-    oracle?.addEventListener('change',updateOracleDescription);
+    scheduleOracleDescriptionRefresh();
+    oracle?.addEventListener('change',scheduleOracleDescriptionRefresh);
+    domain?.addEventListener('change',scheduleOracleDescriptionRefresh);
 
     const spreads=[...panel.querySelectorAll('.choice[data-group="format"]')];
     spreads.forEach(el=>el.classList.add('cr-immersive-spread-choice'));
@@ -203,8 +222,9 @@
       }
       #tarotContext{display:none!important;}
       .cr-reading-immersive .cr-oracle-description{
+        display:block!important;
         margin:8px 2px 0!important;
-        color:rgba(255,248,232,.92)!important;
+        color:rgba(255,248,232,.96)!important;
         font-size:clamp(.76rem,1vw,.84rem)!important;
         line-height:1.35!important;
         text-shadow:0 2px 12px rgba(0,10,25,.82);
@@ -372,15 +392,15 @@
     if(subtitle)subtitle.textContent=(document.documentElement.lang||'').toLowerCase().startsWith('en')
       ? 'Ask your question and let the cards guide you through the Reflections of the Lake.'
       : 'Posez votre question et laissez les cartes vous guider au cœur des Reflets du Lac.';
-    updateOracleDescription();
+    scheduleOracleDescriptionRefresh();
   }
   new MutationObserver(updateSubtitle).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
 
-  const legacyObserver=new MutationObserver(()=>{
-    const legacy=document.getElementById('tarotContext');
-    if(legacy){legacy.hidden=true;legacy.setAttribute('aria-hidden','true');}
+  const legacyObserver=new MutationObserver(mutations=>{
+    if(!mutations.some(m=>m.type==='childList'||(m.type==='attributes'&&m.target?.id==='tarotContext')))return;
+    hideLegacyTarotContext();
   });
-  legacyObserver.observe(document.documentElement,{childList:true,subtree:true});
+  legacyObserver.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden','style','class']});
 
   installReadingEntryPositioning();
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',enhance,{once:true});
