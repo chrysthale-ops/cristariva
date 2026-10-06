@@ -2,7 +2,9 @@
 (function(){
   'use strict';
 
-  const VERSION='20260928-tarot78-png-r1';
+  const VERSION='20261006-reversal-inline-r3';
+  let reversalLayoutObserver=null;
+  let reversalLayoutScheduled=false;
 
   function appendScript(src){
     return new Promise((resolve,reject)=>{
@@ -20,6 +22,8 @@
     const heading=document.querySelector('h3[data-i18n="s37"]');
     if(!option||!heading)return;
 
+    option.classList.remove('cr-tarot-reversal-compact');
+
     let row=document.getElementById('crFormatReversalRow');
     if(!row){
       row=document.createElement('div');
@@ -35,7 +39,7 @@
     if(hint){
       const fullHint=hint.textContent.trim();
       hint.hidden=true;
-      if(label&&!label.title)label.title=fullHint;
+      if(label)label.title=fullHint;
       option.setAttribute('aria-description',fullHint);
     }
 
@@ -63,6 +67,8 @@
           flex:0 0 auto;
           width:auto!important;
           max-width:100%;
+          min-height:0!important;
+          box-sizing:border-box!important;
           margin:0!important;
           padding:7px 12px!important;
           border-radius:999px!important;
@@ -80,12 +86,14 @@
           text-shadow:none!important;
           white-space:nowrap!important;
           font-size:.9rem!important;
+          font-weight:750!important;
           line-height:1!important;
           cursor:pointer;
         }
         #crFormatReversalRow .tarot-reversal-option input{
           width:18px!important;
           height:18px!important;
+          min-width:18px!important;
           margin:0!important;
           flex:0 0 18px!important;
           box-shadow:none!important;
@@ -104,6 +112,33 @@
       `;
       document.head.appendChild(style);
     }
+  }
+
+  function scheduleCompactTarotReversalOption(){
+    if(reversalLayoutScheduled)return;
+    reversalLayoutScheduled=true;
+    setTimeout(()=>{
+      reversalLayoutScheduled=false;
+      compactTarotReversalOption();
+    },0);
+  }
+
+  function installTarotReversalLayoutGuard(){
+    if(reversalLayoutObserver)return;
+    const root=document.getElementById('tirage')||document.querySelector('.cr-reading-immersive')||document.body;
+    if(!root)return;
+    reversalLayoutObserver=new MutationObserver(mutations=>{
+      if(!mutations.some(m=>m.type==='childList'))return;
+      const option=document.getElementById('tarotReversalOption');
+      const heading=document.querySelector('h3[data-i18n="s37"]');
+      const row=document.getElementById('crFormatReversalRow');
+      if(!option||!heading||!row||option.parentNode!==row||heading.parentNode!==row||option.classList.contains('cr-tarot-reversal-compact')){
+        scheduleCompactTarotReversalOption();
+      }
+    });
+    reversalLayoutObserver.observe(root,{childList:true,subtree:true});
+    document.getElementById('oracleChoice')?.addEventListener('change',scheduleCompactTarotReversalOption);
+    document.getElementById('domain')?.addEventListener('change',scheduleCompactTarotReversalOption);
   }
 
   async function activateTarot78(){
@@ -144,9 +179,10 @@
       delete window.__CRISTARIVA_TAROT_READY__;
       await appendScript('./tarot-divinatoire-integration-v78.js?v='+VERSION+'-reversals-r1');
       await appendScript('./tarot-story-fluid-v6.2.js?v=6.6-'+VERSION);
+      installTarotReversalLayoutGuard();
       compactTarotReversalOption();
 
-      window.CR_TAROT_HOTFIX_VERSION='2026.10.06-reversal-inline-r2';
+      window.CR_TAROT_HOTFIX_VERSION='2026.10.06-reversal-inline-r3';
       document.documentElement.dataset.cristarivaTarot='78';
       document.documentElement.dataset.cristarivaTarotImages='56';
       document.documentElement.dataset.cristarivaTarotStory='6.2';
@@ -155,6 +191,7 @@
     }
   }
 
+  installTarotReversalLayoutGuard();
   compactTarotReversalOption();
   activateTarot78();
 })();
