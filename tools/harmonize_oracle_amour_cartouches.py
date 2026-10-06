@@ -5,7 +5,8 @@ import json
 import re
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
+import numpy as np
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 ROOT = Path(__file__).resolve().parents[1]
 CARDS = ROOT / "cards" / "amour"
@@ -14,7 +15,7 @@ EXPECTED = [CARDS / f"{i:03d}.webp" for i in range(1, 81)]
 
 # GABARIT MAÎTRE EXTERNE — modèle fourni et validé par l'utilisateur.
 # Aucune carte du dépôt n'est utilisée comme référence de forme, de position,
-# de taille ou de typographie. Les WebP GitHub ne fournissent que l'illustration.
+# de taille ou de typographie. Les WebP GitHub ne servent que d'illustrations.
 CANVAS = (512, 768)
 IVORY = (250, 248, 240)
 GOLD = (177, 145, 77)
@@ -22,30 +23,34 @@ GOLD_LIGHT = (211, 190, 132)
 NAVY = (25, 48, 72)
 NUMBER = (126, 104, 60)
 
-# Modèle validé : le médaillon supérieur est une plaque rectangulaire à angles
-# fortement arrondis, partiellement coupée par le bord supérieur. Il ne s'agit
-# PAS d'une ellipse. Les dimensions reproduisent la proportion du modèle fourni.
-TOP_OUTER = (188, -24, 324, 52)
-TOP_INNER = (195, -18, 317, 46)
-TOP_RADIUS = 24
-TOP_INNER_RADIUS = 19
-TOP_NUMBER_CENTER = (256, 24)
+# Médaillon supérieur du modèle validé : onglet ivoire étroit, rectangulaire à
+# angles très arrondis, partiellement coupé par le bord supérieur.
+TOP_OUTER = (194, -23, 318, 54)
+TOP_INNER = (200, -17, 312, 47)
+TOP_RADIUS = 22
+TOP_INNER_RADIUS = 17
+TOP_NUMBER_CENTER = (256, 25)
 NUMBER_FONT_SIZE = 25
 
-# Modèle validé : cartouche inférieur large et compact, avec un corps arrondi
-# et de petites pointes latérales. Il recouvre entièrement l'ancien cartouche
-# sans laisser apparaître sa bordure supérieure ou inférieure.
-BOTTOM_BODY = (42, 654, 470, 731)
-BOTTOM_INNER = (50, 661, 462, 724)
-BOTTOM_RADIUS = 17
-BOTTOM_INNER_RADIUS = 13
-BOTTOM_LEFT_TIP = (30, 692)
-BOTTOM_RIGHT_TIP = (482, 692)
-TITLE_CENTER = (256, 692)
-TITLE_MAX_WIDTH = 310
+# Cartouche inférieur du modèle validé : plus bas, plus étroit et plus compact
+# que les essais r6/r8, avec corps arrondi et petites pointes latérales.
+BOTTOM_BODY = (62, 688, 450, 741)
+BOTTOM_INNER = (69, 694, 443, 735)
+BOTTOM_RADIUS = 14
+BOTTOM_INNER_RADIUS = 10
+BOTTOM_LEFT_TIP = (52, 714)
+BOTTOM_RIGHT_TIP = (460, 714)
+TITLE_CENTER = (256, 714)
+TITLE_MAX_WIDTH = 276
 TITLE_FONT_SIZE = 22
 TITLE_TRACKING = 1.0
 TITLE_LINE_GAP = 1
+
+# Zone de l'ancien cartouche qui resterait visible au-dessus du nouveau.
+# Elle est reconstruite à partir de l'illustration immédiatement voisine, avant
+# de poser le gabarit maître. Cela évite les doubles cartouches et les aplats
+# clairs produits par les anciens essais d'effacement.
+RESTORE_BOX = (58, 648, 454, 692)
 
 
 def find_font(name: str) -> Path:
@@ -73,6 +78,36 @@ def read_titles() -> dict[int, str]:
     missing = [i for i in range(1, 81) if i not in out]
     if missing:
         raise RuntimeError(f"Titres manquants dans oracle-amour-data.js: {missing}")
+    return out
+
+
+def restore_old_bottom_cartouche(im: Image.Image) -> Image.Image:
+    """Masque seulement la partie de l'ancien cartouche encore visible.
+
+    Le remplissage est une réflexion locale de la bande d'illustration située
+    juste au-dessus. Le masque est limité aux pixels clairs/peu chromatiques de
+    l'ancienne plaque puis adouci ; aucune référence visuelle GitHub n'est
+    utilisée pour définir le nouveau gabarit.
+    """
+    x0, y0, x1, y1 = RESTORE_BOX
+    arr = np.array(im, dtype=np.uint8)
+    roi = arr[y0:y1, x0:x1]
+    mx = roi.max(axis=2)
+    mn = roi.min(axis=2)
+
+    # Ivoire, beige, gris clair et filet doré de l'ancien cartouche.
+    mask = ((mx > 130) & ((mx - mn) < 105)).astype(np.uint8) * 255
+    mask_img = Image.fromarray(mask, mode="L")
+    mask_img = mask_img.filter(ImageFilter.MaxFilter(9))
+    mask_img = mask_img.filter(ImageFilter.GaussianBlur(1.8))
+
+    h = y1 - y0
+    reflected = im.crop((x0, y0 - h, x1, y0)).transpose(Image.Transpose.FLIP_TOP_BOTTOM)
+    current = im.crop((x0, y0, x1, y1))
+    repaired = Image.composite(reflected, current, mask_img)
+
+    out = im.copy()
+    out.paste(repaired, (x0, y0))
     return out
 
 
@@ -104,9 +139,9 @@ def draw_tracking_text(
 
 
 def split_title(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFont) -> list[str]:
-    """Conserve exactement la même taille et le même espacement sur les 80 cartes.
+    """Conserve taille, graisse et espacement identiques sur les 80 cartes.
 
-    Les titres trop longs sont répartis sur deux lignes plutôt que réduits.
+    Un titre qui ne tient pas est réparti sur deux lignes au lieu d'être réduit.
     """
     if tracking_width(draw, text, font, TITLE_TRACKING) <= TITLE_MAX_WIDTH:
         return [text]
@@ -162,7 +197,6 @@ def draw_top_medallion(draw: ImageDraw.ImageDraw, idx: int) -> None:
 
 
 def draw_bottom_cartouche(draw: ImageDraw.ImageDraw, title: str) -> None:
-    # Corps large et arrondi du modèle maître.
     draw.rounded_rectangle(
         BOTTOM_BODY,
         radius=BOTTOM_RADIUS,
@@ -171,15 +205,14 @@ def draw_bottom_cartouche(draw: ImageDraw.ImageDraw, title: str) -> None:
         width=3,
     )
 
-    # Petites pointes latérales, plus douces que l'ancien polygone anguleux.
     lx, ly = BOTTOM_LEFT_TIP
     rx, ry = BOTTOM_RIGHT_TIP
-    draw.polygon([(lx, ly), (BOTTOM_BODY[0] + 1, ly - 9), (BOTTOM_BODY[0] + 1, ly + 9)], fill=IVORY)
-    draw.line([(lx, ly), (BOTTOM_BODY[0] + 1, ly - 9)], fill=GOLD, width=2)
-    draw.line([(lx, ly), (BOTTOM_BODY[0] + 1, ly + 9)], fill=GOLD, width=2)
-    draw.polygon([(rx, ry), (BOTTOM_BODY[2] - 1, ry - 9), (BOTTOM_BODY[2] - 1, ry + 9)], fill=IVORY)
-    draw.line([(rx, ry), (BOTTOM_BODY[2] - 1, ry - 9)], fill=GOLD, width=2)
-    draw.line([(rx, ry), (BOTTOM_BODY[2] - 1, ry + 9)], fill=GOLD, width=2)
+    draw.polygon([(lx, ly), (BOTTOM_BODY[0] + 1, ly - 8), (BOTTOM_BODY[0] + 1, ly + 8)], fill=IVORY)
+    draw.line([(lx, ly), (BOTTOM_BODY[0] + 1, ly - 8)], fill=GOLD, width=2)
+    draw.line([(lx, ly), (BOTTOM_BODY[0] + 1, ly + 8)], fill=GOLD, width=2)
+    draw.polygon([(rx, ry), (BOTTOM_BODY[2] - 1, ry - 8), (BOTTOM_BODY[2] - 1, ry + 8)], fill=IVORY)
+    draw.line([(rx, ry), (BOTTOM_BODY[2] - 1, ry - 8)], fill=GOLD, width=2)
+    draw.line([(rx, ry), (BOTTOM_BODY[2] - 1, ry + 8)], fill=GOLD, width=2)
 
     draw.rounded_rectangle(
         BOTTOM_INNER,
@@ -189,10 +222,10 @@ def draw_bottom_cartouche(draw: ImageDraw.ImageDraw, title: str) -> None:
     )
 
     cy = TITLE_CENTER[1]
-    draw.line((59, cy, 101, cy), fill=GOLD, width=1)
-    draw.polygon([(53, cy), (59, cy - 3), (65, cy), (59, cy + 3)], fill=GOLD)
-    draw.line((411, cy, 453, cy), fill=GOLD, width=1)
-    draw.polygon([(447, cy), (453, cy - 3), (459, cy), (453, cy + 3)], fill=GOLD)
+    draw.line((76, cy, 111, cy), fill=GOLD, width=1)
+    draw.polygon([(70, cy), (76, cy - 3), (82, cy), (76, cy + 3)], fill=GOLD)
+    draw.line((401, cy, 436, cy), fill=GOLD, width=1)
+    draw.polygon([(430, cy), (436, cy - 3), (442, cy), (436, cy + 3)], fill=GOLD)
 
     text = title.upper()
     font = ImageFont.truetype(str(FONT_REGULAR), size=TITLE_FONT_SIZE)
@@ -215,7 +248,8 @@ def process_one(path: Path, idx: int, title: str) -> None:
     if im.size != CANVAS:
         raise RuntimeError(f"{path.name}: canevas {im.size}, attendu {CANVAS}")
 
-    # Illustration, cadre général, palette, luminosité et longueur restent inchangés.
+    # Les retouches existantes 31–40 restaurent uniquement les zones qui avaient
+    # été détériorées lors des essais précédents ; elles ne servent pas de modèle.
     patch_path = ROOT / "assets" / "amour-cartouche-restoration" / f"{idx:03d}.webp"
     if 31 <= idx <= 40:
         if not patch_path.exists():
@@ -225,6 +259,10 @@ def process_one(path: Path, idx: int, title: str) -> None:
         if patch.size != CANVAS:
             raise RuntimeError(f"Dimensions incorrectes : {patch_path}")
         im.paste(patch, (0, 0), patch)
+
+    # Descendre le nouveau cartouche impose de reconstruire la fine bande de
+    # l'ancien cartouche qui serait sinon visible au-dessus.
+    im = restore_old_bottom_cartouche(im)
 
     draw = ImageDraw.Draw(im)
     draw_top_medallion(draw, idx)
