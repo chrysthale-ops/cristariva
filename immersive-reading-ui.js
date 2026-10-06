@@ -2,7 +2,7 @@
 (function(){
   'use strict';
 
-  const VERSION='20261006-reading-panel-compact-r5';
+  const VERSION='20261006-reading-entry-position-r6';
 
   function enhance(){
     const question=document.getElementById('question');
@@ -277,6 +277,35 @@
     document.head.appendChild(style);
   }
 
+  function positionReadingEntry(behavior='smooth'){
+    const target=document.getElementById('approche')||document.getElementById('tirage');
+    if(!target)return;
+    const top=Math.max(0,window.scrollY+target.getBoundingClientRect().top-12);
+    window.scrollTo({top,behavior});
+  }
+
+  function installReadingEntryPositioning(){
+    document.addEventListener('click',event=>{
+      const link=event.target.closest('a[href]');
+      if(!link)return;
+      let url;
+      try{url=new URL(link.getAttribute('href'),window.location.href);}catch(e){return;}
+      if(url.hash!=='#tirage'||url.origin!==window.location.origin||url.pathname!==window.location.pathname)return;
+      event.preventDefault();
+      if(window.location.hash==='#tirage')history.replaceState(null,'','#tirage');
+      else history.pushState(null,'','#tirage');
+      requestAnimationFrame(()=>positionReadingEntry('smooth'));
+    });
+
+    window.addEventListener('hashchange',()=>{
+      if(window.location.hash==='#tirage')requestAnimationFrame(()=>positionReadingEntry('smooth'));
+    });
+
+    if(window.location.hash==='#tirage'){
+      requestAnimationFrame(()=>requestAnimationFrame(()=>positionReadingEntry('auto')));
+    }
+  }
+
   function updateSubtitle(){
     const subtitle=document.querySelector('.cr-reading-immersive-subtitle');
     if(subtitle)subtitle.textContent=(document.documentElement.lang||'').toLowerCase().startsWith('en')
@@ -285,6 +314,7 @@
   }
   new MutationObserver(updateSubtitle).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
 
+  installReadingEntryPositioning();
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',enhance,{once:true});
   else enhance();
 })();
