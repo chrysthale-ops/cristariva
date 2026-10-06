@@ -2,7 +2,7 @@
 (function(){
   'use strict';
 
-  const VERSION='20261006-format-spacing-r12';
+  const VERSION='20261006-format-up-r13';
 
   const ORACLE_DESCRIPTIONS={
     fr:{
@@ -203,7 +203,7 @@
         text-shadow:0 2px 12px rgba(0,10,25,.78);
       }
       .cr-reading-immersive > h3[data-i18n="s37"]{
-        margin:4px 0 8px!important;
+        margin:-6px 0 8px!important;
         line-height:1.15!important;
       }
       .cr-reading-immersive input,
