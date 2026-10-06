@@ -2,7 +2,7 @@
 (function(){
   'use strict';
 
-  const VERSION='20261005-immersive-r2';
+  const VERSION='20261006-approche-compact-r1';
 
   function enhance(){
     const question=document.getElementById('question');
@@ -59,6 +59,17 @@
     const style=document.createElement('style');
     style.id='cr-reading-immersive-styles';
     style.textContent=`
+      #approche.panel{
+        padding-top:clamp(22px,2.2vw,28px)!important;
+        padding-bottom:clamp(22px,2.2vw,28px)!important;
+      }
+      #approche h2{
+        margin-bottom:10px!important;
+      }
+      #approche .muted{
+        margin:0!important;
+        line-height:1.5;
+      }
       .cr-reading-immersive{
         --cr-night:#071b35;
         --cr-night-2:#0c3157;
@@ -210,6 +221,10 @@
         outline-offset:3px!important;
       }
       @media (max-width:860px){
+        #approche.panel{
+          padding-top:18px!important;
+          padding-bottom:18px!important;
+        }
         .cr-reading-immersive{
           border-radius:22px!important;
           background-position:58% center!important;
