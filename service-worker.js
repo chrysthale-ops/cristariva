@@ -1,8 +1,8 @@
-/* CRISTARIVA — service worker v34 — contrôle qualité des noms de cartes.
+/* CRISTARIVA — service worker v35 — carte Patience servie directement en WebP.
    Force 22 arcanes majeurs + 56 arcanes mineurs HD sur PC et Android
    et recharge la planche validée complète des arcanes mineurs. */
-const CACHE_NAME='cristariva-v105-20261005-card-name-quality';
-const APP_VERSION='2026.10.05-card-name-quality';
+const CACHE_NAME='cristariva-v106-20261006-patience-image-r1';
+const APP_VERSION='2026.10.06-patience-image-r1';
 const SHELL=[
   './',
   './index.html',
@@ -104,11 +104,6 @@ self.addEventListener('fetch',event=>{
 
   if(/\.(?:js|html|json|webmanifest)$/.test(url.pathname)||url.pathname.includes('.cristariva-tarot78-sprite/')){
     event.respondWith(networkFirst(request));
-    return;
-  }
-
-  if(url.pathname.endsWith('/cards/039-patience-final.webp')){
-    event.respondWith(fetch('./cards/039-patience-live.svg',{cache:'no-store'}));
     return;
   }
 
