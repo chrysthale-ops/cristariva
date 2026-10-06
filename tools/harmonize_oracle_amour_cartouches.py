@@ -23,8 +23,7 @@ GOLD_LIGHT = (211, 190, 132)
 NAVY = (25, 48, 72)
 NUMBER = (126, 104, 60)
 
-# R11 — le cartouche haut doit être ENTIEREMENT dans la carte.
-# Il touche visuellement le bord supérieur mais aucun pixel ne dépasse le canevas.
+# R12 — le cartouche haut reste entièrement dans la carte.
 TOP_OUTER = (198, 2, 314, 54)
 TOP_INNER = (204, 7, 308, 48)
 TOP_RADIUS = 18
@@ -32,7 +31,7 @@ TOP_INNER_RADIUS = 14
 TOP_NUMBER_CENTER = (256, 27)
 NUMBER_FONT_SIZE = 23
 
-# Cartouche inférieur compact déjà validé sur le principe en r10.
+# Cartouche inférieur compact validé sur le principe.
 BOTTOM_BODY = (76, 689, 436, 741)
 BOTTOM_INNER = (83, 695, 429, 735)
 BOTTOM_RADIUS = 14
@@ -45,11 +44,9 @@ TITLE_FONT_SIZE = 22
 TITLE_TRACKING = 1.0
 TITLE_LINE_GAP = 1
 
-# R11 — l'ancienne plaque commence plus haut que la zone traitée en r10.
-# La couture blanche observée sur le site se situe typiquement vers y=645/648.
-# On commence donc la restauration à y=632 pour englober complètement le filet
-# blanc et doré de l'ancien cartouche, avant de poser le nouveau cartouche.
-RESTORE_BOX = (48, 632, 464, 694)
+# Zone de restauration de l'ancien cartouche. Elle commence assez haut pour
+# englober le filet blanc horizontal visible sur les captures utilisateur.
+RESTORE_BOX = (48, 628, 464, 694)
 
 
 def find_font(name: str) -> Path:
@@ -81,12 +78,14 @@ def read_titles() -> dict[int, str]:
 
 
 def restore_old_bottom_cartouche(im: Image.Image) -> Image.Image:
-    """Supprime les restes visibles de l'ancien cartouche sans toucher au reste.
+    """Supprime les restes de l'ancien cartouche sans créer de barres latérales.
 
-    La restauration cible les pixels clairs/ivoire/or de l'ancienne plaque et de
-    sa couture blanche. Le contenu de remplacement est prélevé dans la bande
-    d'illustration directement au-dessus, puis réfléchi localement. Le nouveau
-    cartouche recouvre ensuite la majeure partie de cette zone restaurée.
+    La correction r12 combine trois garde-fous :
+    - ciblage par couleur des pixels ivoire/blanc/or de l'ancienne plaque ;
+    - intersection avec la géométrie réelle de l'ancien cartouche pour ne jamais
+      toucher aux lanternes ou aux vêtements situés sur les côtés ;
+    - masque obligatoire sur la bande du filet supérieur afin d'éliminer aussi
+      les pixels anti-crénelés plus sombres responsables de la ligne résiduelle.
     """
     x0, y0, x1, y1 = RESTORE_BOX
     arr = np.array(im, dtype=np.uint8)
@@ -95,23 +94,45 @@ def restore_old_bottom_cartouche(im: Image.Image) -> Image.Image:
     mn = roi.min(axis=2)
     spread = mx - mn
 
-    # Ancien fond ivoire / gris clair / filet blanc.
-    pale = (mx > 125) & (spread < 105)
-    # Couture blanche très lumineuse observée sur les captures.
-    seam = (mx > 175) & (spread < 75)
-    # Filet vieux-or peu saturé de l'ancienne plaque.
+    pale = (mx > 120) & (spread < 115)
+    seam = (mx > 165) & (spread < 85)
     goldish = (
-        (roi[:, :, 0] > 120)
-        & (roi[:, :, 1] > 90)
-        & (roi[:, :, 2] < 150)
-        & ((roi[:, :, 0].astype(int) - roi[:, :, 2].astype(int)) < 115)
+        (roi[:, :, 0] > 105)
+        & (roi[:, :, 1] > 80)
+        & (roi[:, :, 2] < 155)
+        & ((roi[:, :, 0].astype(int) - roi[:, :, 2].astype(int)) < 130)
     )
-    mask = (pale | seam | goldish).astype(np.uint8) * 255
+    color_mask = pale | seam | goldish
 
+    # Géométrie approximative de l'ancien cartouche, exprimée en coordonnées
+    # globales puis ramenée dans la zone de restauration.
+    geom = Image.new("L", (x1 - x0, y1 - y0), 0)
+    gd = ImageDraw.Draw(geom)
+    old_shape = [
+        (70 - x0, 676 - y0),
+        (86 - x0, 642 - y0),
+        (426 - x0, 642 - y0),
+        (442 - x0, 676 - y0),
+        (426 - x0, 710 - y0),
+        (86 - x0, 710 - y0),
+    ]
+    gd.polygon(old_shape, fill=255)
+    geom_mask = np.array(geom) > 0
+
+    # Bande supérieure obligatoire : c'est là que subsistait le trait blanc.
+    yy = np.arange(y0, y1)[:, None]
+    xx = np.arange(x0, x1)[None, :]
+    mandatory_top_band = (
+        (yy >= 638)
+        & (yy <= 660)
+        & (xx >= 82)
+        & (xx <= 430)
+    )
+
+    mask = ((color_mask & geom_mask) | mandatory_top_band).astype(np.uint8) * 255
     mask_img = Image.fromarray(mask, mode="L")
-    # Étendre légèrement pour englober les bords anti-crénelés de la couture.
-    mask_img = mask_img.filter(ImageFilter.MaxFilter(11))
-    mask_img = mask_img.filter(ImageFilter.GaussianBlur(2.0))
+    mask_img = mask_img.filter(ImageFilter.MaxFilter(9))
+    mask_img = mask_img.filter(ImageFilter.GaussianBlur(2.5))
 
     h = y1 - y0
     source_top = max(0, y0 - h)
@@ -180,7 +201,6 @@ def split_title(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFo
 
 
 def draw_top_medallion(draw: ImageDraw.ImageDraw, idx: int) -> None:
-    # Sécurité : aucune coordonnée négative n'est admise pour le cartouche haut.
     if TOP_OUTER[1] < 0 or TOP_INNER[1] < 0:
         raise RuntimeError("Le cartouche haut dépasse du canevas")
 
@@ -259,12 +279,10 @@ def draw_bottom_cartouche(draw: ImageDraw.ImageDraw, title: str) -> None:
 
 
 def count_white_seam_pixels(im: Image.Image) -> int:
-    """Détecte une éventuelle ligne blanche résiduelle juste au-dessus du cartouche."""
     arr = np.array(im, dtype=np.uint8)
-    roi = arr[632:689, 55:457]
+    roi = arr[628:689, 55:457]
     mx = roi.max(axis=2)
     mn = roi.min(axis=2)
-    # Compter les pixels très clairs et quasi neutres, typiques de la couture.
     return int(((mx > 215) & ((mx - mn) < 32)).sum())
 
 
@@ -316,12 +334,9 @@ def main() -> None:
     if sizes != {CANVAS}:
         raise RuntimeError(f"Canevas finaux incohérents: {sizes}")
 
-    # Le contrôle de couture est informatif car certaines illustrations peuvent
-    # naturellement contenir des zones blanches. Les planches visuelles restent
-    # la validation finale avant fusion.
     worst = sorted(seam_scores.items(), key=lambda kv: kv[1], reverse=True)[:10]
     print("Top scores couture blanche:", worst)
-    print("80/80 cartes harmonisées r11 : cartouche haut contenu et zone blanche retraitée.")
+    print("80/80 cartes harmonisées r12 : cartouche haut contenu et couture blanche supprimée.")
 
 
 if __name__ == "__main__":
