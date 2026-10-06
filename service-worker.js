@@ -1,10 +1,10 @@
-/* CRISTARIVA — service worker v39 — positionnement uniforme des accès au tirage. */
-const CACHE_NAME='cristariva-v110-20261006-reading-entry-position-r6';
-const APP_VERSION='2026.10.06-reading-entry-position-r6';
+/* CRISTARIVA — service worker v40 — légère augmentation de hauteur du panneau de tirage. */
+const CACHE_NAME='cristariva-v111-20261006-reading-panel-height-r7';
+const APP_VERSION='2026.10.06-reading-panel-height-r7';
 const SHELL=[
   './',
   './index.html',
-  './immersive-reading-ui.js?v=20261006-reading-entry-position-r6',
+  './immersive-reading-ui.js?v=20261006-reading-panel-height-r7',
   './story-quality.js?v=3-card-name-context',
   './groq-hybrid-story.js?v=5-external-diagnostics',
   './manifest.webmanifest',
