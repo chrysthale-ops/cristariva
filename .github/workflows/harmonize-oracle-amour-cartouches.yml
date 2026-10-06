@@ -35,14 +35,14 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Installer Pillow et la police Cinzel
+      - name: Installer Pillow, NumPy et la police Cinzel
         run: |
           sudo mkdir -p /usr/local/share/fonts
           sudo curl -L --fail --silent --show-error \
             'https://raw.githubusercontent.com/google/fonts/main/ofl/cinzel/Cinzel%5Bwght%5D.ttf' \
             -o /usr/local/share/fonts/Cinzel-Regular.ttf
           sudo fc-cache -f
-          python -m pip install --disable-pip-version-check pillow
+          python -m pip install --disable-pip-version-check pillow numpy
 
       - name: Appliquer le modèle externe validé aux 80 cartes
         run: python tools/harmonize_oracle_amour_cartouches.py
@@ -54,7 +54,7 @@ jobs:
           import re
           p=Path('oracle-amour-data.js')
           s=p.read_text(encoding='utf-8')
-          s2=re.sub(r'(cards/amour/\d{3}\.webp)\?v=[^\"\']+', r'\1?v=20261006-modele-valide-r8', s)
+          s2=re.sub(r'(cards/amour/\d{3}\.webp)\?v=[^\"\']+', r'\1?v=20261006-modele-valide-r9', s)
           if s2!=s:
               p.write_text(s2, encoding='utf-8')
               print('Cache-buster mis à jour')
@@ -105,11 +105,11 @@ jobs:
       - name: Joindre le contrôle visuel
         uses: actions/upload-artifact@v4
         with:
-          name: oracle-amour-cartouches-controle-modele-valide-r8
+          name: oracle-amour-cartouches-controle-modele-valide-r9
           path: /tmp/oracle-amour-cartouches-check
           if-no-files-found: error
 
-      - name: Publier les cartes harmonisées
+      - name: Publier les cartes harmonisées sur la branche de contrôle
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -117,7 +117,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "Aucune modification à publier."
           else
-            git commit -m "Appliquer le modèle validé r8 aux 80 cartes de l’Oracle Amour"
+            git commit -m "Appliquer le modèle validé r9 aux 80 cartes de l’Oracle Amour"
             git pull --rebase origin "${GITHUB_REF_NAME}"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
