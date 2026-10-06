@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import io
 import re
 from pathlib import Path
 
@@ -22,16 +23,15 @@ NAVY = (25, 48, 72)
 NUMBER = (126, 104, 60)
 
 # Médaillon supérieur du modèle validé : centré, ivoire, double filet or et
-# légèrement coupé par le bord supérieur. La surface opaque recouvre les anciens
-# médaillons variables sans les prendre comme référence.
+# légèrement coupé par le bord supérieur. Hauteur visible : 62 px au lieu de 86.
 TOP_OUTER = (179, -38, 333, 62)
 TOP_INNER = (186, -31, 326, 55)
 TOP_NUMBER_CENTER = (256, 24)
 NUMBER_FONT_SIZE = 27
 
 # Cartouche inférieur du modèle validé : plaque ivoire allongée, pointes latérales,
-# double filet or et titre centré. Les dimensions opaques masquent entièrement les
-# anciens cartouches présents dans certaines illustrations source.
+# double filet or et titre centré. Hauteur : 75 px au lieu de 100.
+# Les anciennes bordures qui dépassaient sur 31–40 sont restaurées séparément.
 BOTTOM_OUTER = [
     (30, 691), (48, 668), (66, 654), (446, 654), (464, 668),
     (482, 691), (464, 715), (446, 729), (66, 729), (48, 715),
@@ -152,10 +152,29 @@ def process_one(path: Path, idx: int, title: str) -> None:
 
     # Illustration, cadre général, palette, luminosité et longueur restent
     # inchangés. Seules les deux zones de cartouche sont recouvertes.
+    # Les retouches ImageGen sont limitées par un masque aux anciennes plaques.
+    # Aucun pixel du reste de l'illustration ne provient des images générées.
+    patch_path = ROOT / "assets" / "amour-cartouche-restoration" / f"{idx:03d}.webp"
+    if 31 <= idx <= 40:
+        if not patch_path.exists():
+            raise RuntimeError(f"Retouche de cartouche manquante : {patch_path}")
+        with Image.open(patch_path) as source_patch:
+            patch = source_patch.convert("RGBA")
+        if patch.size != CANVAS:
+            raise RuntimeError(f"Dimensions incorrectes : {patch_path}")
+        im.paste(patch, (0, 0), patch)
     draw = ImageDraw.Draw(im)
     draw_top_medallion(draw, idx)
     draw_bottom_cartouche(draw, title)
-    im.save(path, "WEBP", lossless=True, method=6)
+    # Encoder et vérifier avant le remplacement, sans recompression avec pertes.
+    encoded = io.BytesIO()
+    im.save(encoded, "WEBP", lossless=True, method=6)
+    payload = encoded.getvalue()
+    with Image.open(io.BytesIO(payload)) as check:
+        check.load()
+        if check.size != CANVAS:
+            raise RuntimeError(f"Encodage incorrect : {path.name}")
+    path.write_bytes(payload)
 
 
 def main() -> None:

@@ -5,6 +5,7 @@ on:
     paths:
       - 'tools/harmonize_oracle_amour_cartouches.py'
       - '.github/workflows/harmonize-oracle-amour-cartouches.yml'
+      - 'assets/amour-cartouche-restoration/**'
   workflow_dispatch:
 
 concurrency:
@@ -54,7 +55,7 @@ jobs:
           import re
           p=Path('oracle-amour-data.js')
           s=p.read_text(encoding='utf-8')
-          s2=re.sub(r'(cards/amour/\d{3}\.webp)\?v=[^\"\']+', r'\1?v=20261006-cartouches-compact-r5', s)
+          s2=re.sub(r'(cards/amour/\d{3}\.webp)\?v=[^\"\']+', r'\1?v=20261006-cartouches-compact-r6', s)
           if s2!=s:
               p.write_text(s2, encoding='utf-8')
               print('Cache-buster mis à jour')
@@ -105,12 +106,11 @@ jobs:
       - name: Joindre le contrôle visuel
         uses: actions/upload-artifact@v4
         with:
-          name: oracle-amour-cartouches-controle-compact-r5
+          name: oracle-amour-cartouches-controle-compact-r6
           path: /tmp/oracle-amour-cartouches-check
           if-no-files-found: error
 
       - name: Publier les cartes harmonisées
-        if: github.ref == 'refs/heads/main'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -118,7 +118,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "Aucune modification à publier."
           else
-            git commit -m "Uniformiser cartouches et typographie de tout l’Oracle Amour"
+            git commit -m "Réduire les cartouches haut et bas des 80 cartes de l’Oracle Amour"
             git pull --rebase origin "${GITHUB_REF_NAME}"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
