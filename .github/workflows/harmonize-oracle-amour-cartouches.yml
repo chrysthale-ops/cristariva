@@ -30,8 +30,11 @@ jobs:
 
       - name: Installer les dépendances et la police Cinzel
         run: |
-          sudo apt-get update
-          sudo apt-get install -y fonts-cinzel
+          sudo mkdir -p /usr/local/share/fonts
+          sudo curl -L --fail --silent --show-error \
+            'https://raw.githubusercontent.com/google/fonts/main/ofl/cinzel/Cinzel%5Bwght%5D.ttf' \
+            -o /usr/local/share/fonts/Cinzel-Regular.ttf
+          sudo fc-cache -f
           python -m pip install --disable-pip-version-check pillow numpy opencv-python-headless
 
       - name: Appliquer le modèle validé aux 80 cartes
@@ -87,7 +90,6 @@ jobs:
               last=sheet_start+len(subset)
               canvas.save(out/f'controle-{first:03d}-{last:03d}.png')
 
-          # Copie des cartes 1 à 6 pour contrôle détaillé du cartouche maître.
           for p in cards[:6]:
               (out/p.name).write_bytes(p.read_bytes())
           PY
