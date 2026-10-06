@@ -44,7 +44,7 @@ jobs:
           sudo fc-cache -f
           python -m pip install --disable-pip-version-check pillow numpy
 
-      - name: Appliquer la correction r11 aux 80 cartes
+      - name: Appliquer la correction r12 aux 80 cartes
         run: python tools/harmonize_oracle_amour_cartouches.py
 
       - name: Mettre à jour le cache-buster des cartes
@@ -54,7 +54,7 @@ jobs:
           import re
           p=Path('oracle-amour-data.js')
           s=p.read_text(encoding='utf-8')
-          s2=re.sub(r'(cards/amour/\d{3}\.webp)\?v=[^\"\']+', r'\1?v=20261006-modele-valide-r11', s)
+          s2=re.sub(r'(cards/amour/\d{3}\.webp)\?v=[^\"\']+', r'\1?v=20261006-modele-valide-r12', s)
           if s2!=s:
               p.write_text(s2, encoding='utf-8')
               print('Cache-buster mis à jour')
@@ -71,7 +71,7 @@ jobs:
               raise SystemExit('Position du cartouche haut inattendue')
           if 'TOP_INNER = (204, 7, 308, 48)' not in text:
               raise SystemExit('Position interne du cartouche haut inattendue')
-          print('Cartouche haut r11 entièrement contenu dans le canevas')
+          print('Cartouche haut r12 entièrement contenu dans le canevas')
           PY
 
       - name: Générer le contrôle visuel global
@@ -117,7 +117,7 @@ jobs:
       - name: Joindre le contrôle visuel
         uses: actions/upload-artifact@v4
         with:
-          name: oracle-amour-cartouches-controle-modele-valide-r11
+          name: oracle-amour-cartouches-controle-modele-valide-r12
           path: /tmp/oracle-amour-cartouches-check
           if-no-files-found: error
 
@@ -129,7 +129,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "Aucune modification à publier."
           else
-            git commit -m "Corriger débordement haut et lignes blanches Oracle Amour"
+            git commit -m "Corriger définitivement cartouches haut et coutures Oracle Amour"
             git pull --rebase origin "${GITHUB_REF_NAME}"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
