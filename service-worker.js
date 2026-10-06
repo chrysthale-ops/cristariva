@@ -1,10 +1,11 @@
-/* CRISTARIVA — service worker v43 — descriptifs des jeux sous le sélecteur d’oracle. */
-const CACHE_NAME='cristariva-v114-20261006-oracle-description-r10';
-const APP_VERSION='2026.10.06-oracle-description-r10';
+/* CRISTARIVA — service worker v44 — chargement forcé du descriptif des jeux. */
+const CACHE_NAME='cristariva-v115-20261006-oracle-description-r11';
+const APP_VERSION='2026.10.06-oracle-description-r11';
+const IMMERSIVE_URL='./immersive-reading-ui.js?v=20261006-oracle-description-r11';
 const SHELL=[
   './',
   './index.html',
-  './immersive-reading-ui.js?v=20261006-oracle-description-r10',
+  IMMERSIVE_URL,
   './story-quality.js?v=3-card-name-context',
   './groq-hybrid-story.js?v=5-external-diagnostics',
   './manifest.webmanifest',
@@ -58,7 +59,11 @@ self.addEventListener('activate',event=>{
     for(const client of clients){
       try{
         client.postMessage({type:'CRISTARIVA_UPDATED',version:APP_VERSION});
-        if(client.url)await client.navigate(client.url);
+        if(client.url){
+          const target=new URL(client.url);
+          target.searchParams.set('crv',APP_VERSION);
+          await client.navigate(target.href);
+        }
       }catch(e){}
     }
   })());
@@ -97,6 +102,12 @@ self.addEventListener('fetch',event=>{
 
   if(request.mode==='navigate'){
     event.respondWith(networkFirst(request));
+    return;
+  }
+
+  if(url.pathname.endsWith('/immersive-reading-ui.js')){
+    const forced=new Request(new URL(IMMERSIVE_URL,self.location.href),{cache:'no-store',credentials:'same-origin'});
+    event.respondWith(networkFirst(forced));
     return;
   }
 
