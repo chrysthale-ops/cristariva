@@ -21,24 +21,30 @@ GOLD_LIGHT = (211, 190, 132)
 NAVY = (25, 48, 72)
 NUMBER = (126, 104, 60)
 
-# Médaillon supérieur du modèle validé.
-TOP_OUTER = (184, -34, 328, 66)
-TOP_INNER = (191, -27, 321, 59)
-TOP_NUMBER_CENTER = (256, 27)
+# Médaillon supérieur du modèle validé : centré, ivoire, double filet or et
+# légèrement coupé par le bord supérieur. La surface opaque recouvre les anciens
+# médaillons variables sans les prendre comme référence.
+TOP_OUTER = (154, -46, 358, 86)
+TOP_INNER = (164, -36, 348, 76)
+TOP_NUMBER_CENTER = (256, 29)
 NUMBER_FONT_SIZE = 31
 
-# Cartouche inférieur du modèle externe. Sa hauteur couvre aussi les anciennes
-# plaques les plus basses du jeu, afin qu'aucun ancien titre/filet ne dépasse.
-# La position, la double bordure or, le centrage et la typographie restent communs.
-BOTTOM_OUTER = (58, 635, 454, 746)
-BOTTOM_INNER = (66, 643, 446, 738)
-BOTTOM_RADIUS = 31
-BOTTOM_INNER_RADIUS = 27
-TITLE_CENTER = (256, 690)
-TITLE_MAX_WIDTH = 336
-TITLE_FONT_SIZE = 25
-TITLE_MIN_SIZE = 19
-TITLE_TRACKING = 1.05
+# Cartouche inférieur du modèle validé : plaque ivoire allongée, pointes latérales,
+# double filet or et titre centré. Les dimensions opaques masquent entièrement les
+# anciens cartouches présents dans certaines illustrations source.
+BOTTOM_OUTER = [
+    (24, 698), (45, 665), (66, 650), (446, 650), (467, 665),
+    (488, 698), (467, 731), (446, 750), (66, 750), (45, 731),
+]
+BOTTOM_INNER = [
+    (38, 698), (55, 674), (73, 660), (439, 660), (457, 674),
+    (474, 698), (457, 722), (439, 740), (73, 740), (55, 722),
+]
+TITLE_CENTER = (256, 699)
+TITLE_MAX_WIDTH = 318
+TITLE_FONT_SIZE = 24
+TITLE_MIN_SIZE = 18
+TITLE_TRACKING = 1.0
 
 
 def find_font(name: str) -> Path:
@@ -97,6 +103,8 @@ def draw_tracking_text(
 
 
 def fitted_title_font(draw: ImageDraw.ImageDraw, text: str) -> ImageFont.FreeTypeFont:
+    # Même famille et même graisse sur tout le jeu. Seuls les titres qui ne
+    # peuvent physiquement tenir sur une ligne descendent de quelques points.
     for size in range(TITLE_FONT_SIZE, TITLE_MIN_SIZE - 1, -1):
         font = ImageFont.truetype(str(FONT_REGULAR), size=size)
         if tracking_width(draw, text, font, TITLE_TRACKING) <= TITLE_MAX_WIDTH:
@@ -121,25 +129,16 @@ def draw_top_medallion(draw: ImageDraw.ImageDraw, idx: int) -> None:
 
 
 def draw_bottom_cartouche(draw: ImageDraw.ImageDraw, title: str) -> None:
-    draw.rounded_rectangle(
-        BOTTOM_OUTER,
-        radius=BOTTOM_RADIUS,
-        fill=IVORY,
-        outline=GOLD,
-        width=3,
-    )
-    draw.rounded_rectangle(
-        BOTTOM_INNER,
-        radius=BOTTOM_INNER_RADIUS,
-        outline=GOLD_LIGHT,
-        width=1,
-    )
+    draw.polygon(BOTTOM_OUTER, fill=IVORY)
+    draw.line(BOTTOM_OUTER + [BOTTOM_OUTER[0]], fill=GOLD, width=3, joint="curve")
+    draw.line(BOTTOM_INNER + [BOTTOM_INNER[0]], fill=GOLD_LIGHT, width=1, joint="curve")
 
     cy = TITLE_CENTER[1]
-    draw.line((75, cy, 104, cy), fill=GOLD, width=1)
-    draw.polygon([(70, cy), (75, cy - 4), (80, cy), (75, cy + 4)], fill=GOLD)
-    draw.line((408, cy, 437, cy), fill=GOLD, width=1)
-    draw.polygon([(432, cy), (437, cy - 4), (442, cy), (437, cy + 4)], fill=GOLD)
+    # Ornements latéraux fixes et symétriques du modèle validé.
+    draw.line((61, cy, 102, cy), fill=GOLD, width=1)
+    draw.polygon([(55, cy), (61, cy - 4), (67, cy), (61, cy + 4)], fill=GOLD)
+    draw.line((410, cy, 451, cy), fill=GOLD, width=1)
+    draw.polygon([(445, cy), (451, cy - 4), (457, cy), (451, cy + 4)], fill=GOLD)
 
     text = title.upper()
     font = fitted_title_font(draw, text)
@@ -151,8 +150,8 @@ def process_one(path: Path, idx: int, title: str) -> None:
     if im.size != CANVAS:
         raise RuntimeError(f"{path.name}: canevas {im.size}, attendu {CANVAS}")
 
-    # Illustration, cadre, palette et luminosité restent inchangés. Les seules
-    # zones recouvertes sont les deux cartouches normalisés.
+    # Illustration, cadre général, palette, luminosité et longueur restent
+    # inchangés. Seules les deux zones de cartouche sont recouvertes.
     draw = ImageDraw.Draw(im)
     draw_top_medallion(draw, idx)
     draw_bottom_cartouche(draw, title)
