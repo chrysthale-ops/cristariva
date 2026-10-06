@@ -1,7 +1,8 @@
-/* CRISTARIVA — service worker v44 — chargement forcé du descriptif des jeux. */
-const CACHE_NAME='cristariva-v115-20261006-oracle-description-r11';
-const APP_VERSION='2026.10.06-oracle-description-r11';
+/* CRISTARIVA — service worker v45 — cartouche compact des cartes renversées. */
+const CACHE_NAME='cristariva-v116-20261006-reversal-cartouche-r2';
+const APP_VERSION='2026.10.06-reversal-cartouche-r2';
 const IMMERSIVE_URL='./immersive-reading-ui.js?v=20261006-oracle-description-r11';
+const TAROT_INTEGRATION_URL='./tarot-divinatoire-integration-v78.js?v=20261006-reversal-cartouche-r2';
 const SHELL=[
   './',
   './index.html',
@@ -26,7 +27,7 @@ const SHELL=[
   './tarot-divinatoire-data.js?v=20260924-tarot78-base-r9',
   './tarot-divinatoire-integration.js?v=20260924-tarot78-r4-compat',
   './tarot-title-image-hotfix.js?v=20260928-tarot78-png-r1',
-  './tarot-divinatoire-integration-v78.js?v=20260928-tarot78-png-r1-reversals-r1',
+  TAROT_INTEGRATION_URL,
   './tarot-minor-sprite-loader.js?v=20260926-minor-hd-r1',
   './tarot-minors-data-batons.js?v=20260924-tarot78-r9',
   './tarot-minors-data-coupes.js?v=20260924-tarot78-r9',
@@ -107,6 +108,12 @@ self.addEventListener('fetch',event=>{
 
   if(url.pathname.endsWith('/immersive-reading-ui.js')){
     const forced=new Request(new URL(IMMERSIVE_URL,self.location.href),{cache:'no-store',credentials:'same-origin'});
+    event.respondWith(networkFirst(forced));
+    return;
+  }
+
+  if(url.pathname.endsWith('/tarot-divinatoire-integration-v78.js')){
+    const forced=new Request(new URL(TAROT_INTEGRATION_URL,self.location.href),{cache:'no-store',credentials:'same-origin'});
     event.respondWith(networkFirst(forced));
     return;
   }
