@@ -1,8 +1,9 @@
-/* CRISTARIVA — service worker v50 — retrait du libellé Jeu actif. */
-const CACHE_NAME='cristariva-v121-20261006-remove-active-label-r16';
-const APP_VERSION='2026.10.06-remove-active-label-r16';
+/* CRISTARIVA — service worker v51 — position stable du cartouche cartes renversées. */
+const CACHE_NAME='cristariva-v122-20261006-reversal-inline-r3';
+const APP_VERSION='2026.10.06-reversal-inline-r3';
 const IMMERSIVE_URL='./immersive-reading-ui.js?v=20261006-remove-active-label-r16';
 const TAROT_INTEGRATION_URL='./tarot-divinatoire-integration-v78.js?v=20261006-reversal-cartouche-r2';
+const TAROT_HOTFIX_URL='./tarot-title-image-hotfix.js?v=20261006-reversal-inline-r3';
 const SHELL=[
   './',
   './index.html',
@@ -26,7 +27,7 @@ const SHELL=[
   './oracle-amour-compat.js?v=20260923-love-story6',
   './tarot-divinatoire-data.js?v=20260924-tarot78-base-r9',
   './tarot-divinatoire-integration.js?v=20260924-tarot78-r4-compat',
-  './tarot-title-image-hotfix.js?v=20260928-tarot78-png-r1',
+  TAROT_HOTFIX_URL,
   TAROT_INTEGRATION_URL,
   './tarot-minor-sprite-loader.js?v=20260926-minor-hd-r1',
   './tarot-minors-data-batons.js?v=20260924-tarot78-r9',
@@ -108,6 +109,12 @@ self.addEventListener('fetch',event=>{
 
   if(url.pathname.endsWith('/immersive-reading-ui.js')){
     const forced=new Request(new URL(IMMERSIVE_URL,self.location.href),{cache:'no-store',credentials:'same-origin'});
+    event.respondWith(networkFirst(forced));
+    return;
+  }
+
+  if(url.pathname.endsWith('/tarot-title-image-hotfix.js')){
+    const forced=new Request(new URL(TAROT_HOTFIX_URL,self.location.href),{cache:'no-store',credentials:'same-origin'});
     event.respondWith(networkFirst(forced));
     return;
   }
