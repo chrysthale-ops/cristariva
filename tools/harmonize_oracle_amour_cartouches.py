@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import json
 import io
+import json
 import re
 from pathlib import Path
 
@@ -22,29 +22,31 @@ GOLD_LIGHT = (211, 190, 132)
 NAVY = (25, 48, 72)
 NUMBER = (126, 104, 60)
 
-# Médaillon supérieur du modèle validé : centré, ivoire, double filet or et
-# légèrement coupé par le bord supérieur. Hauteur visible : 62 px au lieu de 86.
-TOP_OUTER = (179, -38, 333, 62)
-TOP_INNER = (186, -31, 326, 55)
+# Modèle validé : le médaillon supérieur est une plaque rectangulaire à angles
+# fortement arrondis, partiellement coupée par le bord supérieur. Il ne s'agit
+# PAS d'une ellipse. Les dimensions ci-dessous reproduisent la proportion du
+# modèle utilisateur (carte 48 « Interdit »).
+TOP_OUTER = (188, -24, 324, 52)
+TOP_INNER = (195, -18, 317, 46)
+TOP_RADIUS = 24
+TOP_INNER_RADIUS = 19
 TOP_NUMBER_CENTER = (256, 24)
-NUMBER_FONT_SIZE = 27
+NUMBER_FONT_SIZE = 25
 
-# Cartouche inférieur du modèle validé : plaque ivoire allongée, pointes latérales,
-# double filet or et titre centré. Hauteur : 75 px au lieu de 100.
-# Les anciennes bordures qui dépassaient sur 31–40 sont restaurées séparément.
-BOTTOM_OUTER = [
-    (30, 691), (48, 668), (66, 654), (446, 654), (464, 668),
-    (482, 691), (464, 715), (446, 729), (66, 729), (48, 715),
-]
-BOTTOM_INNER = [
-    (40, 691), (57, 674), (74, 661), (438, 661), (455, 674),
-    (472, 691), (455, 710), (438, 722), (74, 722), (57, 710),
-]
-TITLE_CENTER = (256, 692)
-TITLE_MAX_WIDTH = 318
-TITLE_FONT_SIZE = 23
-TITLE_MIN_SIZE = 18
+# Modèle validé : cartouche inférieur compact, placé plus bas, avec un corps
+# arrondi et de petites pointes latérales. L'ancien polygone anguleux n'est pas
+# conforme au modèle fourni.
+BOTTOM_BODY = (42, 676, 470, 738)
+BOTTOM_INNER = (50, 683, 462, 731)
+BOTTOM_RADIUS = 16
+BOTTOM_INNER_RADIUS = 12
+BOTTOM_LEFT_TIP = (30, 707)
+BOTTOM_RIGHT_TIP = (482, 707)
+TITLE_CENTER = (256, 707)
+TITLE_MAX_WIDTH = 310
+TITLE_FONT_SIZE = 22
 TITLE_TRACKING = 1.0
+TITLE_LINE_GAP = 1
 
 
 def find_font(name: str) -> Path:
@@ -86,7 +88,7 @@ def tracking_width(
 
 def draw_tracking_text(
     draw: ImageDraw.ImageDraw,
-    center: tuple[int, int],
+    center: tuple[float, float],
     text: str,
     font: ImageFont.FreeTypeFont,
     fill: tuple[int, int, int],
@@ -102,19 +104,54 @@ def draw_tracking_text(
         x += draw.textlength(ch, font=font) + tracking
 
 
-def fitted_title_font(draw: ImageDraw.ImageDraw, text: str) -> ImageFont.FreeTypeFont:
-    # Même famille et même graisse sur tout le jeu. Seuls les titres qui ne
-    # peuvent physiquement tenir sur une ligne descendent de quelques points.
-    for size in range(TITLE_FONT_SIZE, TITLE_MIN_SIZE - 1, -1):
-        font = ImageFont.truetype(str(FONT_REGULAR), size=size)
-        if tracking_width(draw, text, font, TITLE_TRACKING) <= TITLE_MAX_WIDTH:
-            return font
-    return ImageFont.truetype(str(FONT_REGULAR), size=TITLE_MIN_SIZE)
+def split_title(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFont) -> list[str]:
+    """Garde une taille et un espacement identiques sur les 80 cartes.
+
+    Les titres qui ne tiennent pas sur une ligne sont répartis sur deux lignes,
+    conformément au gabarit validé, au lieu de réduire la taille de caractères.
+    """
+    if tracking_width(draw, text, font, TITLE_TRACKING) <= TITLE_MAX_WIDTH:
+        return [text]
+
+    words = text.split()
+    if len(words) == 1:
+        raise RuntimeError(
+            f"Titre trop long pour le gabarit à taille constante : {text!r}"
+        )
+
+    candidates: list[tuple[float, str, str]] = []
+    for cut in range(1, len(words)):
+        left = " ".join(words[:cut])
+        right = " ".join(words[cut:])
+        wl = tracking_width(draw, left, font, TITLE_TRACKING)
+        wr = tracking_width(draw, right, font, TITLE_TRACKING)
+        if wl <= TITLE_MAX_WIDTH and wr <= TITLE_MAX_WIDTH:
+            candidates.append((abs(wl - wr), left, right))
+
+    if not candidates:
+        raise RuntimeError(
+            f"Titre impossible à répartir sur deux lignes à taille constante : {text!r}"
+        )
+
+    _, left, right = min(candidates, key=lambda item: item[0])
+    return [left, right]
 
 
 def draw_top_medallion(draw: ImageDraw.ImageDraw, idx: int) -> None:
-    draw.ellipse(TOP_OUTER, fill=IVORY, outline=GOLD, width=3)
-    draw.ellipse(TOP_INNER, outline=GOLD_LIGHT, width=1)
+    draw.rounded_rectangle(
+        TOP_OUTER,
+        radius=TOP_RADIUS,
+        fill=IVORY,
+        outline=GOLD,
+        width=3,
+    )
+    draw.rounded_rectangle(
+        TOP_INNER,
+        radius=TOP_INNER_RADIUS,
+        outline=GOLD_LIGHT,
+        width=1,
+    )
+
     font = ImageFont.truetype(str(FONT_REGULAR), size=NUMBER_FONT_SIZE)
     text = str(idx)
     bbox = draw.textbbox((0, 0), text, font=font)
@@ -129,20 +166,53 @@ def draw_top_medallion(draw: ImageDraw.ImageDraw, idx: int) -> None:
 
 
 def draw_bottom_cartouche(draw: ImageDraw.ImageDraw, title: str) -> None:
-    draw.polygon(BOTTOM_OUTER, fill=IVORY)
-    draw.line(BOTTOM_OUTER + [BOTTOM_OUTER[0]], fill=GOLD, width=3, joint="curve")
-    draw.line(BOTTOM_INNER + [BOTTOM_INNER[0]], fill=GOLD_LIGHT, width=1, joint="curve")
+    # Corps arrondi.
+    draw.rounded_rectangle(
+        BOTTOM_BODY,
+        radius=BOTTOM_RADIUS,
+        fill=IVORY,
+        outline=GOLD,
+        width=3,
+    )
+
+    # Petites pointes latérales du modèle, sans effet d'hexagone anguleux.
+    lx, ly = BOTTOM_LEFT_TIP
+    rx, ry = BOTTOM_RIGHT_TIP
+    draw.polygon([(lx, ly), (BOTTOM_BODY[0] + 1, ly - 9), (BOTTOM_BODY[0] + 1, ly + 9)], fill=IVORY)
+    draw.line([(lx, ly), (BOTTOM_BODY[0] + 1, ly - 9)], fill=GOLD, width=2)
+    draw.line([(lx, ly), (BOTTOM_BODY[0] + 1, ly + 9)], fill=GOLD, width=2)
+    draw.polygon([(rx, ry), (BOTTOM_BODY[2] - 1, ry - 9), (BOTTOM_BODY[2] - 1, ry + 9)], fill=IVORY)
+    draw.line([(rx, ry), (BOTTOM_BODY[2] - 1, ry - 9)], fill=GOLD, width=2)
+    draw.line([(rx, ry), (BOTTOM_BODY[2] - 1, ry + 9)], fill=GOLD, width=2)
+
+    draw.rounded_rectangle(
+        BOTTOM_INNER,
+        radius=BOTTOM_INNER_RADIUS,
+        outline=GOLD_LIGHT,
+        width=1,
+    )
 
     cy = TITLE_CENTER[1]
     # Ornements latéraux fixes et symétriques du modèle validé.
-    draw.line((61, cy, 102, cy), fill=GOLD, width=1)
-    draw.polygon([(55, cy), (61, cy - 4), (67, cy), (61, cy + 4)], fill=GOLD)
-    draw.line((410, cy, 451, cy), fill=GOLD, width=1)
-    draw.polygon([(445, cy), (451, cy - 4), (457, cy), (451, cy + 4)], fill=GOLD)
+    draw.line((59, cy, 101, cy), fill=GOLD, width=1)
+    draw.polygon([(53, cy), (59, cy - 3), (65, cy), (59, cy + 3)], fill=GOLD)
+    draw.line((411, cy, 453, cy), fill=GOLD, width=1)
+    draw.polygon([(447, cy), (453, cy - 3), (459, cy), (453, cy + 3)], fill=GOLD)
 
     text = title.upper()
-    font = fitted_title_font(draw, text)
-    draw_tracking_text(draw, TITLE_CENTER, text, font, NAVY, TITLE_TRACKING)
+    font = ImageFont.truetype(str(FONT_REGULAR), size=TITLE_FONT_SIZE)
+    lines = split_title(draw, text, font)
+    if len(lines) == 1:
+        draw_tracking_text(draw, TITLE_CENTER, lines[0], font, NAVY, TITLE_TRACKING)
+        return
+
+    bbox = draw.textbbox((0, 0), "Ag", font=font)
+    line_h = bbox[3] - bbox[1]
+    total_h = line_h * 2 + TITLE_LINE_GAP
+    first_y = TITLE_CENTER[1] - total_h / 2 + line_h / 2
+    second_y = first_y + line_h + TITLE_LINE_GAP
+    draw_tracking_text(draw, (TITLE_CENTER[0], first_y), lines[0], font, NAVY, TITLE_TRACKING)
+    draw_tracking_text(draw, (TITLE_CENTER[0], second_y), lines[1], font, NAVY, TITLE_TRACKING)
 
 
 def process_one(path: Path, idx: int, title: str) -> None:
@@ -151,9 +221,8 @@ def process_one(path: Path, idx: int, title: str) -> None:
         raise RuntimeError(f"{path.name}: canevas {im.size}, attendu {CANVAS}")
 
     # Illustration, cadre général, palette, luminosité et longueur restent
-    # inchangés. Seules les deux zones de cartouche sont recouvertes.
-    # Les retouches ImageGen sont limitées par un masque aux anciennes plaques.
-    # Aucun pixel du reste de l'illustration ne provient des images générées.
+    # inchangés. Seules les zones de cartouche sont recouvertes.
+    # Les retouches ImageGen existantes sont limitées aux anciennes plaques 31–40.
     patch_path = ROOT / "assets" / "amour-cartouche-restoration" / f"{idx:03d}.webp"
     if 31 <= idx <= 40:
         if not patch_path.exists():
@@ -163,9 +232,11 @@ def process_one(path: Path, idx: int, title: str) -> None:
         if patch.size != CANVAS:
             raise RuntimeError(f"Dimensions incorrectes : {patch_path}")
         im.paste(patch, (0, 0), patch)
+
     draw = ImageDraw.Draw(im)
     draw_top_medallion(draw, idx)
     draw_bottom_cartouche(draw, title)
+
     # Encoder et vérifier avant le remplacement, sans recompression avec pertes.
     encoded = io.BytesIO()
     im.save(encoded, "WEBP", lossless=True, method=6)
@@ -191,7 +262,7 @@ def main() -> None:
     if sizes != {CANVAS}:
         raise RuntimeError(f"Canevas finaux incohérents: {sizes}")
 
-    print("80/80 cartes harmonisées sur le gabarit externe validé.")
+    print("80/80 cartes harmonisées sur le modèle externe validé.")
 
 
 if __name__ == "__main__":
