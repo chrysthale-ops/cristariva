@@ -2,7 +2,7 @@
 (function(){
   'use strict';
 
-  const VERSION='20261006-reading-entry-position-r6';
+  const VERSION='20261006-reading-panel-height-r7';
 
   function enhance(){
     const question=document.getElementById('question');
@@ -82,8 +82,8 @@
         position:relative!important;
         isolation:isolate;
         overflow:hidden;
-        padding-top:clamp(20px,2vw,28px)!important;
-        padding-bottom:clamp(20px,2vw,28px)!important;
+        padding-top:clamp(24px,2.2vw,32px)!important;
+        padding-bottom:clamp(24px,2.2vw,32px)!important;
         color:var(--cr-ivory)!important;
         background:
           linear-gradient(180deg,rgba(5,23,45,.48),rgba(5,24,48,.72)),
@@ -246,8 +246,8 @@
           line-height:1.2!important;
         }
         .cr-reading-immersive{
-          padding-top:18px!important;
-          padding-bottom:18px!important;
+          padding-top:20px!important;
+          padding-bottom:20px!important;
           border-radius:22px!important;
           background-position:58% center!important;
         }
