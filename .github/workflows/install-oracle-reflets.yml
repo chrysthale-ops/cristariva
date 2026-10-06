@@ -1,0 +1,78 @@
+name: Install Oracle Reflets du Lac
+on:
+  push:
+    branches: [integrate-reflets-du-lac]
+    paths: ['.cristariva-assets/reflets-ready.txt']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - name: Rebuild Reflets sprite and card wrappers
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import base64
+          parts=sorted(Path('.cristariva-assets').glob('reflets-sprite-part*.b64'))
+          if not parts: raise SystemExit('Fragments Reflets introuvables')
+          raw=base64.b64decode(''.join(p.read_text().strip() for p in parts))
+          out=Path('cards/reflets'); out.mkdir(parents=True,exist_ok=True)
+          (out/'reflets-sprite.webp').write_bytes(raw)
+          w,h,cols=360,509,5
+          for i in range(1,51):
+              idx=i-1; col=idx%cols; row=idx//cols
+              x=-col*w; y=-row*h
+              svg=f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {h}" width="{w}" height="{h}"><image href="reflets-sprite.webp" x="{x}" y="{y}" width="{w*cols}" height="{h*10}"/></svg>'''
+              (out/f'{i:03d}.svg').write_text(svg,encoding='utf-8')
+          print('Sprite:',len(raw),'octets; 50 cartes SVG générées')
+          PY
+      - name: Patch site for the new oracle
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('index.html'); s=p.read_text(encoding='utf-8')
+          s=s.replace('<option value="tarot">Tarot CRISTARIVA</option></select></div>', '<option value="tarot">Tarot CRISTARIVA</option><option value="reflets">Oracle CRISTARIVA des Reflets du Lac</option></select></div>',1)
+          s=s.replace('<option value="tarot">Tarot CRISTARIVA</option></select>\n<label class="sr-only" data-i18n="s17"', '<option value="tarot">Tarot CRISTARIVA</option><option value="reflets">Oracle CRISTARIVA des Reflets du Lac</option></select>\n<label class="sr-only" data-i18n="s17"',1)
+          marker='<script src="./immersive-reading-ui.js?v=20261005-r2"></script>'
+          if 'oracle-reflets-data.js' not in s:
+              s=s.replace(marker,marker+'<script src="./oracle-reflets-data.js?v=20261006-r1"></script><script src="./oracle-reflets-integration.js?v=20261006-r1"></script>')
+          s=s.replace("{id:'tarot',nameFr:'Tarot CRISTARIVA',nameEn:'CRISTARIVA Tarot',count:78}", "{id:'tarot',nameFr:'Tarot CRISTARIVA',nameEn:'CRISTARIVA Tarot',count:78},\n{id:'reflets',nameFr:'Oracle CRISTARIVA des Reflets du Lac',nameEn:'CRISTARIVA Oracle of Lake Reflections',count:50}")
+          s=s.replace("for(const id of ['oracle-amour-catalog','tarot-divinatoire-catalog'])", "for(const id of ['oracle-amour-catalog','tarot-divinatoire-catalog','oracle-reflets-catalog'])")
+          s=s.replace('if(found===2)observer.disconnect();','if(found===3)observer.disconnect();')
+          s=s.replace('<div class="stat"><strong data-game-count="tarot">78</strong><span data-game-name="tarot">Tarot CRISTARIVA</span></div></section>', '<div class="stat"><strong data-game-count="tarot">78</strong><span data-game-name="tarot">Tarot CRISTARIVA</span></div><div class="stat"><strong data-game-count="reflets">50</strong><span data-game-name="reflets">Oracle CRISTARIVA des Reflets du Lac</span></div></section>')
+          s=s.replace('2 oracles et 1 tarot divinatoire','3 oracles et 1 tarot divinatoire')
+          s=re.sub(r"const CRISTARIVA_PWA_VERSION='[^']+';","const CRISTARIVA_PWA_VERSION='2026.10.06-reflets-r1';",s,count=1)
+          s=re.sub(r"service-worker\.js\?v=[^'\"]+","service-worker.js?v=20261006-reflets-r1",s,count=1)
+          p.write_text(s,encoding='utf-8')
+          p=Path('service-worker.js'); s=p.read_text(encoding='utf-8')
+          s=re.sub(r"const CACHE_NAME='[^']+';","const CACHE_NAME='cristariva-v123-20261006-reflets-r1';",s,count=1)
+          s=re.sub(r"const APP_VERSION='[^']+';","const APP_VERSION='2026.10.06-reflets-r1';",s,count=1)
+          marker="  './relation-astrology.js?v=20261002-cross-analysis-restore-r1'"
+          if './oracle-reflets-data.js' not in s:
+              s=s.replace(marker,marker+",\n  './oracle-reflets-data.js?v=20261006-r1',\n  './oracle-reflets-integration.js?v=20261006-r1'")
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Validate
+        run: |
+          test -f cards/reflets/reflets-sprite.webp
+          test "$(find cards/reflets -maxdepth 1 -name '*.svg' | wc -l)" -eq 50
+          node --check oracle-reflets-data.js
+          node --check oracle-reflets-integration.js
+          grep -q 'value="reflets"' index.html
+          grep -q 'oracle-reflets-integration.js' index.html
+          grep -q 'data-game-count="reflets"' index.html
+          grep -q 'cristariva-v123-20261006-reflets-r1' service-worker.js
+      - name: Clean transfer fragments
+        run: rm -f .cristariva-assets/reflets-sprite-part*.b64 .cristariva-assets/reflets-ready.txt
+      - name: Commit installed oracle
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Integrate Oracle CRISTARIVA des Reflets du Lac"
+          git push origin HEAD:integrate-reflets-du-lac
