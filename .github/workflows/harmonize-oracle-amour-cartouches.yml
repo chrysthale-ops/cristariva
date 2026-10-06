@@ -1,0 +1,113 @@
+name: Harmoniser cartouches Oracle Amour
+
+on:
+  push:
+    paths:
+      - 'tools/harmonize_oracle_amour_cartouches.py'
+      - '.github/workflows/harmonize-oracle-amour-cartouches.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: harmonize-oracle-amour-cartouches-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  harmonize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Préparer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Installer les dépendances et la police Cinzel
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fonts-cinzel
+          python -m pip install --disable-pip-version-check pillow numpy opencv-python-headless
+
+      - name: Appliquer le modèle validé aux 80 cartes
+        run: python tools/harmonize_oracle_amour_cartouches.py
+
+      - name: Mettre à jour le cache-buster des cartes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('oracle-amour-data.js')
+          s=p.read_text(encoding='utf-8')
+          s2=re.sub(r'(cards/amour/\d{3}\.webp)\?v=[^\"\']+', r'\1?v=20261006-cartouches-master-r1', s)
+          if s2!=s:
+              p.write_text(s2, encoding='utf-8')
+              print('Cache-buster mis à jour')
+          else:
+              print('Cache-buster déjà à jour')
+          PY
+
+      - name: Générer le contrôle visuel global
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageDraw
+
+          cards=[Path('cards/amour')/f'{i:03d}.webp' for i in range(1,81)]
+          out=Path('/tmp/oracle-amour-cartouches-check')
+          out.mkdir(parents=True,exist_ok=True)
+
+          per_sheet=20
+          cols=5
+          thumb_w,thumb_h=154,231
+          margin=16
+          label_h=24
+          for sheet_start in range(0,80,per_sheet):
+              subset=cards[sheet_start:sheet_start+per_sheet]
+              rows=(len(subset)+cols-1)//cols
+              canvas=Image.new('RGB',(
+                  margin+cols*(thumb_w+margin),
+                  margin+rows*(thumb_h+label_h+margin)
+              ),'white')
+              draw=ImageDraw.Draw(canvas)
+              for j,p in enumerate(subset):
+                  im=Image.open(p).convert('RGB').resize((thumb_w,thumb_h),Image.Resampling.LANCZOS)
+                  c=j%cols
+                  r=j//cols
+                  x=margin+c*(thumb_w+margin)
+                  y=margin+r*(thumb_h+label_h+margin)
+                  draw.text((x+thumb_w/2,y+7),p.stem,anchor='ma',fill='black')
+                  canvas.paste(im,(x,y+label_h))
+              first=sheet_start+1
+              last=sheet_start+len(subset)
+              canvas.save(out/f'controle-{first:03d}-{last:03d}.png')
+
+          # Copie des cartes 1 à 6 pour contrôle détaillé du cartouche maître.
+          for p in cards[:6]:
+              (out/p.name).write_bytes(p.read_bytes())
+          PY
+
+      - name: Joindre le contrôle visuel
+        uses: actions/upload-artifact@v4
+        with:
+          name: oracle-amour-cartouches-controle-global
+          path: /tmp/oracle-amour-cartouches-check
+          if-no-files-found: error
+
+      - name: Publier les cartes harmonisées
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add cards/amour/*.webp oracle-amour-data.js
+          if git diff --cached --quiet; then
+            echo "Aucune modification à publier."
+          else
+            git commit -m "Uniformiser cartouches et typographie de tout l’Oracle Amour"
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
