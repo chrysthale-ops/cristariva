@@ -1,10 +1,10 @@
-/* CRISTARIVA — service worker v41 — positionnement des accès au tirage après les trois cartouches. */
-const CACHE_NAME='cristariva-v112-20261006-reading-entry-after-stats-r8';
-const APP_VERSION='2026.10.06-reading-entry-after-stats-r8';
+/* CRISTARIVA — service worker v42 — positionnement complet du cartouche de lecture. */
+const CACHE_NAME='cristariva-v113-20261006-reading-entry-approche-top-r9';
+const APP_VERSION='2026.10.06-reading-entry-approche-top-r9';
 const SHELL=[
   './',
   './index.html',
-  './immersive-reading-ui.js?v=20261006-reading-entry-after-stats-r8',
+  './immersive-reading-ui.js?v=20261006-reading-entry-approche-top-r9',
   './story-quality.js?v=3-card-name-context',
   './groq-hybrid-story.js?v=5-external-diagnostics',
   './manifest.webmanifest',
