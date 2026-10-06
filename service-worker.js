@@ -1,7 +1,7 @@
-/* CRISTARIVA — service worker v47 — format du tirage légèrement remonté. */
-const CACHE_NAME='cristariva-v118-20261006-format-up-r13';
-const APP_VERSION='2026.10.06-format-up-r13';
-const IMMERSIVE_URL='./immersive-reading-ui.js?v=20261006-format-up-r13';
+/* CRISTARIVA — service worker v48 — jeu actif en bas du tirage. */
+const CACHE_NAME='cristariva-v119-20261006-active-game-footer-r14';
+const APP_VERSION='2026.10.06-active-game-footer-r14';
+const IMMERSIVE_URL='./immersive-reading-ui.js?v=20261006-active-game-footer-r14';
 const TAROT_INTEGRATION_URL='./tarot-divinatoire-integration-v78.js?v=20261006-reversal-cartouche-r2';
 const SHELL=[
   './',
