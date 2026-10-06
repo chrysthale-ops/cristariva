@@ -2,7 +2,7 @@
 (function(){
   'use strict';
 
-  const VERSION='20261006-format-up-r13';
+  const VERSION='20261006-active-game-footer-r14';
 
   const ORACLE_DESCRIPTIONS={
     fr:{
@@ -39,7 +39,13 @@
       context.id='oracleContext';
       context.className='cr-oracle-description';
       context.setAttribute('aria-live','polite');
-      parent.appendChild(context);
+    }
+
+    const actionRow=document.getElementById('drawBtn')?.closest('.actions');
+    if(actionRow){
+      const placeholder=[...actionRow.children].find(el=>el.tagName==='SPAN'&&!el.textContent.trim());
+      if(placeholder)actionRow.replaceChild(context,placeholder);
+      else if(context.parentElement!==actionRow)actionRow.insertBefore(context,actionRow.firstChild);
     }else if(context.parentElement!==parent){
       parent.appendChild(context);
     }
@@ -53,7 +59,7 @@
     };
     context.hidden=false;
     context.removeAttribute('aria-hidden');
-    context.innerHTML=`<b>${copy.title}</b><br>${copy.text}`;
+    context.innerHTML=`<b>${copy.title}</b><span> · ${copy.text}</span>`;
     hideLegacyTarotContext();
   }
 
@@ -118,6 +124,8 @@
     [...panel.querySelectorAll('button,a')].forEach(el=>{
       if(/m[ée]langer|tirer|shuffle|draw/i.test(el.textContent||''))el.classList.add('cr-reading-immersive-cta');
     });
+
+    scheduleOracleDescriptionRefresh();
 
     if(document.getElementById('cr-reading-immersive-styles'))return;
     const style=document.createElement('style');
@@ -225,17 +233,28 @@
         outline-offset:1px;
       }
       #tarotContext{display:none!important;}
+      .cr-reading-immersive .actions{
+        align-items:center!important;
+        margin-top:14px!important;
+      }
       .cr-reading-immersive .cr-oracle-description{
         display:block!important;
-        margin:8px 2px 0!important;
-        color:rgba(255,248,232,.96)!important;
-        font-size:clamp(.76rem,1vw,.84rem)!important;
-        line-height:1.35!important;
+        flex:1 1 auto;
+        min-width:0;
+        margin:0!important;
+        color:rgba(255,248,232,.94)!important;
+        font-size:clamp(.72rem,.92vw,.8rem)!important;
+        line-height:1.25!important;
+        white-space:nowrap;
         text-shadow:0 2px 12px rgba(0,10,25,.82);
       }
       .cr-reading-immersive .cr-oracle-description b{
         color:#fff1c9!important;
         font-weight:750!important;
+      }
+      .cr-reading-immersive .cr-oracle-description span{
+        color:rgba(255,248,232,.9)!important;
+        font-weight:500!important;
       }
       .cr-reading-immersive .cr-immersive-steps,
       .cr-reading-immersive .steps{
@@ -294,6 +313,7 @@
         color:inherit!important;
       }
       .cr-reading-immersive .cr-reading-immersive-cta{
+        flex:0 0 auto;
         margin-top:0!important;
         color:#12223b!important;
         background:linear-gradient(135deg,#ffe09a 0%,#e6ad56 58%,#d4933f 100%)!important;
@@ -349,6 +369,17 @@
           margin-bottom:11px!important;
         }
         .cr-reading-immersive .step{flex:0 0 auto}
+        .cr-reading-immersive .actions{
+          align-items:flex-start!important;
+          flex-direction:column!important;
+        }
+        .cr-reading-immersive .cr-oracle-description{
+          width:100%;
+          white-space:normal;
+        }
+        .cr-reading-immersive .cr-reading-immersive-cta{
+          align-self:flex-end;
+        }
       }
       @media (prefers-reduced-motion:reduce){
         .cr-reading-immersive .cr-immersive-spread-choice,
