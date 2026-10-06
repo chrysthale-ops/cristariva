@@ -21,25 +21,24 @@ GOLD_LIGHT = (211, 190, 132)
 NAVY = (25, 48, 72)
 NUMBER = (126, 104, 60)
 
-# Le médaillon du numéro est centré et volontairement légèrement coupé en haut,
-# comme sur le modèle validé. Sa taille couvre les anciens médaillons variables.
+# Médaillon supérieur du modèle validé.
 TOP_OUTER = (184, -34, 328, 66)
 TOP_INNER = (191, -27, 321, 59)
 TOP_NUMBER_CENTER = (256, 27)
 NUMBER_FONT_SIZE = 31
 
-# Cartouche titre : proportions, position et centrage issus du modèle externe.
-# Il est légèrement plus grand que les anciennes plaques afin de les recouvrir
-# entièrement sans effacer ni reconstruire l'illustration.
-BOTTOM_OUTER = (61, 637, 451, 720)
-BOTTOM_INNER = (68, 644, 444, 713)
-BOTTOM_RADIUS = 27
-BOTTOM_INNER_RADIUS = 23
-TITLE_CENTER = (256, 678)
-TITLE_MAX_WIDTH = 306
+# Cartouche inférieur du modèle externe. Sa hauteur couvre aussi les anciennes
+# plaques les plus basses du jeu, afin qu'aucun ancien titre/filet ne dépasse.
+# La position, la double bordure or, le centrage et la typographie restent communs.
+BOTTOM_OUTER = (58, 635, 454, 746)
+BOTTOM_INNER = (66, 643, 446, 738)
+BOTTOM_RADIUS = 31
+BOTTOM_INNER_RADIUS = 27
+TITLE_CENTER = (256, 690)
+TITLE_MAX_WIDTH = 336
 TITLE_FONT_SIZE = 25
-TITLE_MIN_SIZE = 18
-TITLE_TRACKING = 1.15
+TITLE_MIN_SIZE = 19
+TITLE_TRACKING = 1.05
 
 
 def find_font(name: str) -> Path:
@@ -98,9 +97,6 @@ def draw_tracking_text(
 
 
 def fitted_title_font(draw: ImageDraw.ImageDraw, text: str) -> ImageFont.FreeTypeFont:
-    # La taille maître reste identique. Seuls les titres exceptionnellement longs
-    # descendent juste assez pour rester dans le cartouche, sans changer graisse
-    # ni famille typographique.
     for size in range(TITLE_FONT_SIZE, TITLE_MIN_SIZE - 1, -1):
         font = ImageFont.truetype(str(FONT_REGULAR), size=size)
         if tracking_width(draw, text, font, TITLE_TRACKING) <= TITLE_MAX_WIDTH:
@@ -125,7 +121,6 @@ def draw_top_medallion(draw: ImageDraw.ImageDraw, idx: int) -> None:
 
 
 def draw_bottom_cartouche(draw: ImageDraw.ImageDraw, title: str) -> None:
-    # Corps ivoire à double filet or, dimensionné pour masquer toute ancienne plaque.
     draw.rounded_rectangle(
         BOTTOM_OUTER,
         radius=BOTTOM_RADIUS,
@@ -140,12 +135,11 @@ def draw_bottom_cartouche(draw: ImageDraw.ImageDraw, title: str) -> None:
         width=1,
     )
 
-    # Ornements latéraux sobres du modèle validé.
     cy = TITLE_CENTER[1]
-    draw.line((78, cy, 109, cy), fill=GOLD, width=1)
-    draw.polygon([(73, cy), (78, cy - 4), (83, cy), (78, cy + 4)], fill=GOLD)
-    draw.line((403, cy, 434, cy), fill=GOLD, width=1)
-    draw.polygon([(429, cy), (434, cy - 4), (439, cy), (434, cy + 4)], fill=GOLD)
+    draw.line((75, cy, 104, cy), fill=GOLD, width=1)
+    draw.polygon([(70, cy), (75, cy - 4), (80, cy), (75, cy + 4)], fill=GOLD)
+    draw.line((408, cy, 437, cy), fill=GOLD, width=1)
+    draw.polygon([(432, cy), (437, cy - 4), (442, cy), (437, cy + 4)], fill=GOLD)
 
     text = title.upper()
     font = fitted_title_font(draw, text)
@@ -157,9 +151,8 @@ def process_one(path: Path, idx: int, title: str) -> None:
     if im.size != CANVAS:
         raise RuntimeError(f"{path.name}: canevas {im.size}, attendu {CANVAS}")
 
-    # Pas d'inpainting, pas de recadrage, pas de modification de luminosité :
-    # on conserve intégralement l'illustration puis on recouvre seulement les
-    # zones des cartouches avec le gabarit maître externe.
+    # Illustration, cadre, palette et luminosité restent inchangés. Les seules
+    # zones recouvertes sont les deux cartouches normalisés.
     draw = ImageDraw.Draw(im)
     draw_top_medallion(draw, idx)
     draw_bottom_cartouche(draw, title)
