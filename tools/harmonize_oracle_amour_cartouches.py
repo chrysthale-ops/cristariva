@@ -24,25 +24,25 @@ NUMBER = (126, 104, 60)
 # Médaillon supérieur du modèle validé : centré, ivoire, double filet or et
 # légèrement coupé par le bord supérieur. La surface opaque recouvre les anciens
 # médaillons variables sans les prendre comme référence.
-TOP_OUTER = (154, -46, 358, 86)
-TOP_INNER = (164, -36, 348, 76)
-TOP_NUMBER_CENTER = (256, 29)
-NUMBER_FONT_SIZE = 31
+TOP_OUTER = (179, -38, 333, 62)
+TOP_INNER = (186, -31, 326, 55)
+TOP_NUMBER_CENTER = (256, 24)
+NUMBER_FONT_SIZE = 27
 
 # Cartouche inférieur du modèle validé : plaque ivoire allongée, pointes latérales,
 # double filet or et titre centré. Les dimensions opaques masquent entièrement les
 # anciens cartouches présents dans certaines illustrations source.
 BOTTOM_OUTER = [
-    (24, 698), (45, 665), (66, 650), (446, 650), (467, 665),
-    (488, 698), (467, 731), (446, 750), (66, 750), (45, 731),
+    (30, 691), (48, 668), (66, 654), (446, 654), (464, 668),
+    (482, 691), (464, 715), (446, 729), (66, 729), (48, 715),
 ]
 BOTTOM_INNER = [
-    (38, 698), (55, 674), (73, 660), (439, 660), (457, 674),
-    (474, 698), (457, 722), (439, 740), (73, 740), (55, 722),
+    (40, 691), (57, 674), (74, 661), (438, 661), (455, 674),
+    (472, 691), (455, 710), (438, 722), (74, 722), (57, 710),
 ]
-TITLE_CENTER = (256, 699)
+TITLE_CENTER = (256, 692)
 TITLE_MAX_WIDTH = 318
-TITLE_FONT_SIZE = 24
+TITLE_FONT_SIZE = 23
 TITLE_MIN_SIZE = 18
 TITLE_TRACKING = 1.0
 
@@ -155,7 +155,7 @@ def process_one(path: Path, idx: int, title: str) -> None:
     draw = ImageDraw.Draw(im)
     draw_top_medallion(draw, idx)
     draw_bottom_cartouche(draw, title)
-    im.save(path, "WEBP", quality=96, method=6)
+    im.save(path, "WEBP", lossless=True, method=6)
 
 
 def main() -> None:

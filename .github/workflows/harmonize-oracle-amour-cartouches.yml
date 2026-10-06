@@ -25,7 +25,10 @@ jobs:
 
       - name: Restaurer les illustrations avant les essais de cartouches
         run: |
-          git checkout 5aa2606c104c468a458ad389220377512cb25bfe -- cards/amour oracle-amour-data.js
+          git restore --source=5aa2606c104c468a458ad389220377512cb25bfe --worktree -- cards/amour
+          git restore --source=046980d9717ba06f72da5c323426eac9109adb6c --worktree -- cards/amour/039.webp
+          mkdir -p /tmp/oracle-amour-cartouches-check/sources
+          cp cards/amour/*.webp /tmp/oracle-amour-cartouches-check/sources/
 
       - name: Préparer Python
         uses: actions/setup-python@v5
@@ -51,7 +54,7 @@ jobs:
           import re
           p=Path('oracle-amour-data.js')
           s=p.read_text(encoding='utf-8')
-          s2=re.sub(r'(cards/amour/\d{3}\.webp)\?v=[^\"\']+', r'\1?v=20261006-cartouches-master-r4', s)
+          s2=re.sub(r'(cards/amour/\d{3}\.webp)\?v=[^\"\']+', r'\1?v=20261006-cartouches-compact-r5', s)
           if s2!=s:
               p.write_text(s2, encoding='utf-8')
               print('Cache-buster mis à jour')
@@ -102,11 +105,12 @@ jobs:
       - name: Joindre le contrôle visuel
         uses: actions/upload-artifact@v4
         with:
-          name: oracle-amour-cartouches-controle-global-r4
+          name: oracle-amour-cartouches-controle-compact-r5
           path: /tmp/oracle-amour-cartouches-check
           if-no-files-found: error
 
       - name: Publier les cartes harmonisées
+        if: github.ref == 'refs/heads/main'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
