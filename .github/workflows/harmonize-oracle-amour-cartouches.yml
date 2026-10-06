@@ -27,7 +27,6 @@ jobs:
       - name: Restaurer les illustrations avant les essais de cartouches
         run: |
           git restore --source=5aa2606c104c468a458ad389220377512cb25bfe --worktree -- cards/amour
-          git restore --source=046980d9717ba06f72da5c323426eac9109adb6c --worktree -- cards/amour/039.webp
           mkdir -p /tmp/oracle-amour-cartouches-check/sources
           cp cards/amour/*.webp /tmp/oracle-amour-cartouches-check/sources/
 
