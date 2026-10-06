@@ -1,7 +1,7 @@
-/* CRISTARIVA — service worker v45 — cartouche compact des cartes renversées. */
-const CACHE_NAME='cristariva-v116-20261006-reversal-cartouche-r2';
-const APP_VERSION='2026.10.06-reversal-cartouche-r2';
-const IMMERSIVE_URL='./immersive-reading-ui.js?v=20261006-oracle-description-r11';
+/* CRISTARIVA — service worker v46 — espacement resserré avant le format du tirage. */
+const CACHE_NAME='cristariva-v117-20261006-format-spacing-r12';
+const APP_VERSION='2026.10.06-format-spacing-r12';
+const IMMERSIVE_URL='./immersive-reading-ui.js?v=20261006-format-spacing-r12';
 const TAROT_INTEGRATION_URL='./tarot-divinatoire-integration-v78.js?v=20261006-reversal-cartouche-r2';
 const SHELL=[
   './',
