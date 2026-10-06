@@ -22,7 +22,7 @@ jobs:
           raw=base64.b64decode(''.join(p.read_text().strip() for p in parts))
           out=Path('cards/reflets'); out.mkdir(parents=True,exist_ok=True)
           (out/'reflets-sprite.webp').write_bytes(raw)
-          w,h,cols=360,509,5
+          w,h,cols=240,339,5
           for i in range(1,51):
               idx=i-1; col=idx%cols; row=idx//cols
               x=-col*w; y=-row*h
