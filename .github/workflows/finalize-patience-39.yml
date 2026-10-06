@@ -1,0 +1,115 @@
+name: Finaliser Patience 39
+
+on:
+  push:
+    branches:
+      - fix/patience-39-final-perfect
+
+permissions:
+  contents: write
+
+jobs:
+  build-card:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout complet
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Installer Pillow
+        run: python -m pip install --upgrade pillow
+
+      - name: Reconstruire la carte 39 au gabarit standard
+        shell: bash
+        run: |
+          set -euo pipefail
+          git show 7fbfe69c0495ef6b13ce3981572bc008db896d38:cards/039-patience-base.webp > /tmp/patience-base.webp
+          python <<'PY'
+          from PIL import Image, ImageDraw, ImageFont
+          from pathlib import Path
+
+          W, H = 1024, 1536
+          GOLD = (231, 190, 78, 255)
+          NAVY = (23, 59, 96, 255)
+          CREAM = (255, 248, 232, 255)
+
+          base = Image.open('/tmp/patience-base.webp').convert('RGBA')
+          # Même cadrage visuel retenu auparavant pour Patience.
+          scene = base.resize((1106, 1659), Image.Resampling.LANCZOS)
+          card = Image.new('RGBA', (W, H), (10, 17, 28, 255))
+          card.alpha_composite(scene, (-41, -61))
+
+          # Ombre discrète derrière le titre, sans assombrir l'ensemble de la carte.
+          shade = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+          px = shade.load()
+          y0 = 1260
+          for y in range(y0, H):
+              t = (y - y0) / max(1, H - y0 - 1)
+              alpha = int(8 + 70 * t)
+              for x in range(W):
+                  px[x, y] = (5, 8, 12, alpha)
+          card = Image.alpha_composite(card, shade)
+
+          d = ImageDraw.Draw(card)
+
+          # Cadre harmonisé sur le modèle de la carte 38 : marges régulières et cadre complet.
+          d.rounded_rectangle((31, 35, 992, 1493), radius=24, outline=GOLD, width=3)
+          d.rounded_rectangle((44, 48, 979, 1480), radius=17, outline=GOLD, width=2)
+
+          # Médaillon 39 exactement centré horizontalement.
+          cx, cy, r = W // 2, 54, 46
+          d.ellipse((cx-r, cy-r, cx+r, cy+r), fill=NAVY, outline=GOLD, width=3)
+
+          font_num_candidates = [
+              '/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf',
+              '/usr/share/fonts/truetype/liberation2/LiberationSerif-Regular.ttf',
+          ]
+          font_title_candidates = [
+              '/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf',
+              '/usr/share/fonts/truetype/liberation2/LiberationSerif-Regular.ttf',
+          ]
+          def font_from(candidates, size):
+              for p in candidates:
+                  if Path(p).exists():
+                      return ImageFont.truetype(p, size=size)
+              return ImageFont.load_default()
+
+          fnum = font_from(font_num_candidates, 55)
+          ftitle = font_from(font_title_candidates, 72)
+
+          # Centrage optique du nombre dans le médaillon.
+          bbox = d.textbbox((0, 0), '39', font=fnum)
+          tw, th = bbox[2]-bbox[0], bbox[3]-bbox[1]
+          d.text((cx - tw/2, cy - th/2 - 5), '39', font=fnum, fill=CREAM)
+
+          # Titre propre et centré, sans altérer l'illustration.
+          title = 'Patience'
+          bbox = d.textbbox((0, 0), title, font=ftitle)
+          tw, th = bbox[2]-bbox[0], bbox[3]-bbox[1]
+          tx = (W - tw) / 2
+          ty = 1393
+          # légère ombre pour la lisibilité
+          d.text((tx+2, ty+2), title, font=ftitle, fill=(60, 35, 20, 110))
+          d.text((tx, ty), title, font=ftitle, fill=CREAM)
+
+          out = Path('cards/039-patience-final.webp')
+          card.convert('RGB').save(out, 'WEBP', quality=96, method=6)
+          check = Image.open(out)
+          assert check.size == (1024, 1536), check.size
+          print(f'Carte générée: {out} — {check.size}')
+          PY
+
+      - name: Vérifier que seule Patience et le workflow temporaire changent
+        run: |
+          git status --short
+          test -s cards/039-patience-final.webp
+
+      - name: Livrer la carte corrigée sur la branche
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -f .github/workflows/finalize-patience-39.yml
+          git add cards/039-patience-final.webp .github/workflows/finalize-patience-39.yml
+          git commit -m "Finaliser cadre et centrage de la carte 39 Patience"
+          git push origin HEAD:${GITHUB_REF_NAME}
