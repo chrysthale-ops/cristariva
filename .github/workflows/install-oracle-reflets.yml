@@ -17,12 +17,12 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           import base64
-          parts=sorted(Path('.cristariva-assets').glob('reflets-sprite-part*.b64'))
-          if not parts: raise SystemExit('Fragments Reflets introuvables')
+          parts=sorted(Path('.cristariva-assets').glob('reflets50-part*.b64'))
+          if len(parts)!=6: raise SystemExit(f'6 fragments Reflets attendus, {len(parts)} trouvés')
           raw=base64.b64decode(''.join(p.read_text().strip() for p in parts))
           out=Path('cards/reflets'); out.mkdir(parents=True,exist_ok=True)
           (out/'reflets-sprite.webp').write_bytes(raw)
-          w,h,cols=180,254,5
+          w,h,cols=50,71,5
           for i in range(1,51):
               idx=i-1; col=idx%cols; row=idx//cols
               x=-col*w; y=-row*h
@@ -68,7 +68,7 @@ jobs:
           grep -q 'data-game-count="reflets"' index.html
           grep -q 'cristariva-v123-20261006-reflets-r1' service-worker.js
       - name: Clean transfer fragments
-        run: rm -f .cristariva-assets/reflets-sprite-part*.b64 .cristariva-assets/reflets-ready.txt
+        run: rm -f .cristariva-assets/reflets50-part*.b64 .cristariva-assets/reflets-ready.txt
       - name: Commit installed oracle
         run: |
           git config user.name "github-actions[bot]"
