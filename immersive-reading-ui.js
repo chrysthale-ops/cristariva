@@ -2,7 +2,50 @@
 (function(){
   'use strict';
 
-  const VERSION='20261006-reading-entry-approche-top-r9';
+  const VERSION='20261006-oracle-description-r10';
+
+  const ORACLE_DESCRIPTIONS={
+    fr:{
+      cristariva:{title:'Jeu actif : Oracle CRISTARIVA',text:'130 cartes pour une lecture symbolique, relationnelle, professionnelle ou spirituelle, complétée par les cartes de relation et de datation.'},
+      amour:{title:'Jeu actif : Oracle sentimental CRISTARIVA',text:'80 cartes consacrées aux liens, aux émotions, aux attirances, aux obstacles et aux évolutions sentimentales.'},
+      tarot:{title:'Jeu actif : Tarot divinatoire CRISTARIVA',text:'78 cartes : 22 arcanes majeurs et 56 arcanes mineurs · Bâtons, Coupes, Épées et Deniers.'}
+    },
+    en:{
+      cristariva:{title:'Active deck: CRISTARIVA Oracle',text:'130 cards for symbolic, relationship, professional or spiritual readings, complemented by relationship and timing cards.'},
+      amour:{title:'Active deck: CRISTARIVA Love Oracle',text:'80 cards devoted to bonds, emotions, attraction, obstacles and romantic developments.'},
+      tarot:{title:'Active deck: CRISTARIVA Divinatory Tarot',text:'78 cards: 22 Major Arcana and 56 Minor Arcana · Wands, Cups, Swords and Pentacles.'}
+    }
+  };
+
+  function updateOracleDescription(){
+    const oracle=document.getElementById('oracleChoice');
+    if(!oracle)return;
+    const parent=oracle.parentElement;
+    if(!parent)return;
+
+    let context=document.getElementById('oracleContext');
+    if(!context){
+      context=document.createElement('p');
+      context.id='oracleContext';
+      context.className='cr-oracle-description';
+      context.setAttribute('aria-live','polite');
+      parent.appendChild(context);
+    }else if(context.parentElement!==parent){
+      parent.appendChild(context);
+    }
+
+    const lang=(document.documentElement.lang||'fr').toLowerCase().startsWith('en')?'en':'fr';
+    const selected=oracle.value||'cristariva';
+    const selectedLabel=oracle.selectedOptions?.[0]?.textContent?.trim()||selected;
+    const copy=ORACLE_DESCRIPTIONS[lang][selected]||{
+      title:lang==='en'?`Active deck: ${selectedLabel}`:`Jeu actif : ${selectedLabel}`,
+      text:lang==='en'?'This deck is used for the current reading.':'Ce jeu est utilisé pour le tirage en cours.'
+    };
+    context.innerHTML=`<b>${copy.title}</b><br>${copy.text}`;
+
+    const legacy=document.getElementById('tarotContext');
+    if(legacy){legacy.hidden=true;legacy.setAttribute('aria-hidden','true');}
+  }
 
   function enhance(){
     const question=document.getElementById('question');
@@ -44,6 +87,8 @@
     if(selectParents.length===2&&selectParents[0].parentElement===selectParents[1].parentElement){
       selectParents[0].parentElement.classList.add('cr-immersive-select-grid');
     }
+    updateOracleDescription();
+    oracle?.addEventListener('change',updateOracleDescription);
 
     const spreads=[...panel.querySelectorAll('.choice[data-group="format"]')];
     spreads.forEach(el=>el.classList.add('cr-immersive-spread-choice'));
@@ -155,6 +200,18 @@
         border-color:var(--cr-gold-light)!important;
         outline:3px solid rgba(255,211,129,.22)!important;
         outline-offset:1px;
+      }
+      #tarotContext{display:none!important;}
+      .cr-reading-immersive .cr-oracle-description{
+        margin:8px 2px 0!important;
+        color:rgba(255,248,232,.92)!important;
+        font-size:clamp(.76rem,1vw,.84rem)!important;
+        line-height:1.35!important;
+        text-shadow:0 2px 12px rgba(0,10,25,.82);
+      }
+      .cr-reading-immersive .cr-oracle-description b{
+        color:#fff1c9!important;
+        font-weight:750!important;
       }
       .cr-reading-immersive .cr-immersive-steps,
       .cr-reading-immersive .steps{
@@ -315,8 +372,15 @@
     if(subtitle)subtitle.textContent=(document.documentElement.lang||'').toLowerCase().startsWith('en')
       ? 'Ask your question and let the cards guide you through the Reflections of the Lake.'
       : 'Posez votre question et laissez les cartes vous guider au cœur des Reflets du Lac.';
+    updateOracleDescription();
   }
   new MutationObserver(updateSubtitle).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+
+  const legacyObserver=new MutationObserver(()=>{
+    const legacy=document.getElementById('tarotContext');
+    if(legacy){legacy.hidden=true;legacy.setAttribute('aria-hidden','true');}
+  });
+  legacyObserver.observe(document.documentElement,{childList:true,subtree:true});
 
   installReadingEntryPositioning();
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',enhance,{once:true});
