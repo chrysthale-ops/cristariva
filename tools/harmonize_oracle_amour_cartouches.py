@@ -25,22 +25,22 @@ NUMBER = (126, 104, 60)
 
 # Médaillon supérieur du modèle validé : onglet ivoire étroit, rectangulaire à
 # angles très arrondis, partiellement coupé par le bord supérieur.
-TOP_OUTER = (194, -23, 318, 54)
-TOP_INNER = (200, -17, 312, 47)
-TOP_RADIUS = 22
-TOP_INNER_RADIUS = 17
+TOP_OUTER = (198, -22, 314, 53)
+TOP_INNER = (204, -16, 308, 46)
+TOP_RADIUS = 21
+TOP_INNER_RADIUS = 16
 TOP_NUMBER_CENTER = (256, 25)
 NUMBER_FONT_SIZE = 25
 
 # Cartouche inférieur du modèle validé : plus bas, plus étroit et plus compact
 # que les essais r6/r8, avec corps arrondi et petites pointes latérales.
-BOTTOM_BODY = (62, 688, 450, 741)
-BOTTOM_INNER = (69, 694, 443, 735)
+BOTTOM_BODY = (76, 689, 436, 741)
+BOTTOM_INNER = (83, 695, 429, 735)
 BOTTOM_RADIUS = 14
 BOTTOM_INNER_RADIUS = 10
-BOTTOM_LEFT_TIP = (52, 714)
-BOTTOM_RIGHT_TIP = (460, 714)
-TITLE_CENTER = (256, 714)
+BOTTOM_LEFT_TIP = (66, 715)
+BOTTOM_RIGHT_TIP = (446, 715)
+TITLE_CENTER = (256, 715)
 TITLE_MAX_WIDTH = 276
 TITLE_FONT_SIZE = 22
 TITLE_TRACKING = 1.0
@@ -222,10 +222,10 @@ def draw_bottom_cartouche(draw: ImageDraw.ImageDraw, title: str) -> None:
     )
 
     cy = TITLE_CENTER[1]
-    draw.line((76, cy, 111, cy), fill=GOLD, width=1)
-    draw.polygon([(70, cy), (76, cy - 3), (82, cy), (76, cy + 3)], fill=GOLD)
-    draw.line((401, cy, 436, cy), fill=GOLD, width=1)
-    draw.polygon([(430, cy), (436, cy - 3), (442, cy), (436, cy + 3)], fill=GOLD)
+    draw.line((90, cy, 119, cy), fill=GOLD, width=1)
+    draw.polygon([(84, cy), (90, cy - 3), (96, cy), (90, cy + 3)], fill=GOLD)
+    draw.line((393, cy, 422, cy), fill=GOLD, width=1)
+    draw.polygon([(416, cy), (422, cy - 3), (428, cy), (422, cy + 3)], fill=GOLD)
 
     text = title.upper()
     font = ImageFont.truetype(str(FONT_REGULAR), size=TITLE_FONT_SIZE)
