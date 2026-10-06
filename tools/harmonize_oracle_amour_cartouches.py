@@ -24,8 +24,7 @@ NUMBER = (126, 104, 60)
 
 # Modèle validé : le médaillon supérieur est une plaque rectangulaire à angles
 # fortement arrondis, partiellement coupée par le bord supérieur. Il ne s'agit
-# PAS d'une ellipse. Les dimensions ci-dessous reproduisent la proportion du
-# modèle utilisateur (carte 48 « Interdit »).
+# PAS d'une ellipse. Les dimensions reproduisent la proportion du modèle fourni.
 TOP_OUTER = (188, -24, 324, 52)
 TOP_INNER = (195, -18, 317, 46)
 TOP_RADIUS = 24
@@ -33,16 +32,16 @@ TOP_INNER_RADIUS = 19
 TOP_NUMBER_CENTER = (256, 24)
 NUMBER_FONT_SIZE = 25
 
-# Modèle validé : cartouche inférieur compact, placé plus bas, avec un corps
-# arrondi et de petites pointes latérales. L'ancien polygone anguleux n'est pas
-# conforme au modèle fourni.
-BOTTOM_BODY = (42, 676, 470, 738)
-BOTTOM_INNER = (50, 683, 462, 731)
-BOTTOM_RADIUS = 16
-BOTTOM_INNER_RADIUS = 12
-BOTTOM_LEFT_TIP = (30, 707)
-BOTTOM_RIGHT_TIP = (482, 707)
-TITLE_CENTER = (256, 707)
+# Modèle validé : cartouche inférieur large et compact, avec un corps arrondi
+# et de petites pointes latérales. Il recouvre entièrement l'ancien cartouche
+# sans laisser apparaître sa bordure supérieure ou inférieure.
+BOTTOM_BODY = (42, 654, 470, 731)
+BOTTOM_INNER = (50, 661, 462, 724)
+BOTTOM_RADIUS = 17
+BOTTOM_INNER_RADIUS = 13
+BOTTOM_LEFT_TIP = (30, 692)
+BOTTOM_RIGHT_TIP = (482, 692)
+TITLE_CENTER = (256, 692)
 TITLE_MAX_WIDTH = 310
 TITLE_FONT_SIZE = 22
 TITLE_TRACKING = 1.0
@@ -105,19 +104,16 @@ def draw_tracking_text(
 
 
 def split_title(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFont) -> list[str]:
-    """Garde une taille et un espacement identiques sur les 80 cartes.
+    """Conserve exactement la même taille et le même espacement sur les 80 cartes.
 
-    Les titres qui ne tiennent pas sur une ligne sont répartis sur deux lignes,
-    conformément au gabarit validé, au lieu de réduire la taille de caractères.
+    Les titres trop longs sont répartis sur deux lignes plutôt que réduits.
     """
     if tracking_width(draw, text, font, TITLE_TRACKING) <= TITLE_MAX_WIDTH:
         return [text]
 
     words = text.split()
     if len(words) == 1:
-        raise RuntimeError(
-            f"Titre trop long pour le gabarit à taille constante : {text!r}"
-        )
+        raise RuntimeError(f"Titre trop long pour le gabarit à taille constante : {text!r}")
 
     candidates: list[tuple[float, str, str]] = []
     for cut in range(1, len(words)):
@@ -166,7 +162,7 @@ def draw_top_medallion(draw: ImageDraw.ImageDraw, idx: int) -> None:
 
 
 def draw_bottom_cartouche(draw: ImageDraw.ImageDraw, title: str) -> None:
-    # Corps arrondi.
+    # Corps large et arrondi du modèle maître.
     draw.rounded_rectangle(
         BOTTOM_BODY,
         radius=BOTTOM_RADIUS,
@@ -175,7 +171,7 @@ def draw_bottom_cartouche(draw: ImageDraw.ImageDraw, title: str) -> None:
         width=3,
     )
 
-    # Petites pointes latérales du modèle, sans effet d'hexagone anguleux.
+    # Petites pointes latérales, plus douces que l'ancien polygone anguleux.
     lx, ly = BOTTOM_LEFT_TIP
     rx, ry = BOTTOM_RIGHT_TIP
     draw.polygon([(lx, ly), (BOTTOM_BODY[0] + 1, ly - 9), (BOTTOM_BODY[0] + 1, ly + 9)], fill=IVORY)
@@ -193,7 +189,6 @@ def draw_bottom_cartouche(draw: ImageDraw.ImageDraw, title: str) -> None:
     )
 
     cy = TITLE_CENTER[1]
-    # Ornements latéraux fixes et symétriques du modèle validé.
     draw.line((59, cy, 101, cy), fill=GOLD, width=1)
     draw.polygon([(53, cy), (59, cy - 3), (65, cy), (59, cy + 3)], fill=GOLD)
     draw.line((411, cy, 453, cy), fill=GOLD, width=1)
@@ -220,9 +215,7 @@ def process_one(path: Path, idx: int, title: str) -> None:
     if im.size != CANVAS:
         raise RuntimeError(f"{path.name}: canevas {im.size}, attendu {CANVAS}")
 
-    # Illustration, cadre général, palette, luminosité et longueur restent
-    # inchangés. Seules les zones de cartouche sont recouvertes.
-    # Les retouches ImageGen existantes sont limitées aux anciennes plaques 31–40.
+    # Illustration, cadre général, palette, luminosité et longueur restent inchangés.
     patch_path = ROOT / "assets" / "amour-cartouche-restoration" / f"{idx:03d}.webp"
     if 31 <= idx <= 40:
         if not patch_path.exists():
@@ -237,7 +230,6 @@ def process_one(path: Path, idx: int, title: str) -> None:
     draw_top_medallion(draw, idx)
     draw_bottom_cartouche(draw, title)
 
-    # Encoder et vérifier avant le remplacement, sans recompression avec pertes.
     encoded = io.BytesIO()
     im.save(encoded, "WEBP", lossless=True, method=6)
     payload = encoded.getvalue()
