@@ -2,7 +2,7 @@
 (function(){
   'use strict';
 
-  const VERSION='20261006-approche-compact-r2';
+  const VERSION='20261006-approche-typography-r3';
 
   function enhance(){
     const question=document.getElementById('question');
@@ -60,16 +60,18 @@
     style.id='cr-reading-immersive-styles';
     style.textContent=`
       #approche.panel{
-        padding-top:10px!important;
-        padding-bottom:10px!important;
+        padding-top:8px!important;
+        padding-bottom:8px!important;
       }
       #approche h2{
-        margin:0 0 4px!important;
-        line-height:1.08!important;
+        font-size:clamp(1.55rem,2vw,1.8rem)!important;
+        margin:0 0 2px!important;
+        line-height:1.04!important;
       }
       #approche .muted{
+        font-size:clamp(.84rem,1.05vw,.92rem)!important;
         margin:0!important;
-        line-height:1.32!important;
+        line-height:1.22!important;
       }
       .cr-reading-immersive{
         --cr-night:#071b35;
@@ -223,14 +225,17 @@
       }
       @media (max-width:860px){
         #approche.panel{
-          padding-top:8px!important;
-          padding-bottom:8px!important;
+          padding-top:7px!important;
+          padding-bottom:7px!important;
         }
         #approche h2{
-          margin-bottom:3px!important;
+          font-size:1.4rem!important;
+          margin-bottom:2px!important;
+          line-height:1.04!important;
         }
         #approche .muted{
-          line-height:1.28!important;
+          font-size:.82rem!important;
+          line-height:1.2!important;
         }
         .cr-reading-immersive{
           border-radius:22px!important;
