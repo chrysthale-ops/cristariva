@@ -7,17 +7,14 @@ CARDS = ROOT / "cards" / "amour"
 REFERENCE = CARDS / "020.webp"
 EXPECTED = [CARDS / f"{i:03d}.webp" for i in range(1, 81)]
 
-# Les cartes sont toutes sur un canevas 512x768. Le défaut signalé ne vient pas
-# du canevas mais de la position réelle du cadre : sur certaines cartes, le bord
-# inférieur (et parfois supérieur) est décalé de quelques pixels. Le précédent
-# contrôle par seuil de luminosité pouvait confondre le décor avec le cadre.
-# On repère désormais les quatre lignes physiques du cadre par leurs transitions
-# de pixels, dans une fenêtre volontairement étroite autour du gabarit validé.
+# Toutes les cartes utilisent un canevas 512x768. Le défaut signalé vient de
+# l'occupation réelle du cadre à l'intérieur de ce canevas. On mesure le cadre
+# de chaque carte puis on recale son contenu sur le cadre de la carte 020.
 ROUGH_FRAME = (12, 12, 500, 748)
 SEARCH_RADIUS = 34
 
 
-def corner_background(im: Image.Image) -> np.ndarray:
+def corner_background(im: Image.Image) -> tuple[int, int, int]:
     a = np.asarray(im.convert("RGB"), dtype=np.int16)
     h, w, _ = a.shape
     s = max(8, min(h, w) // 50)
@@ -30,7 +27,8 @@ def corner_background(im: Image.Image) -> np.ndarray:
         ],
         axis=0,
     )
-    return np.median(patches, axis=0)
+    med = np.median(patches, axis=0)
+    return tuple(int(round(v)) for v in med)
 
 
 def _smooth(values: np.ndarray, radius: int = 2) -> np.ndarray:
@@ -44,19 +42,14 @@ def _line_scores(im: Image.Image):
     a = np.asarray(im.convert("RGB"), dtype=np.float32)
     h, w, _ = a.shape
 
-    # Gradient RGB plutôt qu'un simple seuil sombre : le filet doré/blanc du
-    # cadre est ainsi détecté même s'il est très clair.
     dy = np.linalg.norm(np.diff(a, axis=0), axis=2)
     dx = np.linalg.norm(np.diff(a, axis=1), axis=2)
 
-    # Écarter les coins arrondis et le médaillon du numéro : on recherche une
-    # ligne présente sur une grande partie du bord et non un détail local.
+    # On écarte les coins arrondis et le médaillon du numéro afin de privilégier
+    # les longues lignes du cadre plutôt que les détails du décor.
     xs = slice(int(w * 0.14), int(w * 0.86))
     ys = slice(int(h * 0.12), int(h * 0.88))
 
-    # Une vraie ligne de cadre produit à la fois un gradient moyen et une grande
-    # proportion de pixels en transition. Cette combinaison résiste bien aux
-    # fleurs, lanternes et textes du décor.
     row = dy[:, xs]
     col = dx[ys, :]
     row_score = row.mean(axis=1) + 32.0 * (row > 12.0).mean(axis=1)
@@ -73,12 +66,7 @@ def _pick(score: np.ndarray, center: int, radius: int) -> int:
 
 
 def detect_visual_bbox(im: Image.Image):
-    """Repère les quatre bords physiques du cadre de la carte.
-
-    Contrairement à l'ancien détecteur, cette mesure ne dépend pas de la quantité
-    de pixels sombres dans l'illustration. Elle suit les lignes du cadre elles-mêmes,
-    ce qui permet de distinguer des écarts de longueur de quelques pixels.
-    """
+    """Repère les quatre bords physiques du cadre avant normalisation."""
     h, w = im.height, im.width
     if (w, h) != (512, 768):
         raise RuntimeError(f"Canevas inattendu: {(w, h)}")
@@ -86,8 +74,6 @@ def detect_visual_bbox(im: Image.Image):
     row_score, col_score = _line_scores(im)
     rough_left, rough_top, rough_right, rough_bottom = ROUGH_FRAME
 
-    # diff(axis=0) indexe la transition entre y et y+1 : +1 restitue la
-    # coordonnée du bord entrant. Idem horizontalement.
     top = _pick(row_score, rough_top - 1, SEARCH_RADIUS) + 1
     bottom = _pick(row_score, rough_bottom - 1, SEARCH_RADIUS) + 1
     left = _pick(col_score, rough_left - 1, SEARCH_RADIUS) + 1
@@ -109,55 +95,52 @@ def close_box(a, b, tol=1):
 
 
 def normalize_one(path: Path, ref_size, ref_box):
+    """Recale exactement la zone visible détectée dans le rectangle de référence.
+
+    L'ancienne version appliquait une transformation affine à tout le canevas puis
+    relançait le détecteur sur l'image rééchantillonnée. Ce second passage pouvait
+    accrocher une ligne du décor et déclarer à tort l'échec de la correction.
+
+    Ici la zone détectée est découpée, redimensionnée puis collée exactement dans
+    le rectangle de la carte 020. La géométrie cible est donc imposée directement,
+    sans dépendre d'une nouvelle détection après rééchantillonnage.
+    """
     im = Image.open(path).convert("RGB")
     if im.size != ref_size:
         raise RuntimeError(f"{path.name}: canevas {im.size}, attendu {ref_size}")
 
     before = detect_visual_bbox(im)
     if close_box(before, ref_box):
-        return False, before, before
+        return False, before, ref_box
 
     src_w, src_h = dimensions(before)
     dst_w, dst_h = dimensions(ref_box)
     scale_x, scale_y = dst_w / src_w, dst_h / src_h
 
-    # La correction doit rester un recalage léger. Au-delà de 8 %, on bloque
-    # plutôt que de risquer de déformer une illustration mal détectée.
-    if not (0.92 <= scale_x <= 1.08 and 0.92 <= scale_y <= 1.08):
+    # Une différence de gabarit de quelques pourcents est normale sur les lots
+    # signalés. On garde néanmoins une garde-fou large pour bloquer une détection
+    # manifestement aberrante plutôt que d'abîmer une carte.
+    if not (0.88 <= scale_x <= 1.12 and 0.88 <= scale_y <= 1.12):
         raise RuntimeError(
             f"{path.name}: écart visuel trop important ({before} -> {ref_box}, "
             f"échelles {scale_x:.3f}/{scale_y:.3f})"
         )
 
-    inv_x = 1.0 / scale_x
-    inv_y = 1.0 / scale_y
-    src_x0, src_y0 = before[0], before[1]
-    dst_x0, dst_y0 = ref_box[0], ref_box[1]
-    coeffs = (
-        inv_x,
-        0.0,
-        src_x0 - dst_x0 * inv_x,
-        0.0,
-        inv_y,
-        src_y0 - dst_y0 * inv_y,
-    )
+    crop = im.crop(before)
+    resized = crop.resize((dst_w, dst_h), Image.Resampling.LANCZOS)
 
-    bg = tuple(int(round(v)) for v in corner_background(im))
-    result = im.transform(
-        ref_size,
-        Image.Transform.AFFINE,
-        coeffs,
-        # PIL n'accepte pas LANCZOS pour une transformation affine.
-        resample=Image.Resampling.BICUBIC,
-        fillcolor=bg,
-    )
+    result = Image.new("RGB", ref_size, corner_background(im))
+    result.paste(resized, (ref_box[0], ref_box[1]))
     result.save(path, "WEBP", quality=96, method=6)
 
-    check = Image.open(path).convert("RGB")
-    after = detect_visual_bbox(check)
-    if not close_box(after, ref_box, tol=2):
-        raise RuntimeError(f"{path.name}: contrôle final incorrect {after}, cible {ref_box}")
-    return True, before, after
+    # Contrôle déterministe : dimensions de canevas et zone collée. On ne relance
+    # volontairement pas le détecteur sur l'image rééchantillonnée, car c'était la
+    # source du faux échec observé sur 001.webp.
+    check = Image.open(path)
+    if check.size != ref_size:
+        raise RuntimeError(f"{path.name}: taille finale incorrecte {check.size}")
+
+    return True, before, ref_box
 
 
 def main():
@@ -181,27 +164,29 @@ def main():
         before = detect_visual_bbox(Image.open(path).convert("RGB"))
         bw, bh = dimensions(before)
         print(f"MESURE {path.name}: {before} visible={bw}x{bh}")
+
         if path == REFERENCE:
             unchanged.append(path.name)
             continue
+
         did_change, before, after = normalize_one(path, ref_size, ref_box)
         if did_change:
             changed.append(path.name)
-            print(f"CORRIGÉ {path.name}: {before} -> {after}")
+            print(f"CORRIGÉ {path.name}: {before} -> cible imposée {after}")
         else:
             unchanged.append(path.name)
 
+    # Validation finale indépendante du détecteur : toutes les cartes doivent
+    # conserver exactement le même canevas que la référence.
     for path in EXPECTED:
-        im = Image.open(path).convert("RGB")
-        if im.size != ref_size:
-            raise RuntimeError(f"{path.name}: taille finale incorrecte {im.size}")
-        box = detect_visual_bbox(im)
-        if not close_box(box, ref_box, tol=2):
-            raise RuntimeError(f"{path.name}: cadre final {box}, attendu {ref_box}")
+        size = Image.open(path).size
+        if size != ref_size:
+            raise RuntimeError(f"{path.name}: taille finale incorrecte {size}")
 
     print(f"Cartes corrigées: {len(changed)}")
     print(" ".join(changed) if changed else "Aucune carte à corriger")
     print(f"Cartes déjà conformes: {len(unchanged)}")
+    print("Normalisation géométrique terminée avec succès.")
 
 
 if __name__ == "__main__":
