@@ -1,0 +1,61 @@
+name: Export ZIP cartes CRISTARIVA
+
+on:
+  push:
+    branches:
+      - export-zips-20261007
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export-zips:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Préparer Oracle CRISTARIVA 130
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p export/oracle
+          mapfile -t oracle_files < <(find cards -maxdepth 1 -type f -regextype posix-extended -regex 'cards/[0-9]{3}\.webp' | sort)
+          echo "Oracle: ${#oracle_files[@]} cartes"
+          test "${#oracle_files[@]}" -eq 130
+          cp "${oracle_files[@]}" export/oracle/
+          test "$(find export/oracle -maxdepth 1 -type f | wc -l)" -eq 130
+
+      - name: Préparer Tarot CRISTARIVA 78
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p export/tarot/Arcanes_majeurs export/tarot/Arcanes_mineurs_HD
+          mapfile -t major_files < <(find cards/tarot -maxdepth 1 -type f -regextype posix-extended -regex 'cards/tarot/major-[0-9]{3}\.webp' | sort)
+          mapfile -t minor_files < <(find 'cards/tarot/cartes mineures HD' -maxdepth 1 -type f -name '*.png' | sort)
+          echo "Tarot majeurs: ${#major_files[@]}"
+          echo "Tarot mineurs: ${#minor_files[@]}"
+          test "${#major_files[@]}" -eq 22
+          test "${#minor_files[@]}" -eq 56
+          cp "${major_files[@]}" export/tarot/Arcanes_majeurs/
+          cp "${minor_files[@]}" export/tarot/Arcanes_mineurs_HD/
+          test "$(find export/tarot -type f | wc -l)" -eq 78
+
+      - name: Publier ZIP Oracle 130
+        uses: actions/upload-artifact@v4
+        with:
+          name: Oracle_CRISTARIVA_130_cartes
+          path: export/oracle/*
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+
+      - name: Publier ZIP Tarot 78
+        uses: actions/upload-artifact@v4
+        with:
+          name: Tarot_CRISTARIVA_78_cartes
+          path: export/tarot/**
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
