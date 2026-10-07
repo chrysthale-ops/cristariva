@@ -1,0 +1,16 @@
+{
+  "name": "cristariva",
+  "main": "groq-worker.mjs",
+  "compatibility_date": "2026-10-04",
+  "workers_dev": true,
+  "ratelimits": [
+    {
+      "name": "GROQ_LIMITER",
+      "namespace_id": "1042026",
+      "simple": {
+        "limit": 6,
+        "period": 60
+      }
+    }
+  ]
+}

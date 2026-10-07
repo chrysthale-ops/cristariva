@@ -28,7 +28,7 @@
     });
   }
 
-  loadScript('./relation-astrology-core-v1.4.js?v=1.4','relation-astrology-core')
+  loadScript('./relation-astrology-core-v1.4.js?v=1.4.2','relation-astrology-core')
     .then(function(){
       return loadScript('./relation-period-consistency-v1.5.js?v=1.7','relation-period-consistency-v1.6',false);
     })
@@ -191,7 +191,7 @@
 
   function polishRepeatedStoryOpeners(html){
     try{
-      if(!html||state.lang==='en')return html;
+      if(!html||state.lang==='en'||Number(window.CR_UNIVERSAL_FLUID_STORY_VERSION)>=6.25)return html;
       const tpl=document.createElement('template');
       tpl.innerHTML=String(html);
       for(const p of tpl.content.querySelectorAll('.story-continuous')){

@@ -1,0 +1,24 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const {JSDOM}=require('jsdom');
+test('domains recover a removed or hidden Sentimental option and preserve selection and language',async()=>{
+  const dom=new JSDOM('<select id="domain"><option value="Relations">Relationnel</option></select><select id="oracleChoice"><option value="cristariva">Oracle</option><option value="amour">Amour</option><option value="tarot">Tarot</option></select><label id="oracleChoiceLabel"></label>',{runScripts:'outside-only'});
+  const w=dom.window;
+  w.eval("var state={lang:'fr',domain:'Relations',oracle:'cristariva',draw:[]};function applyLanguage(){};function storyInterpretation(){return ''};function interpretation(){return ''}");
+  w.eval(fs.readFileSync(path.join(__dirname,'../oracle-selection.js'),'utf8'));
+  const select=w.document.getElementById('domain');
+  assert.equal(select.value,'Relations');assert.equal(select.options.length,4);
+  select.querySelector('[value="Sentimental"]').remove();
+  await new Promise(r=>w.setTimeout(r,0));
+  assert.equal(select.options.length,4);assert.equal(select.value,'Relations');
+  const option=select.querySelector('[value="Sentimental"]');option.hidden=true;option.disabled=true;
+  await new Promise(r=>w.setTimeout(r,0));
+  assert.equal(option.hidden,false);assert.equal(option.disabled,false);
+  select.value='Sentimental';select.dispatchEvent(new w.Event('change'));
+  assert.equal(w.document.querySelector('[value="amour"]').disabled,false);
+  w.eval("state.lang='en';applyLanguage()");assert.equal(select.options[0].textContent,'Romantic');
+  w.eval("state.lang='fr';applyLanguage()");assert.equal(select.options[0].textContent,'Sentimental');assert.equal(select.value,'Sentimental');
+  dom.window.close();
+});

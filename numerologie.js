@@ -29,7 +29,7 @@
   const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const lang=()=>document.documentElement.lang==='en'?'en':'fr';
   const tr=(fr,en)=>lang()==='en'?en:fr;
-  let drawnAt=null,hasResult=false;
+  let hasResult=false;
   // The timing card gives a symbolic window from the date of the reading.
   const days={116:1,117:3,118:7,119:15,120:21,121:30,122:42,123:60,124:90,125:180,126:270,127:365};
   function period(dateCard,anchor=new Date()){
@@ -47,9 +47,10 @@
   }
   api.monthsInRange=monthsInRange;
   if(!root.document)return;
+  const context=()=>root.CristarivaNumerologieContext?.()||{};
   function readingParagraph(date){
-    const card=typeof state!=='undefined'?state.date:null;
-    const window=period(card,drawnAt||new Date());
+    const card=context().date||null;
+    const window=period(card,context().drawnAt?new Date(context().drawnAt):new Date());
     if(!window){const now=new Date(),y=now.getFullYear(),m=now.getMonth()+1,n=personalMonth(date,y,m);
       return tr(`Sans fenêtre calendaire précise, votre année personnelle ${personalYear(date,y)} et votre mois personnel ${n} invitent à ${themes.fr[n]}. La carte Datation garde son sens symbolique.`,`With no fixed calendar window, your personal year ${personalYear(date,y)} and personal month ${n} invite you to ${themes.en[n]}. The Timing card remains symbolic.`);}
     const locale=lang()==='en'?'en-GB':'fr-FR',fmt=new Intl.DateTimeFormat(locale,{day:'numeric',month:'long',year:'numeric'});
@@ -72,7 +73,7 @@
         const q=profile($('numOtherDate').value,$('numOtherName').value.trim());
         html=`<h3>${tr('Nos nombres','Our numbers')}</h3><div class="num-grid"><div><strong>${p.life}</strong><span>${tr('Votre chemin','Your path')}</span></div><div><strong>${q.life}</strong><span>${tr('Son chemin','Their path')}</span></div></div><p>${p.life===q.life?tr('Vos chemins soulignent une aspiration semblable.','Your paths point to a similar aspiration.'):tr('Vos chemins suggèrent des rythmes différents.','Your paths suggest different rhythms.')} ${tr(`Le premier invite à ${themes.fr[p.life]}, le second à ${themes.fr[q.life]}. Ces tendances peuvent nourrir un échange sur vos besoins, sans prédire la réussite du lien.`,`The first invites you to ${themes.en[p.life]}, the second to ${themes.en[q.life]}. These tendencies can prompt a conversation about your needs without predicting the outcome of your relationship.`)}</p>`;
       }else{
-        if(!(typeof state!=='undefined'&&state.draw&&state.draw.length))throw Error(tr('Effectuez d’abord un tirage de cartes.','Draw cards first.'));
+        if(!context().hasDraw)throw Error(tr('Effectuez d’abord un tirage de cartes.','Draw cards first.'));
         html=`<h3>${tr('Les nombres de mon tirage','The numbers in my reading')}</h3><p>${readingParagraph(date)}</p>`;
       }
       out.innerHTML=html;out.hidden=false;hasResult=true;
@@ -86,11 +87,26 @@
   document.addEventListener('DOMContentLoaded',()=>{
     if(!$('numForm'))return;
     $('numYear').value=new Date().getFullYear();
-    $('numMode').addEventListener('change',()=>{$('numOtherFields').hidden=$('numMode').value!=='relation';$('numYearField').hidden=$('numMode').value!=='annee';});
+    const updateMode=()=>{
+      const relation=$('numMode').value==='relation',year=$('numMode').value==='annee';
+      $('numOtherFields').hidden=!relation;$('numYearField').hidden=!year;
+      $('numOtherFields').querySelectorAll('input').forEach(input=>{input.disabled=!relation;});
+      ($('numOtherDateDirect')||$('numOtherDate')).required=relation;
+      $('numYear').disabled=!year;$('numYear').required=year;
+      $('numName').required=$('numMode').value==='chemin';
+    };
+    const mode=new URLSearchParams(location.search).get('mode');
+    if(['chemin','annee','relation','tirage'].includes(mode))$('numMode').value=mode;
+    $('numMode').addEventListener('change',updateMode);updateMode();
     $('numForm').addEventListener('submit',e=>{e.preventDefault();render();});
-    $('numUseBirth').addEventListener('click',()=>{const birth=$('birthdate');if(birth&&birth.value)$('numDate').value=birth.value;});
-    $('numFromDraw').addEventListener('click',()=>{$('numMode').value='tirage';$('numMode').dispatchEvent(new Event('change'));$('numerologie').scrollIntoView({behavior:'smooth'});});
-    $('drawBtn').addEventListener('click',()=>{drawnAt=new Date();});
+    $('numUseBirth').hidden=!context().birthdate;
+    $('numUseBirth').addEventListener('click',()=>{
+      if(context().birthdate){
+        $('numDate').value=context().birthdate;
+        $('numDate').dispatchEvent(new Event('change',{bubbles:true}));
+        const input=$('numDateDirect');if(input){input.setCustomValidity('');input.dispatchEvent(new Event('input',{bubbles:true}));}
+      }
+    });
     $('langBtn').addEventListener('click',()=>queueMicrotask(translate));
     translate();
   });

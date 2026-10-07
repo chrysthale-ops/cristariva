@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>CRISTARIVA — Essai du moteur externe</title>
+<style>
+:root{color-scheme:light;--night:#122a40;--gold:#bd914e}*{box-sizing:border-box}body{margin:0;background:#f5f1e9;color:var(--night);font:17px/1.6 system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px 22px 70px}h1{font:36px/1.2 Georgia,serif;margin:14px 0}h2{font:25px Georgia,serif}a{color:var(--night)}.tag{color:#77603c;font-size:14px;letter-spacing:.08em;text-transform:uppercase}.panel,fieldset{border:1px solid #d8cbb5;border-radius:16px;background:white;padding:22px;margin:20px 0}.notice{border-left:4px solid var(--gold);padding-left:18px}label{display:block;font-weight:600;margin:12px 0 5px}input:not([type=checkbox]),textarea,select{display:block;width:100%;padding:11px;border:1px solid #bfc5ca;border-radius:8px;font:inherit;background:white;color:var(--night)}textarea{resize:vertical;min-height:110px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.buttons{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}button{padding:11px 17px;border:1px solid var(--night);border-radius:9px;background:white;color:var(--night);font:inherit;cursor:pointer}button.primary{background:var(--night);color:white}button:disabled{opacity:.55;cursor:wait}button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offset:3px}.hint{font-size:14px;color:#57646e}legend{font-weight:700;padding:0 8px}.remove{font-size:14px;padding:6px 12px}#result{white-space:pre-wrap;line-height:1.85}#status[data-kind=error]{color:#a12929}#status[data-kind=success]{color:#236943}pre{white-space:pre-wrap;word-break:break-word;font-size:13px}.check{font-weight:400}.check input{margin-right:10px}@media(max-width:650px){.grid{grid-template-columns:1fr}h1{font-size:30px}main{padding:20px 15px}.panel,fieldset{padding:16px}}
+</style></head><body><main>
+<a href="./">← Consultation habituelle</a><p class="tag">CRISTARIVA · Espace de test indépendant</p><h1>Essayer le moteur externe seul</h1>
+<p class="notice">La question, les positions et les significations des cartes sont envoyées à Groq. Aucun récit ni résumé du moteur interne n’est utilisé. Le mode combiné de la consultation habituelle reste inchangé.</p>
+<p class="hint">Le relais conserve ses règles de rédaction et ses contrôles de qualité. S’il refuse une réponse, le motif est affiché ici et aucun récit de secours ne la remplace. Chaque clic utilise le quota API habituel.</p>
+<form id="testForm"><section class="panel"><h2>Votre consultation d’essai</h2><label for="question">Question</label><textarea id="question" maxlength="2000" required>Kinya</textarea>
+<div class="grid"><div><label for="domain">Domaine</label><select id="domain"><option>Sentimental</option><option>Relations</option><option>Professionnelle / Projet</option><option>Général / spirituel</option></select></div><div><label for="oracle">Jeu</label><select id="oracle"><option value="cristariva">Oracle CRISTARIVA</option><option value="amour">Oracle sentimental CRISTARIVA</option><option value="tarot">Tarot</option></select></div></div>
+<p class="hint">Reprenez un tirage pour comparer les récits, ou saisissez d’autres cartes. Adaptez leur signification au domaine choisi et, au tarot, à leur orientation.</p>
+<div class="buttons"><button type="button" id="sample3">Exemple : Complexité · Indice · Écoute</button><button type="button" id="sample5">Exemple : tarot à 5 cartes</button></div></section>
+<div id="cards"></div><div class="buttons"><button type="button" id="add">Ajouter une carte</button><button type="submit" class="primary" id="run">Générer avec le moteur externe seul</button></div></form>
+<section class="panel" aria-labelledby="resultTitle"><h2 id="resultTitle">Résultat de l’essai</h2><p id="status" role="status" aria-live="polite">Prêt à tester. Aucun appel n’a été envoyé.</p><div id="result"></div><details id="diagnostic" hidden><summary>Détail du résultat</summary><pre id="detail"></pre></details></section>
+<script>
+'use strict';
+const endpoint='https://cristariva.sauvete.workers.dev/';
+const $=id=>document.getElementById(id);
+const roles=[['origin','Avant / Origine'],['obstacle','Obstacle'],['resource','Force'],['evolution','Maintenant / Évolution'],['outcome','Élan / Synthèse']];
+let busy=false,sequence=0;
+const samples={three:[
+['Complexité','origin','Dans une relation, Complexité peut signaler sentiments mêlés, contraintes extérieures, histoire passée, distance ou statut ambigu. Une seule explication ne suffit pas.'],
+['Indice','evolution','Dans une relation, Indice attire l’attention sur un comportement ou une parole qui renseigne sur l’intention réelle de l’autre. Il faut l’examiner avec les autres cartes avant d’en tirer une conclusion.'],
+['Écoute','outcome','Dans une relation, Écoute indique que la qualité du lien dépend de la capacité à recevoir ce que l’autre dit réellement, sans immédiatement interpréter, corriger ou se défendre.']],five:[
+['Six de Bâtons','origin','Le Six de Bâtons apporte reconnaissance et visibilité. Un effort peut être validé, une position renforcée ou une étape remportée, avec la nécessité de rester lucide sur ce qui reste à accomplir.'],
+['Trois d’Épées','obstacle','Le Trois d’Épées met en lumière une douleur affective ou une vérité difficile. La carte n’amplifie pas la blessure : elle demande de la regarder sans détour pour commencer à la traverser.'],
+['Deux de Bâtons','resource','Le Deux de Bâtons place la situation devant un horizon plus vaste. Une décision de direction devient nécessaire : rester dans le connu ou préparer une expansion plus ambitieuse.'],
+['Le Jugement','evolution','Un appel, une nouvelle ou une prise de conscience remet une situation en perspective. Le Jugement invite à faire le bilan du passé pour répondre autrement à ce qui se présente.'],
+['As d’Épées','outcome','L’As d’Épées apporte une percée mentale : une vérité se précise, une décision devient possible ou une parole nette tranche une confusion.']]};
+function status(text,kind=''){ $('status').textContent=text;$('status').dataset.kind=kind; }
+function clearResult(){if(busy)return;$('result').textContent='';$('diagnostic').hidden=true;status('Prêt à tester. Aucun résultat pour ces paramètres.');}
+function renumber(){[...$('cards').children].forEach((el,i)=>el.querySelector('legend').textContent='Carte '+(i+1));$('add').disabled=busy||$('cards').children.length>=15;document.querySelectorAll('.remove').forEach(b=>b.disabled=busy||$('cards').children.length<=1);}
+function addCard(row=['','outcome','']){
+ if($('cards').children.length>=15)return;
+ const el=document.createElement('fieldset'),id='card-'+(++sequence);
+ el.innerHTML='<legend></legend><div class="grid"><div><label for="'+id+'-name">Nom</label><input class="name" id="'+id+'-name" maxlength="150" required></div><div><label for="'+id+'-role">Position</label><select class="role" id="'+id+'-role"></select></div></div><label class="check"><input type="checkbox" class="reversed">Carte renversée (tarot)</label><label for="'+id+'-meaning">Signification de cette carte</label><textarea class="meaning" id="'+id+'-meaning" maxlength="4000" required></textarea><button type="button" class="remove">Retirer cette carte</button>';
+ for(const [value,label] of roles){const option=document.createElement('option');option.value=value;option.textContent=label;el.querySelector('.role').append(option);}
+ el.querySelector('.name').value=row[0];el.querySelector('.role').value=row[1];el.querySelector('.meaning').value=row[2];
+ el.querySelector('.remove').onclick=()=>{el.remove();renumber();clearResult();};
+ $('cards').append(el);el.querySelector('.reversed').disabled=$('oracle').value!=='tarot';renumber();
+}
+function sample(key){if(busy)return;$('cards').replaceChildren();$('oracle').value=key==='three'?'cristariva':'tarot';$('domain').value='Sentimental';$('question').value='Kinya';for(const row of samples[key])addCard(row);clearResult();}
+function lock(value){busy=value;document.querySelectorAll('#testForm input,#testForm select,#testForm textarea,#testForm button').forEach(el=>el.disabled=value);if(!value){document.querySelectorAll('.reversed').forEach(el=>el.disabled=$('oracle').value!=='tarot');renumber();}}
+$('sample3').onclick=()=>sample('three');$('sample5').onclick=()=>sample('five');$('add').onclick=()=>{addCard();clearResult();};
+$('oracle').onchange=()=>document.querySelectorAll('.reversed').forEach(el=>{el.disabled=$('oracle').value!=='tarot';if(el.disabled)el.checked=false;});
+$('testForm').addEventListener('input',clearResult);
+$('testForm').addEventListener('submit',async event=>{
+ event.preventDefault();if(busy||!$('testForm').reportValidity())return;
+ const input={lang:'fr',question:$('question').value.trim(),domain:$('domain').value,oracle:$('oracle').value,cards:[...$('cards').children].map((el,index)=>({index,name:el.querySelector('.name').value.trim(),role:el.querySelector('.role').value,reversed:$('oracle').value==='tarot'&&el.querySelector('.reversed').checked,meaning:el.querySelector('.meaning').value.trim(),local:''}))};
+ if(!input.question||input.cards.some(c=>!c.name||!c.meaning)){status('Complétez la question, le nom et la signification de chaque carte.','error');return;}
+ const body=JSON.stringify(input);if(body.length>60000){status('Le texte est trop long. Réduisez les significations des cartes.','error');return;}
+ $('result').textContent='';$('diagnostic').hidden=true;lock(true);status('Réponse externe en cours… Patientez jusqu’à 30 secondes.');
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),30000),start=Date.now();
+ try{
+ const response=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body,signal:controller.signal,cache:'no-store'});
+ const raw=await response.text();let data;try{data=JSON.parse(raw);}catch{data={error:'non_json'};}
+ const reasons={quality:'La réponse externe a été refusée par le contrôle de qualité.',coverage:'La réponse externe ne couvre pas correctement toutes les cartes.',card_names:'La réponse externe cite les cartes et a été refusée.',incomplete:'Le moteur externe a rendu une réponse incomplète.',not_configured:'Le relais ne dispose pas de la clé Groq.',provider_unavailable:'Le fournisseur externe est indisponible ou sa réponse est inexploitable.',rate_limit:'La limite de requêtes est atteinte. Attendez une minute avant de réessayer.',origin:'Le relais refuse l’origine de cette page.',input:'Les données du tirage ont été refusées.',size:'Le tirage envoyé est trop volumineux.',non_json:'Le serveur a renvoyé une réponse inattendue.'};
+ $('detail').textContent=JSON.stringify({mode:'Externe seul',interpretationInterneEnvoyee:false,http:response.status,code:data.error||null,motif:data.reason||null,relais:data.engine||null,dureeSecondes:Math.round((Date.now()-start)/100)/10},null,2);$('diagnostic').hidden=false;
+ if(!response.ok){status((response.status===429?reasons.rate_limit:reasons[data.error]||'Le relais a refusé la requête.')+' Aucun récit interne ne sera affiché.','error');return;}
+ if(typeof data.text!=='string'||!data.text.trim()){status('Aucun récit externe reçu.','error');return;}
+ $('result').textContent=data.text;status('Réponse externe reçue — aucune interprétation interne utilisée.','success');
+ }catch(error){status(error.name==='AbortError'?'Le délai de réponse est dépassé. Aucun récit interne n’a été utilisé.':'Impossible de joindre le relais externe. Aucun récit interne n’a été utilisé.','error');$('detail').textContent=error.name==='AbortError'?'Délai maximal : 30 secondes.':'Erreur réseau ou accès refusé par le navigateur / Cloudflare.';$('diagnostic').hidden=false;
+ }finally{clearTimeout(timer);lock(false);}
+});
+sample('three');
+</script></main></body></html>

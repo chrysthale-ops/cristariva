@@ -1,36 +1,47 @@
-/* CRISTARIVA — service worker v30 — récit professionnel développé.
-   Force 22 arcanes majeurs + 56 arcanes mineurs HD sur PC et Android
-   et recharge la planche validée complète des arcanes mineurs. */
-const CACHE_NAME='cristariva-v43-20260928-tarot78-png-r1';
-const APP_VERSION='2026.09.28-tarot78-png-r1';
+/* CRISTARIVA — service worker v51 — position stable du cartouche cartes renversées. */
+const CACHE_NAME='cristariva-v123-20261007-numerologie-page';
+const APP_VERSION='2026.10.07-numerologie-page';
+const IMMERSIVE_URL='./immersive-reading-ui.js?v=20261006-remove-active-label-r16';
+const TAROT_INTEGRATION_URL='./tarot-divinatoire-integration-v78.js?v=20261006-reversal-cartouche-r2';
+const TAROT_HOTFIX_URL='./tarot-title-image-hotfix.js?v=20261006-reversal-inline-r3';
 const SHELL=[
+  './numerologie.html',
+  './numerologie.css?v=1',
+  './numerologie.js?v=3',
+  './numerologie-navigation.js?v=1',
+  './date-entry.js?v=3',
+  './time-entry.js?v=1',
   './',
   './index.html',
+  IMMERSIVE_URL,
+  './story-quality.js?v=3-card-name-context',
+  './groq-hybrid-story.js?v=5-external-diagnostics',
   './manifest.webmanifest',
   './manifest-en.webmanifest',
   './icon-192.png',
   './icon-512.png',
   './story-fluid-v5.1.js?v=5.30',
-  './universal-fluid-story-v6.3.js?v=6.8',
+  './tarot-reversals.js?v=20260929-r2',
+  './universal-fluid-story-v6.3.js?v=6.49-unicode-r1',
   './question-context-story-v5.2.js?v=5.2.2',
   './question-intent-story-v5.3.js?v=5.6',
   './question-project-story-v5.5.js?v=5.21',
-  './oracle-selection.js?v=20260926-story-fluid66',
+  './oracle-selection.js?v=20261003-domains-restored-r1',
   './oracle-amour-data.js?v=20260923-love-story6',
   './oracle-amour-card62-fix.js?v=20260923-love-story6',
   './oracle-amour-integration.js?v=20260923-love-story6',
   './oracle-amour-compat.js?v=20260923-love-story6',
   './tarot-divinatoire-data.js?v=20260924-tarot78-base-r9',
   './tarot-divinatoire-integration.js?v=20260924-tarot78-r4-compat',
-  './tarot-title-image-hotfix.js?v=20260928-tarot78-png-r1',
-  './tarot-divinatoire-integration-v78.js?v=20260924-tarot78-r9',
+  TAROT_HOTFIX_URL,
+  TAROT_INTEGRATION_URL,
   './tarot-minor-sprite-loader.js?v=20260926-minor-hd-r1',
   './tarot-minors-data-batons.js?v=20260924-tarot78-r9',
   './tarot-minors-data-coupes.js?v=20260924-tarot78-r9',
   './tarot-minors-data-epees.js?v=20260924-tarot78-r9',
   './tarot-minors-data-deniers.js?v=20260924-tarot78-r9',
   './tarot-minors-v1.js?v=20260924-tarot78-r9',
-  './relation-astrology.js?v=20260926-cross-summary'
+  './relation-astrology.js?v=20261002-cross-analysis-restore-r1'
 ];
 
 self.addEventListener('install',event=>{
@@ -56,7 +67,11 @@ self.addEventListener('activate',event=>{
     for(const client of clients){
       try{
         client.postMessage({type:'CRISTARIVA_UPDATED',version:APP_VERSION});
-        if(client.url)await client.navigate(client.url);
+        if(client.url){
+          const target=new URL(client.url);
+          target.searchParams.set('crv',APP_VERSION);
+          await client.navigate(target.href);
+        }
       }catch(e){}
     }
   })());
@@ -98,12 +113,35 @@ self.addEventListener('fetch',event=>{
     return;
   }
 
+  if(url.pathname.endsWith('/immersive-reading-ui.js')){
+    const forced=new Request(new URL(IMMERSIVE_URL,self.location.href),{cache:'no-store',credentials:'same-origin'});
+    event.respondWith(networkFirst(forced));
+    return;
+  }
+
+  if(url.pathname.endsWith('/tarot-title-image-hotfix.js')){
+    const forced=new Request(new URL(TAROT_HOTFIX_URL,self.location.href),{cache:'no-store',credentials:'same-origin'});
+    event.respondWith(networkFirst(forced));
+    return;
+  }
+
+  if(url.pathname.endsWith('/tarot-divinatoire-integration-v78.js')){
+    const forced=new Request(new URL(TAROT_INTEGRATION_URL,self.location.href),{cache:'no-store',credentials:'same-origin'});
+    event.respondWith(networkFirst(forced));
+    return;
+  }
+
   if(/\.(?:js|html|json|webmanifest)$/.test(url.pathname)||url.pathname.includes('.cristariva-tarot78-sprite/')){
     event.respondWith(networkFirst(request));
     return;
   }
 
   if(url.pathname.includes('/cards/tarot/cartes%20mineures%20HD/') || url.pathname.includes('/cards/tarot/cartes mineures HD/')){
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
+  if(url.pathname.includes('/cards/')){
     event.respondWith(networkFirst(request));
     return;
   }

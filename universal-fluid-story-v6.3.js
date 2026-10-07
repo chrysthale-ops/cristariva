@@ -5,7 +5,7 @@
 */
 (function(){
 'use strict';
-const VERSION='6.8';
+const VERSION='6.49';
 
 function esc(v){
   try{return typeof readingEscape==='function'?readingEscape(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -20,20 +20,30 @@ function hay(card,en=false){
   ].filter(Boolean).join(' '));
 }
 function scope(){
-  const d=norm(state?.domain||''),q=norm(state?.question||'');
-  if(/profession|travail|emploi|carriere|projet|business|work|career|job|money|argent|finance/.test(d+' '+q))return 'work';
-  if(/relation|amour|couple|sentiment|romant|intimit|rencontr|love|partner|retour|recontact/.test(d+' '+q))return 'relation';
-  if(/site|cristariva|plateforme|entreprise/.test(q)&&/actualite|ouverture|fonctionnalite|creation|developpement|integrer|connecter|relier/.test(q))return 'work';
+  // The selected domain is authoritative; a question must not change it.
+  const d=norm(state?.domain||'');
+  if(/profession|travail|projet|work|career/.test(d))return 'work';
+  if(/sentiment|relation|romantic|love/.test(d))return 'relation';
+  if(/general|spirit/.test(d))return 'life';
   return 'life';
 }
 function theme(card,en=false){
   const title=norm((en?card?.en?.name:card?.name)||card?.name);
-  if(/triangle|triangul|troisieme personne|rivalit/.test(title))return 'triangle';
+  if(!card?._themePass){
+    const primary={name:card?.name,keywords:card?.keywords,_themePass:true,en:{name:card?.en?.name,keywords:card?.en?.keywords}};
+    const key=theme(primary,en);
+    if(key!=='neutral')return key;
+  }
+  if(/triangle|triangul|troisieme personne|rivalit/.test(title))return 'ambiguity';
   if(/dispute|querelle|conflit|altercation/.test(title))return 'conflict';
-  if(/engagement|promesse|officialisation|construction/.test(title))return 'commitment';
+  if(/engagement|promesse|officialisation|construction/.test(title))return 'ground';
   if(/communication|dialogue|parole|conversation|clarification|communication|dialog/.test(title))return 'insight';
-  if(/impasse|incompatibil|blocage|obstacle|rupture|conflit|betrayal|deadlock/.test(title))return 'tension';
-  const h=hay(card,en);
+  if(/impasse|incompatibil|blocage|obstacle|rupture|conflit|trahison|infidelit|betrayal|deadlock/.test(title))return 'tension';
+  if(/silence|retrait|absence de reponse|non dit/.test(title))return 'ambiguity';
+  if(/alignement|coherence|accord/.test(title))return 'ground';
+  if(/desir|attirance|passion/.test(title))return 'movement';
+  if(/projet a deux|avenir commun|vie commune/.test(title))return 'bond';
+  const h=title+' '+hay(card,en);
   if(/secret|cache|non dit|dissim|mystere|ambigu|incert|hesit|flou|doute|unknown|uncertain|hidden/.test(h))return 'ambiguity';
   if(/liberte|autonom|independan|espace|distance saine|freedom|autonomy|independence/.test(h))return 'freedom';
   if(/transformation|mutation|changement|renouveau|renaissance|transition|change|transform|renew/.test(h))return 'change';
@@ -69,7 +79,49 @@ function pick(arr,card,i){
 function motif(card,enMode){
   const local=enMode?(card?.en||card):card;
   const name=norm(local?.name||card?.name);
-  const k=norm([local?.category,local?.keywords].filter(Boolean).join(' '));
+  // A title and explicit keywords express the symbol. Incidental words in
+  // prose (including negations and comparisons) must never override them.
+  if(!card?._semanticPass){
+    const primary={...card,_semanticPass:true,definition:'',meaning:'',category:'',en:{...card?.en,definition:'',meaning:'',category:''}};
+    const titled=motif({...primary,keywords:'',en:{...primary.en,keywords:''}},enMode);
+    if(titled)return titled;
+    const keyed=motif(primary,enMode);
+    if(keyed)return keyed;
+  }
+
+  const exact={complexite:'complexity',complexity:'complexity',communication:'communication',equite:'fairness',fairness:'fairness',eclosion:'emergence',éclosion:'emergence',emergence:'emergence',malentendu:'misunderstanding',misunderstanding:'misunderstanding',sincerite:'honesty',sincerity:'honesty',honesty:'honesty',plaisir:'pleasure',pleasure:'pleasure',retour:'return',return:'return',patience:'patience',fidelite:'loyalty',loyalty:'loyalty',faithfulness:'loyalty','attirance reciproque':'mutualAttraction','mutual attraction':'mutualAttraction',rencontre:'encounter',meeting:'encounter',complicite:'companionship',complicity:'companionship',soulmate:'soulmate','ame soeur':'soulmate'};
+  if(exact[name])return exact[name];
+
+  // Keep these symbols distinct from loss, speed and generic adjustment.
+  if(/^(signe|sign|signs)$/.test(name))return 'synchronicity';
+  if(/^(regrets|regret)$/.test(name))return 'regrets';
+  if(/^(echeance|deadline)$/.test(name))return 'deadline';
+  if(/^(intuition)$/.test(name))return 'intuition';
+  if(/^(triangle|love triangle)$/.test(name))return 'triangle';
+  if(/^(eveil|awakening)$/.test(name))return 'awakening';
+
+  if(/^(destin|destiny|fate)$/.test(name))return 'destiny';
+  if(/seconde chance|deuxieme chance|second chance/.test(name))return 'retry';
+  if(/tentation|temptation/.test(name))return 'temptation';
+  if(/^(alignement|alignment)$/.test(name))return 'alignment';
+  if(/^(rupture|breakup|break-up|separation)$/.test(name))return 'separation';
+  if(/^(bonheur|happiness)$/.test(name))return 'happiness';
+  if(/^(lien amoureux|romantic bond|love bond)$/.test(name))return 'romantic';
+  if(/^(evolution|development|growth)$/.test(name))return 'change';
+  if(/^(protection)$/.test(name))return 'ground';
+  if(/^(tendresse|tenderness)$/.test(name))return 'tenderness';
+  if(/^(intimite|intimacy)$/.test(name))return 'intimacy';
+  if(/^(ame jumelle|twin soul|twin flame)$/.test(name))return 'mirror';
+  if(/^(amitie|friendship)$/.test(name))return 'friendship';
+  if(/^(union)$/.test(name))return 'union';
+  if(/^(karma)$/.test(name))return 'patterns';
+  // Love-oracle titles whose exact symbolic meaning must survive broad keyword classification.
+  if(/^(secret)$/.test(name))return 'secret';
+  if(/^(ame soeur|soulmate|soul mate)$/.test(name))return 'soulmate';
+  if(/^(transformation)$/.test(name))return 'transformation';
+  if(/^(coup de foudre|love at first sight)$/.test(name))return 'lightning';
+  if(/^(silence)$/.test(name))return 'silence';
+  const k=norm([local?.name,local?.category,local?.keywords,local?.definition||local?.meaning].filter(Boolean).join(' '));
   const details=norm(local?.definition||local?.meaning||'');
   if(/trois d.?epees|three of swords/.test(name))return 'heartbreak';
   if(/dix de batons|ten of wands/.test(name))return 'burden';
@@ -96,7 +148,8 @@ function motif(card,enMode){
   if(/deuil|perte|regret|deception/.test(k))return 'loss';
   if(/conflit|dispute|desaccord|querelle/.test(k))return 'conflict';
   if(/secret|ambiguite|non.dit|incertitude/.test(k))return 'ambiguity';
-  if(/cooperation|soutien|entraide|equipe|partage/.test(k))return 'cooperation';
+  if(/cooperation|soutien|entraide|equipe|partage|collaboration/.test(k))return 'cooperation';
+  if(/regle|conseil|jugement|evaluation|tradition/.test(k))return 'insight';
   if(/verite|clarte|lucidite|discernement|communication|dialogue/.test(k))return 'insight';
   if(/liberte|autonomie|independance/.test(k))return 'freedom';
   if(/\belan\b|passion|rapidite|mouvement|impulsion/.test(k))return 'movement';
@@ -114,10 +167,267 @@ function motif(card,enMode){
   }
   return '';
 }
+
+/* These readings preserve each symbol and its position without generic padding.
+   They also feed the concise role summary, so both outputs agree. */
+// Preserve the actual symbol before broad theme classification, in every role.
+function exactRoleMeaning(card,role,enMode){
+  const key=norm(card?.name).replace(/œ/g,'oe')==='ame soeur'?'soulmate':motif(card,false), sc=scope();
+  const domainConcepts={
+    relation:{
+      complexity:['des sentiments mêlés, des contraintes ou un statut du lien encore ambigu','mixed feelings, constraints or an unclear relationship status'],
+      communication:['un échange explicite sur les sentiments, les intentions et les attentes','an explicit conversation about feelings, intentions and expectations'],
+      fairness:['une répartition plus équilibrée de l’attention, des efforts et des compromis','a fairer sharing of attention, effort and compromises'],
+      emergence:['l’apparition d’un sentiment, d’une confiance ou d’une nouvelle qualité de lien encore peu exprimée','the emergence of a feeling, trust or a new quality of connection that remains little expressed'],
+      awakening:['une prise de conscience des sentiments, des besoins et de ce qui se joue entre vous','awareness of feelings, needs and what is happening between you']
+    },
+    work:{
+      complexity:['plusieurs contraintes, acteurs ou objectifs qui s’entrecroisent','several overlapping constraints, people or objectives'],
+      communication:['la circulation claire des informations et des attentes du projet','clear sharing of project information and expectations'],
+      fairness:['une répartition juste du travail, des responsabilités et de la reconnaissance','fair sharing of work, responsibilities and recognition'],
+      emergence:['un projet ou une possibilité qui commence à prendre forme','a project or possibility beginning to take shape']
+    },
+    life:{
+      complexity:['plusieurs dimensions de votre situation qui demandent à être comprises ensemble','several aspects of your situation that need to be understood together'],
+      communication:['la mise en mots de ce que vous vivez et avez besoin d’exprimer','putting experiences and needs into words'],
+      fairness:['un équilibre plus juste entre ce que vous donnez, recevez et assumez','a fairer balance between what you give, receive and take on'],
+      emergence:['une aspiration ou une possibilité nouvelle qui commence à se manifester','a new aspiration or possibility beginning to emerge']
+    }
+  };
+  const concepts={
+    ...domainConcepts[sc],
+    soulmate:['la recherche d’une familiarité profonde, d’une compréhension mutuelle et d’une compatibilité affective','the search for deep familiarity, mutual understanding and emotional compatibility'],
+    loyalty:['la constance, la loyauté et le respect des engagements','constancy, loyalty and respect for commitments'],
+    mutualAttraction:['un intérêt et un désir qui circulent des deux côtés','interest and desire shared by both people'],
+    encounter:['l’ouverture d’un nouveau contact ou un rapprochement significatif','a new contact or a meaningful rapprochement'],
+    companionship:['une compréhension naturelle, des échanges spontanés et le plaisir d’être ensemble','natural understanding, spontaneous exchanges and enjoyment of being together'],
+    misunderstanding:['un décalage entre ce qui a été exprimé et ce qui a été compris','a gap between what was expressed and what was understood'],
+    honesty:['des paroles authentiques et des intentions cohérentes avec les actes','honest words and intentions consistent with actions'],
+    pleasure:sc==='relation'?['la joie de partager des moments agréables, la sensualité et la légèreté','the joy of enjoyable shared moments, sensuality and lightness']:['le plaisir et le bien-être que cette expérience peut apporter','the enjoyment and wellbeing this experience can bring'],
+    return:sc==='relation'?['la réapparition possible d’un contact ou d’une histoire affective du passé','the possible reappearance of a contact or an emotional connection from the past']:['la reprise possible d’un contact, d’un sujet ou d’une situation du passé','the possible return of a contact, issue or situation from the past'],
+    patience:['une progression lente qui demande du temps et ne peut pas être forcée','slow progress that takes time and cannot be forced']
+  };
+  if(!concepts[key])return '';
+  const idea=concepts[key][enMode?1:0];
+  const lead=enMode?{
+    origin:`The situation is rooted in ${idea}.`,obstacle:`The unresolved challenge concerns ${idea}.`,resource:`You can draw strength from ${idea}.`,evolution:`The next development points towards ${idea}.`,outcome:`Taken together, the spread calls for attention to ${idea}.`
+  }:{
+    origin:key==='complexity'&&sc==='life'?'Plusieurs éléments se sont mêlés, rendant la situation difficile à comprendre dans son ensemble.':`La situation trouve son origine dans ${idea}.`,obstacle:`Le point à résoudre concerne ${idea}.`,resource:`Vous pouvez vous appuyer sur ${idea}.`,evolution:`La suite laisse entrevoir ${idea}.`,outcome:`L’ensemble du tirage met l’accent sur ${idea}.`
+  };
+  const actions={
+    complexity:['Distinguer ce qui dépend de vous, des circonstances et des informations encore manquantes aide à y voir plus clair.','Several factors overlap; understanding their connections avoids reducing the situation to a single cause.'],
+    communication:[role==='obstacle'?'Ce qui reste retenu, imprécis ou difficile à dire freine la compréhension ; un message ou une conversation claire pourrait lever ce point.':'Mettre les attentes en mots permet de vérifier ce qui peut réellement être convenu.','What remains unspoken or unclear needs an explicit exchange before intentions can be understood.'],
+    fairness:[sc==='relation'?'La progression dépend d’une implication comparable de chacun et de compromis qui ne reposent pas toujours sur la même personne.':'La progression demande de vérifier que les contributions et les responsabilités sont réparties de façon juste.','Progress depends on a fair sharing of contributions and responsibilities.'],
+    emergence:[sc==='relation'?'Quelque chose peut commencer à se révéler entre vous : une confiance naissante, un sentiment reconnu ou une proximité nouvelle. Cela décrit un début à laisser se développer, sans annoncer un engagement déjà décidé.':'Ce qui était encore latent peut devenir perceptible ; il s’agit d’un commencement à accompagner, plutôt que d’un résultat déjà acquis.','Something previously latent may become visible; this is a beginning to nurture rather than an established outcome.'],
+    awakening:['Reconnaître ce qui est ressenti et ce dont chacun a besoin aide à comprendre le lien avec davantage de lucidité.','Recognising feelings and individual needs helps clarify the connection.'],
+    soulmate:['Ce besoin de proximité donne son sens à votre attente, sans supposer qu’une relation existe déjà ni promettre un lien parfait.','This need for closeness gives meaning to your hopes without assuming a relationship already exists or promising a perfect bond.'],
+    loyalty:[role==='obstacle'?'La difficulté est de savoir si les engagements et les comportements seront cohérents dans la durée ; cette position ne permet pas de conclure à une infidélité.':'La confiance se construit par la continuité des comportements et le respect des engagements.','Trust requires consistent behaviour and respected commitments; an obstacle position does not establish infidelity.'],
+    mutualAttraction:['Cette réciprocité peut faciliter le rapprochement ; elle demande encore à se traduire en initiatives et en choix partagés.','This reciprocity can support closeness when it becomes shared initiatives and choices.'],
+    encounter:['Un échange, une première rencontre ou une redécouverte pourrait faire évoluer votre vie affective, sans fixer de date précise.','An exchange, a first meeting or a rediscovery could change your emotional life without setting a precise date.'],
+    companionship:['La perspective repose sur l’humour, la coopération et une proximité vécue simplement au quotidien.','The outlook rests on humour, cooperation and simple everyday closeness.'],
+    misunderstanding:['Vérifier les paroles et les faits permettrait de ne pas décider à partir d’une interprétation erronée.','Checking words and facts would help avoid decisions based on a mistaken interpretation.'],
+    honesty:[role==='obstacle'?'Une franchise encore difficile à établir ou à recevoir empêche de savoir sur quoi compter ; un échange ouvert reste nécessaire.':'Exprimer clairement les attentes et vérifier leur cohérence avec les comportements permettrait de savoir sur quoi compter.','Clear expectations and openness about intentions need to be checked against behaviour.'],
+    pleasure:[role==='obstacle'?'La recherche de satisfaction immédiate risque de détourner l’attention de ce qui demande à être réglé.':'Ce qui vous fait du bien constitue un appui réel, sans suffire à garantir un engagement durable.','Enjoyment can offer real support, though immediate satisfaction does not establish lasting commitment.'],
+    return:['Une reprise ne garantit pas que les difficultés anciennes soient résolues : il faudra observer ce qui fonctionne réellement autrement.','Renewed contact does not establish that old difficulties have been resolved; look for what actually works differently.'],
+    patience:[role==='obstacle'?'L’attente risque de figer la situation si elle remplace les échanges ou les décisions nécessaires.':'Laisser du temps permettrait d’observer des changements réels, sans suspendre vos propres choix à une promesse de résultat.','Allow time to observe real changes without putting your own choices on hold for a promised outcome.']
+  };
+  return (lead[role]||lead.outcome)+' '+actions[key][enMode?1:0];
+}
+
+function faithfulSymbol(card,role,enMode){
+  const exact=exactRoleMeaning(card,role,enMode);
+  if(exact)return exact;
+  const key=motif(card,false);
+  if(key==='triangle'&&scope()!=='relation'){
+    const lead=enMode?{origin:'The initial situation',obstacle:'The obstacle',resource:'The available support',evolution:'The next development',outcome:'The direction ahead'}:{origin:'La situation initiale',obstacle:'La difficulté',resource:'Le point d’appui',evolution:'L’évolution',outcome:'La direction qui se dessine'};
+    return enMode
+      ?`${lead[role]} involves three competing poles, such as stakeholders, commitments or options pulling in different directions. Clarify their respective roles and decide which commitments can coexist.`
+      :`${lead[role]} met en jeu trois pôles, qu’il s’agisse de personnes, d’engagements ou de possibilités qui tirent dans des directions différentes. Préciser leurs places respectives et choisir les engagements compatibles permettrait de sortir de cette rivalité.`;
+  }
+  const readings={
+    triangle:{
+      origin:['La proximité s’est construite dans une configuration où trois pôles interviennent : une autre personne, des liens qui se chevauchent ou deux attachements entre lesquels choisir. Cette configuration explique pourquoi les places de chacun demandent à être précisées.','The connection developed around three competing poles: another person, overlapping connections or a choice between two attachments. Each person’s place needs to be established.'],
+      obstacle:['La difficulté vient de la présence de trois pôles : une autre personne, une rivalité ou une hésitation entre deux liens peut empêcher une place claire pour chacun. Des choix explicites sont nécessaires pour sortir de cette configuration.','Three competing poles create the difficulty: another person, rivalry or hesitation between two connections may prevent clear roles. Explicit choices are needed.'],
+      resource:['Reconnaître les trois pôles en présence permet de comprendre les loyautés et les attentes qui se croisent. Cette lucidité aide à poser des limites et à décider quelle place vous souhaitez réellement occuper.','Recognising the three competing poles helps clarify overlapping loyalties and expectations. This awareness supports boundaries and a choice about the place you wish to occupy.'],
+      evolution:['Le rapprochement pourrait se compliquer par l’intervention d’une autre personne, une rivalité ou une hésitation entre deux liens. La prochaine étape demande de préciser les places et les choix de chacun.','Closeness may become complicated by another person, rivalry or hesitation between two connections. The next step requires clear roles and choices.'],
+      outcome:['Le rapprochement se heurte toutefois à une configuration à trois pôles : une autre personne, une relation parallèle, une rivalité ou une hésitation entre deux liens peut entrer en jeu. L’attirance ne suffit donc pas à assurer une relation disponible et clairement choisie. La suite dépend de la clarification des places et des engagements de chacun ; ce tirage ne permet pas d’affirmer qu’une troisième personne est effectivement présente.','The rapprochement nevertheless encounters three competing poles: another person, an overlapping relationship, rivalry or hesitation between two connections may be involved. Attraction alone does not establish an available, clearly chosen relationship. Progress requires clarity about each person’s place and commitments; this spread does not establish that a third person is actually present.']
+    },
+    synchronicity:{
+      origin:['Des coïncidences ou des motifs qui se répètent ont attiré votre attention et nourri votre recherche de sens. Ils ouvrent une réflexion sur ce que vous vivez, sans constituer à eux seuls une réponse certaine.','Coincidences or recurring patterns have drawn your attention and prompted a search for meaning. They invite reflection on your experience without providing a certain answer on their own.'],
+      obstacle:['Chercher un message dans chaque coïncidence peut brouiller votre compréhension. Le discernement consiste à laisser une place au sens symbolique sans lui faire dire ce que vous espérez entendre.','Looking for a message in every coincidence can cloud your understanding. Discernment means allowing symbolic meaning without making it confirm what you hope to hear.'],
+      resource:['Les motifs qui se répètent peuvent vous aider à repérer ce qui mérite votre attention. Les rapprocher de votre expérience concrète donne un appui à votre réflexion.','Recurring patterns can help you notice what deserves attention. Relating them to your actual experience supports your reflection.'],
+      evolution:['Votre attention aux coïncidences et aux répétitions peut s’affiner. Leur sens se précise en les confrontant à votre vécu plutôt qu’en recherchant une confirmation systématique.','Your attention to coincidences and repetitions may become more sensitive. Their meaning becomes clearer through lived experience rather than a constant search for confirmation.'],
+      outcome:['Le fil du tirage invite à observer les répétitions porteuses de sens tout en gardant votre discernement. Elles peuvent éclairer votre cheminement, sans décider à votre place.','The spread invites attention to meaningful repetitions while retaining discernment. They may illuminate your path without deciding for you.']
+    },
+    regrets:{
+      origin:['Votre recherche actuelle prend racine dans ce que vous auriez voulu vivre ou choisir autrement. Revenir sur cette expérience peut vous aider à comprendre ce qui compte encore pour vous.','Your present search is rooted in what you wish you had experienced or chosen differently. Revisiting that experience may help clarify what still matters to you.'],
+      obstacle:['Ce cheminement reste freiné par ce que vous auriez voulu faire autrement. Rejouer le passé entretient l’hésitation ; en tirer une décision pour le présent vous permettrait de retrouver une marge de choix.','This process is held back by what you wish you had done differently. Replaying the past sustains hesitation; turning its lessons into a present decision can restore room for choice.'],
+      resource:['Votre expérience passée peut devenir un appui si vous en tirez un enseignement précis. Ce que vous souhaiteriez changer vous aide à choisir différemment maintenant.','Past experience can support you when you draw a clear lesson from it. What you wish to change can help you choose differently now.'],
+      evolution:['Des choix anciens peuvent revenir à votre esprit. Leur utilité sera de vous conduire à une réponse présente, plutôt que de prolonger le scénario de ce qui aurait pu être.','Earlier choices may return to mind. Their value lies in helping you respond now rather than extending the story of what might have been.'],
+      outcome:['L’essentiel est de transformer ce que vous auriez voulu vivre autrement en choix actuel. Le passé apporte un enseignement ; il ne doit pas retenir toute votre attention au détriment de ce qui reste à vivre.','The central task is to turn what you wish had been different into a present choice. The past offers a lesson without needing to take all your attention away from what remains to be lived.']
+    },
+    deadline:{
+      origin:['Une étape arrivée à son terme, ou une décision devenue nécessaire, a déclenché votre réflexion. Ce passage demande de reconnaître ce qui doit être achevé avant d’ouvrir la suite.','A stage reaching its end, or a decision becoming necessary, has prompted your reflection. This passage asks you to recognize what needs completion before moving on.'],
+      obstacle:['Une clôture ou une décision reste en suspens et retarde la suite. Préciser ce qui doit être terminé vous aiderait à sortir de cette attente.','An unfinished closure or decision is delaying the next step. Clarifying what needs completion can help you move beyond waiting.'],
+      resource:['Un terme à respecter ou une décision à prendre vous offre un point d’appui concret. Achever ce qui est resté en suspens peut libérer l’espace nécessaire à une nouvelle étape.','An endpoint to respect or a decision to make offers concrete support. Completing what remains pending can make room for a new stage.'],
+      evolution:['Le cheminement vous rapproche d’un moment où il faudra conclure ou décider. Préparer cette clôture permet de franchir le passage avec davantage de conscience.','The process brings you closer to a point of closure or decision. Preparing that ending can help you cross into the next stage more consciously.'],
+      outcome:['La direction du tirage demande de mener une étape à son terme. Une clôture ou une décision claire ouvre la suite, sans que cela permette de fixer une date précise.','The direction of the spread calls for bringing a stage to completion. Clear closure or a decision opens what follows without establishing a precise date.']
+    },
+    intuition:{
+      origin:['Un ressenti intérieur a éveillé votre questionnement. L’écouter avec attention, tout en distinguant perception, désir et projection, permet de mieux comprendre ce qui vous traverse.','An inner feeling has prompted your questioning. Listening carefully while distinguishing perception, desire and projection can clarify your experience.'],
+      obstacle:['La difficulté tient à la distinction entre ce que vous percevez et ce que vous souhaitez. Un ressenti mérite d’être écouté, puis confronté à votre expérience avant de devenir une certitude.','The difficulty lies in distinguishing what you perceive from what you wish for. A feeling deserves attention and comparison with experience before becoming a certainty.'],
+      resource:['Votre écoute intérieure constitue une ressource. Elle devient plus fiable lorsque vous prenez le temps de distinguer un ressenti calme d’un désir pressant ou d’une projection.','Inner listening is a resource. It becomes more reliable when you distinguish a calm feeling from an urgent wish or a projection.'],
+      evolution:['Votre écoute intérieure peut devenir plus fine. L’enjeu est de reconnaître ce que vous percevez réellement, sans le confondre avec vos désirs ou vos projections.','Your inner listening may become more sensitive. The task is to recognize what you actually perceive without confusing it with desires or projections.'],
+      outcome:['La suite invite à vous appuyer sur une écoute intérieure attentive et discernante. Vos ressentis peuvent orienter votre réflexion, en restant ouverts à ce que l’expérience vient confirmer ou corriger.','The direction ahead invites attentive and discerning inner listening. Feelings can guide reflection while remaining open to what experience confirms or corrects.']
+    },
+    awakening:{
+      origin:['Une sensibilité accrue ou une prise de conscience a ouvert votre exploration intérieure. Vous commencez à percevoir votre expérience avec davantage de finesse.','Heightened sensitivity or awareness has opened an inner exploration. You are beginning to perceive your experience more closely.'],
+      obstacle:['Une sensibilité nouvelle peut être difficile à accueillir ou à comprendre. Prendre le temps de l’intégrer vous aiderait à ne pas exiger immédiatement une explication à chaque ressenti.','New sensitivity can be difficult to receive or understand. Giving it time to settle can help you avoid demanding an immediate explanation for every feeling.'],
+      resource:['Une conscience plus fine de ce que vous vivez soutient votre cheminement. Cette ouverture vous aide à explorer votre monde intérieur et à reconnaître ce qui change dans votre perception.','A finer awareness of your experience supports your path. This opening helps you explore your inner world and recognize changes in perception.'],
+      evolution:['Une conscience plus fine de vos réactions et de vos ressentis peut se développer. Cette ouverture se construit en intégrant progressivement ce que votre exploration intérieure vous apprend.','A finer awareness of reactions and feelings may develop. This opening grows through gradual integration of what inner exploration teaches you.'],
+      outcome:['L’ensemble dessine une ouverture de conscience et une sensibilité plus fine. Votre exploration intérieure peut vous aider à mieux percevoir ce que vous vivez et à l’intégrer à vos choix quotidiens.','The overall picture suggests greater awareness and sensitivity. Inner exploration may help you perceive your experience more clearly and integrate it into everyday choices.']
+    }
+  };
+  return readings[key]?.[role]?.[enMode?1:0]||'';
+}
+
 function distinctiveFr(card,role,sc){
   const m=motif(card,false);
   const project=sc==='work';
   const stages={
+    secret:{
+      origin:'Le point de départ est marqué par ce qui demeure caché ou retenu. Des sentiments, des intentions ou une part de la situation peuvent exister sans être exprimés ouvertement, ce qui rend l’histoire difficile à lire dès son origine.',
+      obstacle:'Le non-dit devient ici un obstacle : ce qui est caché ou protégé empêche de savoir sur quoi le lien peut réellement s’appuyer.',
+      resource:'Ce qui n’a pas encore été dit peut devenir une ressource si cela trouve enfin une forme d’expression sincère, sans forcer ce qui doit rester intime.',
+      evolution:'Une part encore secrète de la situation continue d’influencer son évolution ; le mouvement dépend de ce qui pourra réellement sortir du non-dit.',
+      outcome:'La synthèse conserve une part cachée : tout n’est pas disponible ou exprimé, et l’histoire reste donc partiellement ouverte tant que ces éléments ne deviennent pas plus lisibles.'
+    },
+    soulmate:{
+      origin:'Le lien s’est construit avec un fort sentiment de familiarité, de compréhension ou d’évidence. Cette impression donne beaucoup de poids à l’histoire, sans suffire à elle seule à définir ce que les deux personnes peuvent réellement construire.',
+      obstacle:'Le principal obstacle vient précisément de l’impression d’évidence ou de connexion exceptionnelle. Ressentir une grande proximité peut nourrir beaucoup d’attentes ; pourtant, la profondeur ressentie ne garantit ni la réciprocité, ni la disponibilité, ni la possibilité concrète de former un couple.',
+      resource:'Le sentiment d’une compréhension profonde peut soutenir le lien lorsqu’il aide chacun à se montrer avec sincérité, sans transformer cette résonance en certitude sur l’avenir.',
+      evolution:'La sensation d’une connexion particulièrement forte prend davantage de place. Elle peut rapprocher, mais sa valeur se mesure à la manière dont elle est vécue et partagée dans les faits.',
+      outcome:'Le tirage se termine sur l’importance d’une connexion ressentie comme exceptionnelle. Cette intensité donne du sens au lien, mais elle ne décide pas à elle seule de sa forme ni de sa durée.'
+    },
+    transformation:{
+      origin:'Une mutation profonde est déjà engagée : une ancienne manière d’aimer ou de vivre la situation commence à perdre sa place.',
+      obstacle:'Le changement devient difficile lorsqu’une ancienne dynamique continue d’être retenue alors qu’elle ne correspond plus à ce qui est en train d’émerger.',
+      resource:'La force du tirage réside dans une transformation profonde. Elle permet de quitter d’anciens schémas et d’aborder les sentiments autrement, avec une manière nouvelle de se positionner et de comprendre le lien.',
+      evolution:'La relation ou la vie affective change de forme en profondeur. Ce qui existait auparavant ne peut pas simplement être reconduit à l’identique.',
+      outcome:'La synthèse annonce une transformation plutôt qu’un retour exact à l’ancien fonctionnement : la suite demande une autre manière de vivre les sentiments et le lien.'
+    },
+    lightning:{
+      origin:'L’histoire prend naissance dans une attirance immédiate et très vive, avec l’impression que quelque chose s’impose rapidement.',
+      obstacle:'L’intensité d’un élan immédiat peut devenir déstabilisante si elle est prise pour une certitude avant que le lien ait eu le temps de se construire.',
+      resource:'Une attraction puissante redonne de l’élan et peut réveiller la vie affective, à condition de ne pas confondre intensité et stabilité.',
+      evolution:'L’évolution s’accélère brusquement : une rencontre ou un rapprochement peut provoquer une émotion très forte et donner le sentiment que tout se remet en mouvement. Cet élan est réel dans le récit, mais il doit encore montrer ce qu’il peut devenir avec le temps.',
+      outcome:'La synthèse est celle d’un élan amoureux soudain et puissant. Quelque chose peut se déclencher rapidement, mais la force du départ ne permet pas encore de savoir quelle forme durable cette histoire prendra.'
+    },
+    silence:{
+      origin:'Le point de départ est marqué par une absence de réponse ou une communication interrompue. Le lien existe dans un espace où ce qui n’est pas dit pèse autant que ce qui est exprimé.',
+      obstacle:'Le silence devient le frein principal : l’absence de réponse ou le retrait empêche de savoir clairement ce qui est ressenti et laisse la relation sans direction partagée.',
+      resource:'Le silence peut offrir un temps de recul lorsqu’il n’est pas utilisé pour fuir la relation ; il permet alors de laisser retomber la pression avant une éventuelle reprise des échanges.',
+      evolution:'La dynamique entre dans une phase de retrait ou de communication suspendue. Après ce qui a précédé, le mouvement ralentit et laisse davantage de place à l’attente qu’à l’action.',
+      outcome:'La dernière étape est marquée par le silence : après les mouvements précédents, une absence de réponse, un retrait ou une communication interrompue laisse la situation en suspens. Ce silence peut correspondre à une hésitation, à une protection ou à une prise de distance, mais le tirage ne permet pas de choisir arbitrairement entre ces possibilités. Il ne constitue donc ni une clarification ni une conclusion définitive : il laisse l’histoire ouverte, avec une incertitude réelle sur ce qui sera exprimé ensuite.'
+    },
+    friendship:{
+      origin:'Un lien amical, fait d’écoute et de confiance, constitue le point de départ. Cette proximité offre une place dans la vie de l’autre, sans que sa nature soit nécessairement amoureuse.',
+      obstacle:'Le décalage peut tenir à la place donnée au lien : une proximité amicale peut être vécue comme une promesse sentimentale alors que les attentes ne sont pas encore partagées. Nommer cette différence aiderait à vous situer.',
+      resource:'La confiance amicale et l’écoute constituent un appui réel. Elles permettent de parler plus librement de vos attentes sans faire dépendre la valeur du lien d’une évolution amoureuse.',
+      evolution:'Le lien prend une forme plus amicale, centrée sur la confiance, les échanges et le soutien mutuel. Des sentiments pourraient évoluer, mais cette proximité ne permet pas à elle seule de conclure à la formation d’un couple.',
+      outcome:'La conclusion du tirage met l’amitié au premier plan : un lien de confiance, d’écoute et de soutien paraît être la forme de proximité à privilégier. Pour votre avenir amoureux, cela peut représenter une base affective importante, mais pas encore une promesse de couple. Une évolution sentimentale reste possible si elle devient désirée et exprimée de part et d’autre ; elle ne découle pas automatiquement de la complicité. La direction actuelle consiste donc à reconnaître la valeur du lien amical tout en clarifiant la place que chacun souhaite lui donner.'
+    },
+    union:{
+      origin:'Le désir de faire route ensemble a donné une forme plus concrète à vos attentes. Vous cherchez une place reconnue dans le lien, au-delà des seuls échanges ou de l’attirance.',
+      obstacle:'Le passage à un couple ou à un engagement assumé constitue ici le point difficile. Les sentiments ne suffisent pas si vos envies de vous unir, votre disponibilité ou le rythme souhaité restent différents.',
+      resource:'Un engagement partagé peut donner un cadre à vos sentiments. La possibilité de décider ensemble et de reconnaître votre place respective offre une base pour construire.',
+      evolution:'Le lien peut prendre une forme plus assumée, avec un choix concret de faire route ensemble. Cette étape demande que l’engagement soit voulu et porté par les deux personnes.',
+      outcome:'La direction du tirage est celle d’une union plus concrète : donner au lien une place visible et choisir de construire ensemble. Cette perspective devient solide lorsque les intentions sont partagées et se traduisent par un engagement réciproque.'
+    },
+    patterns:{
+      origin:'Un ancien schéma relationnel a marqué votre façon d’entrer dans cette histoire. Ce qui se répète mérite d’être reconnu pour distinguer le désir présent des habitudes du passé.',
+      obstacle:'La répétition d’une ancienne dynamique peut vous ramener aux mêmes attentes et aux mêmes déceptions. Le frein se situe dans ce mécanisme, qui risque de guider vos réactions malgré l’envie de changer.',
+      resource:'Comprendre ce qui se répète vous rend une liberté de choix. Vous pouvez utiliser cette expérience pour reconnaître plus tôt les limites et répondre autrement.',
+      evolution:'L’étape qui se dessine remet un ancien schéma relationnel en lumière. Une nouvelle tentative risque de reproduire le passé si les attentes, les limites et les façons de réagir restent identiques ; reconnaître ce mécanisme ouvre la possibilité de changer réellement la suite.',
+      outcome:'Le fil central est de sortir d’un schéma qui se répète. La suite dépend moins du retour d’une situation familière que de votre capacité à choisir une réponse nouvelle et à ne plus accepter les mêmes déséquilibres.'
+    },
+    freedom:{
+      origin:'Votre vie affective part d’un besoin d’espace et d’autonomie. Vous cherchez un lien dans lequel vous pouvez rester vous-même, sans perdre votre liberté pour conserver une proximité.',
+      obstacle:'Des attentes trop contraignantes peuvent rendre le rapprochement difficile. Trouver une place pour chacun demande de respecter les besoins d’indépendance sans laisser l’autre dans une attente indéfinie.',
+      resource:'Votre autonomie vous aide à choisir le lien plutôt qu’à le subir. Cet espace personnel permet de vous rapprocher sans faire dépendre tout votre équilibre de la relation.',
+      evolution:'Le lien évolue en laissant davantage de place à l’espace personnel. Cette respiration peut soutenir une proximité plus libre si les besoins de chacun sont compris.',
+      outcome:'La suite gagne à préserver votre liberté et celle de l’autre. Un lien durable demande une proximité choisie, où chacun peut conserver ses repères sans transformer l’attachement en contrainte.'
+    },
+    tenderness:{
+      origin:'Une proximité douce, faite d’attentions et de gestes rassurants, a donné au lien une valeur particulière. Cette expérience explique le besoin de vous sentir accueilli sans avoir à forcer votre place.',
+      obstacle:'La douceur peut manquer si les attentes deviennent pressantes ou si les besoins restent tus. Prendre soin du lien demande aussi de pouvoir dire ce qui vous touche sans craindre une réaction dure.',
+      resource:'La bienveillance et les petites attentions offrent un appui pour traverser les incertitudes. Une présence attentive peut rendre le dialogue plus sûr, sans exiger une réponse immédiate.',
+      evolution:'Le lien peut évoluer par des gestes plus doux et une attention plus personnelle. Cette proximité se construit dans la manière de vous accueillir mutuellement, au-delà de l’intensité du désir.',
+      outcome:'Ce qui mérite de durer, c’est la douceur entre vous : les attentions sincères, les gestes rassurants et la possibilité de vous rapprocher sans pression. Le désir et l’intensité peuvent ouvrir une étape, mais la qualité de cette étape se mesure surtout à la façon dont vous prenez soin l’un de l’autre. La suite la plus nourrissante serait une proximité où chacun se sent accueilli, libre de dire ce qu’il ressent et respecté dans son rythme.'
+    },
+    intimacy:{
+      origin:'Une proximité intime, émotionnelle ou physique, donne à votre histoire une profondeur particulière. Ce qui vous a rapprochés tient à la confiance et à la possibilité de vous montrer plus vulnérables, au-delà de la séduction.',
+      obstacle:'La proximité peut devenir difficile si la vulnérabilité expose à une attente trop forte. Vous ouvrir demande un espace sûr, où ce qui est confié reste respecté.',
+      resource:'La confiance déjà partagée peut aider à aborder ce qui reste délicat. Elle offre un espace pour parler plus personnellement et reconnaître les besoins de chacun.',
+      evolution:'Le rapprochement peut gagner en profondeur lorsque chacun accepte de se montrer plus authentiquement. La confiance devient alors aussi importante que l’attirance.',
+      outcome:'La direction profonde du tirage est celle d’une intimité plus confiante. Ce qui peut durer repose sur la sécurité émotionnelle, le respect de votre espace privé et la possibilité de vous montrer tels que vous êtes.'
+    },
+    mirror:{
+      origin:'Une attraction intense et un sentiment de vous reconnaître dans l’autre ont donné de la force à cette histoire. Cette résonance a aussi pu rendre vos fragilités plus sensibles.',
+      obstacle:'L’intensité du lien peut amplifier les attentes et les réactions. Le sentiment de vous reconnaître l’un dans l’autre ne règle pas à lui seul les désaccords ou les différences de disponibilité.',
+      resource:'Ce que l’autre réveille en vous peut aider à comprendre vos propres besoins. Cette lucidité devient une force lorsqu’elle permet de répondre autrement aux anciennes blessures.',
+      evolution:'Une forte résonance entre vous peut remettre les sentiments au premier plan. Ce rapprochement agit aussi comme un miroir : il rend visibles vos besoins et vos fragilités, et demande de la maturité pour trouver un équilibre.',
+      outcome:'La suite se joue dans votre capacité à donner un cadre plus mûr à une attraction intense. Le lien peut être marquant, mais ce sont vos choix réciproques et votre manière de traverser les difficultés qui lui donneront une stabilité.'
+    },
+    romantic:{
+      origin:'Votre question prend racine dans un attachement amoureux : le désir de proximité affective donne à cette histoire une portée qui dépasse un simple échange amical.',
+      obstacle:'La dimension amoureuse du lien soulève des attentes qui peuvent être difficiles à accorder. Le désir de proximité mérite d’être exprimé pour comprendre ce que chacun souhaite réellement vivre.',
+      resource:'La dimension amoureuse constitue ici une force : la tendresse et le désir de proximité peuvent soutenir un dialogue plus personnel. Cet appui gagne en solidité lorsque chacun peut dire la place qu’il souhaite donner au lien.',
+      evolution:'L’évolution se situe dans le registre amoureux : l’attachement, les sentiments et le désir de proximité affective prennent davantage de place. Cette orientation ouvre une possibilité de rapprochement sentimental, dont la réciprocité et la forme concrète restent à éclaircir entre vous.',
+      outcome:'L’ensemble du tirage met en avant la nature amoureuse du lien. Il ouvre une perspective affective, sans fixer à lui seul la durée de la relation ni confirmer les intentions de chacun.'
+    },
+    alignment:{
+      origin:'Vous avez cherché à faire correspondre vos choix à ce que vous ressentez vraiment. Ce besoin de cohérence explique pourquoi une réponse incertaine ou des gestes contradictoires ne peuvent plus vous satisfaire.',
+      obstacle:'Un décalage entre vos attentes et les actes posés fragilise votre direction. Chercher l’accord à tout prix risquerait de vous éloigner de ce qui compte pour vous.',
+      resource:'Vous pouvez vous appuyer sur une vision plus claire de vos besoins. Elle vous aide à reconnaître les propositions qui vous conviennent et à poser vos limites avec davantage de calme.',
+      evolution:'Vos décisions se rapprochent de vos besoins réels. Cette cohérence change votre manière de répondre : vous cherchez moins à maintenir une apparence d’accord qu’à vivre quelque chose de juste.',
+      outcome:'La suite gagne en cohérence lorsque vos choix traduisent vos besoins réels. Une direction devient plus solide si vous pouvez la vivre sans vous renier.'
+    },
+    separation:{
+      origin:'Une coupure a changé les repères sur lesquels vous comptiez. Elle laisse une histoire à comprendre, mais elle a aussi rendu impossible de continuer exactement comme auparavant.',
+      obstacle:'La séparation ou la fin d’un ancien fonctionnement reste le point difficile à traverser. Le désir de retrouver ce qui existait ne suffit pas encore à résoudre ce qui vous a éloignés.',
+      resource:'Reconnaître la coupure vous rend une marge de choix. Vous pouvez distinguer ce qui mérite encore une tentative de ce qui vous retient dans une attente douloureuse.',
+      evolution:'Aujourd’hui, une coupure ou la fin d’un ancien fonctionnement occupe le premier plan. Même si l’attachement demeure, un rapprochement demanderait de traiter ce qui vous a éloignés et de construire un échange différent.',
+      outcome:'Une fin ou une séparation marque la direction actuelle. Elle invite à protéger votre équilibre et à laisser une éventuelle reprise dépendre de changements réels.'
+    },
+    happiness:{
+      origin:'Des moments heureux ont donné à cette histoire une valeur particulière. Leur souvenir nourrit votre désir de retrouver une vie où vous vous sentez pleinement à votre place.',
+      obstacle:'L’envie de retrouver le bonheur peut rendre difficile de voir ce qui manque aujourd’hui. Préserver une image heureuse ne devrait pas vous faire accepter une réalité qui vous blesse.',
+      resource:'Ce qui vous apporte une joie réelle devient un repère précieux. Vous pouvez vous appuyer sur ces expériences pour choisir ce qui nourrit votre vie plutôt que la seule attente d’un résultat.',
+      evolution:'Une place plus grande se libère pour la joie et la satisfaction. Cette amélioration prend corps dans des expériences où vous vous sentez accueilli et libre d’être vous-même.',
+      outcome:'La direction qui s’ouvre est plus lumineuse et laisse une place à l’épanouissement. Ce mieux-être peut venir d’un lien renouvelé, mais aussi d’une manière de retrouver votre équilibre sans rester suspendu à une seule issue.'
+    },
+    destiny:{
+      origin:'Une rencontre ou un tournant marquant a laissé une empreinte qui donne encore du poids à votre question.',
+      obstacle:'Le sentiment que tout serait déjà écrit risque de faire attendre un signe au lieu de choisir votre réponse.',
+      resource:'Ce qui a profondément compté pour vous aide à reconnaître la direction que vous souhaitez réellement prendre.',
+      evolution:'Un tournant donne une portée nouvelle à vos choix ; vous gardez la possibilité de répondre autrement.',
+      outcome:'La suite pourrait prendre une importance particulière dans votre parcours, sans vous retirer la liberté de choisir.'
+    },
+    retry:{
+      origin:'Une première tentative n’a pas clos l’histoire ; le désir de reprendre autrement reste présent.',
+      obstacle:'Recommencer sans modifier ce qui avait échoué ferait courir le risque de retrouver les mêmes difficultés.',
+      resource:'L’expérience passée vous permet de savoir ce qui doit changer pour rendre une nouvelle tentative plus solide.',
+      evolution:'Une possibilité de reprendre ce qui semblait interrompu se présente maintenant, en construisant autrement cette nouvelle étape.',
+      outcome:'Une nouvelle tentative reste envisageable si elle s’accompagne de changements réels plutôt que de la seule envie de retrouver le passé.'
+    },
+    temptation:{
+      origin:'Un désir puissant ou une possibilité séduisante a bousculé vos repères et ouvert cette question.',
+      obstacle:'L’attrait immédiat peut faire oublier une limite ou une conséquence qui comptera ensuite.',
+      resource:'Reconnaître votre désir vous aide à choisir consciemment la place que vous souhaitez lui donner.',
+      evolution:'Une envie plus forte pousse à franchir un pas ; prendre le temps d’en mesurer les conséquences protège votre choix.',
+      outcome:'L’attirance peut donner l’impulsion de la prochaine étape, mais sa force ne suffit pas à garantir ce qui pourra durer.'
+    },
     heartbreak:{
       origin:'Une blessure ou une vérité douloureuse marque le point de départ. Elle mérite d’être regardée sans détour, car l’ignorer rendrait la suite moins juste et moins lisible.',
       obstacle:'La douleur peut devenir un frein si elle pousse à éviter les faits ou à interpréter chaque geste à travers la blessure passée. Il faut lui donner une place sans la laisser décider de tout.',
@@ -154,10 +464,19 @@ function distinctiveFr(card,role,sc){
       outcome:project?'La synthèse ouvre sur une avancée possible, à condition de choisir une direction précise et de concentrer les moyens sur une première étape réalisable. L’élan devient utile lorsqu’il sert un cap tenu dans la durée.':'La synthèse invite à choisir une direction nette, puis à conduire les forces disponibles vers ce même objectif. Une avancée est possible si la volonté s’accompagne d’actes coordonnés.'
     }
   };
-  return stages[m]?.[role]||'';
+  let text=stages[m]?.[role]||'';
+  if(sc!=='relation')text=text.replace('ce qui vous a éloignés','ce qui a conduit à cette interruption').replace('un rapprochement','une reprise').replace('d’un lien renouvelé','d’une nouvelle orientation').replace('l’attachement demeure','l’envie de poursuivre demeure');
+  if(sc==='work')text=text.replace('Une rencontre ou un tournant marquant','Une occasion ou un tournant professionnel marquant').replace('L’attirance','L’attrait d’une proposition').replace('retrouver le passé','relancer le projet précédent').replace('un échange différent','un fonctionnement différent');
+  if(sc==='life')text=text.replace('Une rencontre ou un tournant marquant','Une expérience ou un tournant marquant').replace('L’attirance','L’envie d’explorer une autre voie');
+  return text;
 }
 function developFr(card,role){
   const actions={
+    friendship:'reconnaître la nature amicale du lien et clarifier toute attente sentimentale',union:'vérifier que l’engagement est souhaité de part et d’autre',patterns:'reconnaître le schéma relationnel qui se répète pour choisir autrement',
+    tenderness:'préserver la douceur et les attentions sans imposer de pression',intimacy:'préserver la confiance et la sécurité émotionnelle',mirror:'donner un cadre mûr à cette résonance intense',
+    romantic:'clarifier la place des sentiments amoureux et la proximité souhaitée par chacun',
+    alignment:'faire correspondre vos décisions à vos besoins réels',separation:'reconnaître ce qui s’est terminé et ce qui pourrait être reconstruit',happiness:'choisir ce qui nourrit une joie durable',
+    destiny:'choisir votre réponse à ce tournant marquant',retry:'reprendre autrement ce qui avait échoué',temptation:'mesurer les conséquences du désir avant de lui donner suite',
     departure:'nommer ce qui ne nourrit plus la situation',contentment:'vérifier ce qui apporte une satisfaction durable',
     anxiety:'séparer les inquiétudes des faits établis',pause:'utiliser le recul pour revoir les hypothèses',
     tangible:'donner une forme concrète à la possibilité entrevue',disenchantment:'réévaluer ce qui existe avant de le quitter',
@@ -184,11 +503,11 @@ function developFr(card,role){
   if(!action)return '';
   const de=/^[aeiouyàâäéèêëîïôöùûü]/i.test(action)?'d’':'de ';
   return {
-    origin:`Ce point de départ explique pourquoi il faudra ${action} avant d’aller plus loin.`,
-    obstacle:`Le mouvement risque de rester freiné tant qu’il n’est pas possible ${de}${action}.`,
-    resource:`Cet appui prend tout son sens s’il permet ${de}${action}.`,
-    evolution:`Le changement se vérifiera dans la capacité à ${action}.`,
-    outcome:`La prochaine étape consisterait à ${action}.`
+    origin:`Vous pouvez ${action}.`,
+    obstacle:`La difficulté demande ${de}${action}.`,
+    resource:`Vous pouvez ${action}.`,
+    evolution:`Vous pourrez ${action}.`,
+    outcome:`Il s’agit ${de}${action}.`
   }[role]||'';
 }
 function preciseFr(card,role){
@@ -428,51 +747,273 @@ function en(card,role,sc,i){
   };
   return pick(bank?.[role]?.[t]||bank?.[role]?.neutral||[],card,i);
 }
+function semanticEn(card,role,sc,i){
+  const actions={
+    friendship:'recognise the friendship at the heart of the bond without assuming that it promises a romantic relationship',union:'check that commitment is genuinely wanted by both people',patterns:'recognise the recurring relationship pattern and choose a different response',
+    tenderness:'preserve kindness, reassuring gestures and closeness without pressure',intimacy:'build emotional safety and respect the vulnerability you share',mirror:'give an intense mutual resonance a mature and balanced framework',
+    romantic:'clarify the romantic feelings and the emotional closeness each person wants',
+    alignment:'bring your choices into line with what you genuinely need',separation:'acknowledge the break and establish what would need to change before rebuilding',happiness:'make room for lasting fulfilment without tying it to a single outcome',
+    destiny:'choose your response to a turning point that has particular meaning for you',
+    retry:'make a fresh attempt while changing what caused the earlier setback',
+    temptation:'weigh a compelling desire against its consequences before acting',
+    heartbreak:'recognise the hurt without letting it decide everything',burden:'share the responsibilities and reduce the load',
+    sensitivity:'follow a gentle opening with consistent actions',composure:'express what matters calmly',direction:'choose a clear course before accelerating',
+    departure:'decide what is worth leaving behind',contentment:'check whether satisfaction also meets the deeper need',
+    anxiety:'separate the feared scenarios from established facts',pause:'use the pause to reconsider the next step',
+    tangible:'turn the available opportunity into something workable',disenchantment:'reassess what is still available before dismissing it',
+    illusion:'choose an option that can actually be tested',loss:'acknowledge the loss while making use of what remains',
+    conflict:'address the disagreement directly',ambiguity:'clarify what remains unspoken',cooperation:'agree on how each person can contribute',
+    insight:'make the decision with clearer information',freedom:'leave room for independence',movement:'give the momentum a sustainable direction',
+    change:'put the new approach into practice',ground:'build on what is dependable'
+  };
+  const action=actions[motif(card,false)||theme(card,false)];
+  if(!action)return en(card,role,sc,i);
+  const place=sc==='work'?'the project':sc==='relation'?'the connection':'your next step';
+  return {
+    origin:`What set ${place} in motion explains why you now need to ${action}.`,
+    obstacle:`Progress could falter if you do not ${action} before carrying on.`,
+    resource:`You have a useful opening here: you can ${action} and make it a point of support.`,
+    evolution:`A shift becomes possible as you begin to ${action} in practice.`,
+    outcome:`The direction ahead depends on your willingness to ${action}, with attention to what the earlier steps have revealed.`
+  }[role];
+}
+function tarotMixedPart(card,role,sc,i,enMode){
+  // Use meaning only to identify a motif. Never emit catalogue sentences.
+  return enMode?semanticEn(card,role,sc,i):
+    distinctiveFr(card,role,sc)||preciseFr(card,role)||fr(card,role,sc,i);
+}
+// Keep the actual reading as the semantic source. Broad keyword matching is
+// unsuitable for reversals and for cards without a dedicated narrative motif.
+function meaningPart(card,role,enMode,reversed=false){
+  const sc=scope(), local=enMode?(card.en||{}):card;
+  const field=sc==='relation'?'reading_relationnel':sc==='work'?'reading_professionnel':'reading_spirituel';
+  let raw=reversed?window.CR_TAROT_REVERSED?.[card.id]?.[enMode?'en':'fr']:
+    (state.oracle==='tarot'&&card.id>22?local.definition:'')||local[field]||local.meaning||local.definition||(!enMode?card[field]||card.meaning||card.definition:'');
+  // Domain-specific readings keep the symbol without asserting reciprocity.
+  if(state.oracle==='tarot'&&sc==='relation'){
+    if(card.id===33&&reversed)raw=enMode?
+      'An impulse to reconnect may lack follow-through. Testing it in practice means observing whether contact becomes regular, rather than relying on an intention.':
+      'Un élan de rapprochement peut manquer de constance. Le concrétiser demande des échanges réguliers : une intention seule ne suffit pas à faire la différence.';
+    if(card.id===20&&!reversed)raw=enMode?
+      'A warmer, clearer exchange becomes possible. This opening can support an honest conversation, without establishing mutual feelings or renewed contact.':
+      'Un échange plus chaleureux et plus clair devient possible. Cette ouverture peut favoriser une conversation franche, sans établir la réciprocité des sentiments ni une reprise de contact.';
+    if(card.id===54&&!reversed)raw=enMode?
+      'A pause, rest or silence allows emotional recovery and clearer thinking. This withdrawal calls for respecting the pace, without promising renewed contact afterwards.':
+      'Une pause, du repos ou du silence permettent de récupérer et de retrouver une pensée plus claire. Ce retrait demande de respecter le rythme, sans promettre une reprise de contact ensuite.';
+  }
+  if(!raw)return '';
+  let text=groundedText(raw,card,enMode);
+  // JavaScript \b treats accented letters as non-word characters: it matched
+  // the end of « réelle ». Match standalone pronouns with Unicode boundaries.
+  text=text.replace(/(?<![\p{L}\p{M}\p{N}_])Elle(?![\p{L}\p{M}\p{N}_])/gu,enMode?'This situation':'Cette situation').replace(/(?<![\p{L}\p{M}\p{N}_])elle(?![\p{L}\p{M}\p{N}_])/gu,enMode?'this situation':'cette situation');
+  text=text.replace(/\s*;\s*/g,'. ').replace(/, mais /g,' ; toutefois, ').replace(/, yet /g,'; however, ').replace(/\bde ([aeiouéèêàâîïôùû])/gi,'d’$1');
+  const context=enMode?{origin:'In the earlier situation, ',obstacle:'The obstacle to address is this: ',resource:'You can draw on this insight: ',evolution:'At present, ',outcome:'For the next step, '}:{origin:'',obstacle:'La difficulté à résoudre est la suivante : ',resource:'Vous pouvez vous appuyer sur ce constat : ',evolution:'',outcome:''};
+  return context[role]?`${context[role]}${text.charAt(0).toLocaleLowerCase()+text.slice(1)}`:text;
+}
+function reversedPart(card,role,sc,i,enMode){
+  return meaningPart(card,role,enMode,true);
+}
+function sourceSentences(cards,enMode){
+  const values=[];
+  for(const card of cards){
+    for(const local of [card,card.en||{}])
+      for(const field of ['definition','meaning','reading_relationnel','reading_professionnel','reading_spirituel'])
+        values.push(local[field]||'');
+    values.push(window.CR_TAROT_REVERSED?.[card.id]?.[enMode?'en':'fr']||'');
+  }
+  return values.flatMap(v=>String(v).match(/[^.!?;]+[.!?;]?/g)||[]).map(v=>norm(v).replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim()).filter(v=>v.split(' ').length>=7);
+}
+function withoutCatalogue(text,sources){
+  return (String(text).match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[]).filter(sentence=>{
+    const clean=norm(sentence).replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+    return !sources.some(source=>clean.includes(source)||source.includes(clean));
+  }).join(' ').trim();
+}
+function tarotPairLink(previous,current,enMode){
+  const family=card=>card.id<=22?'major':card.id<=36?'wands':card.id<=50?'cups':card.id<=64?'swords':'pentacles';
+  const a=family(previous),b=family(current);
+  if(a===b)return '';
+  const fr={
+    'cups:pentacles':'Ce qui se ressent doit aussi trouver une place dans les contraintes concrètes.',
+    'pentacles:cups':'Les contraintes concrètes finissent par peser sur ce qui peut être vécu et partagé.',
+    'major:wands':'Une direction intérieure se précise au contact des gestes réellement posés.',
+    'wands:major':'L’élan d’agir soulève une question qui dépasse le seul résultat immédiat.',
+    'wands:cups':'Une avancée visible ne dit pas encore comment les émotions pourront être accueillies.',
+    'cups:wands':'Ce qui touche demande maintenant à se traduire dans les actes.',
+    'swords:pentacles':'Une décision claire doit également tenir compte des moyens disponibles.',
+    'pentacles:swords':'Les faits du quotidien rendent plus urgente la mise au clair des choix.',
+    'swords:cups':'Une parole juste doit aussi laisser de la place à ce qui est ressenti.',
+    'cups:swords':'Ce qui est ressenti gagnerait à être nommé avec précision.',
+    'major:cups':'Cette question plus profonde rejoint aussi la manière de vivre les émotions.',
+    'cups:major':'L’émotion présente ouvre sur une question plus large de direction.',
+    'major:pentacles':'Une direction personnelle se mesure aussi à ce qu’elle permet dans le quotidien.',
+    'pentacles:major':'Les limites du quotidien invitent à revoir la direction prise.',
+    'wands:pentacles':'L’énergie du moment a besoin d’une place réelle dans le quotidien.',
+    'pentacles:wands':'Une base concrète peut donner une portée nouvelle à l’initiative.',
+    'major:swords':'Ce qui se joue en profondeur demande aussi des mots et des choix clairs.',
+    'swords:major':'La décision visible engage également une orientation plus personnelle.',
+    'wands:swords':'L’envie d’agir demande encore à être éclairée par les faits.',
+    'swords:wands':'Une pensée claire ne portera ses fruits que si elle trouve un geste juste.'
+  };
+  const en={
+    'cups:pentacles':'What is felt also needs a real place among everyday demands.',
+    'pentacles:cups':'Practical demands shape what can actually be felt and shared.',
+    'major:wands':'An inner direction becomes clearer through actions actually taken.',
+    'wands:major':'The urge to act raises a question larger than an immediate result.',
+    'wands:cups':'Visible progress does not yet say how feelings will be received.',
+    'cups:wands':'What matters emotionally now needs to find expression in action.',
+    'swords:pentacles':'A clear decision must also account for the resources available.',
+    'pentacles:swords':'Everyday facts make it more urgent to clarify the choice.',
+    'swords:cups':'Clear words must also make room for what is felt.',
+    'cups:swords':'What is felt would benefit from being named more precisely.',
+    'major:cups':'The deeper question also reaches into how feelings are lived.',
+    'cups:major':'The present feeling opens onto a larger question of direction.',
+    'major:pentacles':'A personal direction also needs to work in everyday life.',
+    'pentacles:major':'Everyday limits invite a closer look at the direction taken.',
+    'wands:pentacles':'The current energy needs a real place in daily life.',
+    'pentacles:wands':'A practical foundation can give new reach to an initiative.',
+    'major:swords':'What runs deeper also calls for clear words and choices.',
+    'swords:major':'The visible decision also carries a more personal direction.',
+    'wands:swords':'The wish to act still needs to be informed by facts.',
+    'swords:wands':'Clear thought bears fruit when it finds a fitting action.'
+  };
+  return (enMode?en:fr)[a+':'+b]||'';
+}
+/* Keep the selected domain's actual meaning; never infer it from polarity or
+   incidental keywords. Removing a title must preserve a grammatical subject. */
+function groundedText(raw,card,enMode){
+  let text=String(raw||'').trim();
+  const title=enMode?(card.en?.name||card.name):card.name;
+  const quote=s=>String(s).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  text=text.replace(/^(?:Sur le plan [^,]+|Dans le cadre [^,]+|Dans une relation|Dans le travail),?\s*/i,'');
+  if(title)text=text.replace(new RegExp('(^|[.!?]\\s+)(?:«\\s*)?'+quote(title)+'(?:\\s*»)?(?=\\s|[,;:])','gi'),'$1Cette lecture');
+  if(title){
+    const variants=[title,title.replace(/ de É/g,' d’É'),title.replace(/ de É/g," d'É")];
+    for(const name of variants)text=text.replace(new RegExp('(?<![\\p{L}])(?:The |Le |La |L[’\'])?'+quote(name)+'(?![\\p{L}])','gu'),enMode?'this experience':'cette expérience');
+  }
+  text=text.replace(/(^|[.!?]\s+)(?:cette carte|la carte|cette lecture|elle)\s+(?:vous\s+)?/gi,'$1@ ');
+  const replacements=[
+    [/^@ demande de ne pas /i,'Il convient de ne pas '],
+    [/^@ (?:invite à|demande de|encourage à) /i,'Vous pouvez '],
+    [/^@ (?:rappelle|montre|indique|signale|enseigne) qu[’']/i,''],
+    [/^@ (?:rappelle|montre|indique|signale|enseigne) que /i,''],
+    [/^@ confirme qu[’']/i,''],
+    [/^@ confirme que /i,''],
+    [/^@ confirme /i,'Les faits confirment '],
+    [/^@ (?:annonce|signale|indique|décrit|évoque|représente|désigne|symbolise|exprime|marque)(?: ou (?:annonce|signale|indique|décrit|évoque|représente|désigne|symbolise|exprime|marque))? /i,'Cela révèle '],
+    [/^@ parle de (?=(?:un|une|le|la|les|des)\b|l[’'])/i,'Cela révèle '],
+    [/^@ parle d[’'](?=(?:un|une|le|la|les|des)\b|l[’'])/i,'Cela révèle '],
+    [/^@ parle de /i,'Cela fait état de '],
+    [/^@ parle d[’']/i,'Cela fait état d’'],
+    [/^@ met en lumière /i,'Cela révèle '],
+    [/^@ peut marquer /i,'Vous pouvez traverser '],
+    [/^@ aide à /i,'Vous pouvez '],
+    [/^@ oblige à /i,'Il devient nécessaire de '],
+    [/^@ parle d[’']/i,'Cela révèle '],
+    [/^@ demande d[’']/i,'Il est nécessaire d’'],
+    [/^@ /i,'Cela ']
+  ];
+  return (text.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[]).map(sentence=>{
+    let s=sentence.trim().replace(/^(?:Au départ|Aujourd’hui|À partir de là|Pour la suite|At first|Initially),?\s*/i,'');
+    s=s.replace(/^(?=(?:Indique|Désigne|Annonce|Représente|Signale|Évoque|Symbolise|Met|Parle|Montre|Place|Décrit|Exprime|Rappelle|Favorise|Ouvre|Fait|Invite|Avertit|Confirme)\b)/,'@ ');
+    for(const [pattern,replacement] of replacements)s=s.replace(pattern,replacement);
+    s=s.replace(/;\s*(?:la carte|elle) invite à /gi,' ; vous pouvez ');
+    s=s.replace(/^Cela (Favorise|Ouvre|Fait|Place|Montre|Rappelle|Invite|Avertit|Met)\b/,(m,v)=>'Cela '+v.charAt(0).toLocaleLowerCase()+v.slice(1));
+    s=s.replace(/Vous pouvez se /g,'Il est possible de se ').replace(/, et que /g,', et ');
+    return s?s.charAt(0).toLocaleUpperCase()+s.slice(1):'';
+  }).join(' ');
+}
+function roleGrounded(text,role,enMode){
+  const firstLead=enMode
+    ?{origin:'The situation',obstacle:'The difficulty',resource:'This strength',evolution:'The development',outcome:'The overall picture'}
+    :{origin:'La situation',obstacle:'La difficulté',resource:'Cette force',evolution:'L’évolution',outcome:'La synthèse'};
+  const firstReveal=enMode
+    ?{origin:'The situation highlights',obstacle:'The difficulty reveals',resource:'This strength brings',evolution:'The development brings out',outcome:'The overall picture highlights'}
+    :{origin:'La situation met en lumière',obstacle:'L’obstacle met en évidence',resource:'Cette force apporte',evolution:'L’évolution fait apparaître',outcome:'La synthèse met en évidence'};
+  const continuationReveal=enMode
+    ?{origin:'This situation also shows',obstacle:'This tension also shows',resource:'This strength also supports',evolution:'This development also highlights',outcome:'This perspective also underlines'}
+    :{origin:'Cette situation souligne aussi',obstacle:'Cette tension souligne aussi',resource:'Cette force soutient aussi',evolution:'Cette dynamique souligne',outcome:'Cette perspective souligne aussi'};
+  let introduced=false;
+  const source=String(text||'');
+  return source.replace(/\b(?:Cela révèle|Cela|This experience)\b/g,(match,offset)=>{
+    const before=source.slice(0,offset).trim();
+    const continuation=introduced||Boolean(before);
+    introduced=true;
+    if(/révèle/i.test(match)){
+      return (continuation?continuationReveal:firstReveal)[role]||(enMode?'The situation highlights':'La situation met en lumière');
+    }
+    if(continuation)return enMode?'It':'Elle';
+    return firstLead[role]||(enMode?'The situation':'La situation');
+  });
+}
+
+
 function build(cards){
   if(!Array.isArray(cards)||!cards.length)return '';
-  const chosen=cards.slice(0,12), r=roles(chosen.length), sc=scope(), enMode=state?.lang==='en';
-  const q=String(state?.question||'').replace(/\s+/g,' ').trim();
-  const themes=chosen.map(c=>theme(c,enMode));
-  const clarifyingCommitment=chosen.length===3&&sc==='relation'&&themes[0]==='triangle'&&themes[1]==='conflict'&&themes[2]==='commitment';
-  const stuckThenClarity=chosen.length===3&&themes[0]==='tension'&&themes[1]==='tension'&&themes[2]==='insight';
-  const parts=clarifyingCommitment?(enMode?[
-    'The situation begins with uncertainty about where each person stands. Several ties or competing wishes may be making it difficult to choose a clear direction.',
-    'That uncertainty is now bringing tension into the open. An honest conversation could clarify what each person wants, even if it is uncomfortable.',
-    'If the positions become clear, a more concrete commitment may become possible. Its strength will depend on shared decisions and lasting actions, not on promises alone.'
-  ]:[
-    'La situation semble d’abord marquée par une ambiguïté sentimentale : plusieurs liens, plusieurs directions ou des sentiments contradictoires rendent difficile de savoir quelle place chacun souhaite prendre.',
-    'Cette incertitude arrive maintenant à un point de tension. Des désaccords peuvent éclater, mais leur expression peut aussi permettre de clarifier les attentes et de sortir du non-dit.',
-    'Une fois les positions établies, la possibilité d’un engagement plus concret apparaît. Sa solidité dépendra de choix partagés et d’actes durables, au-delà des seules promesses.'
-  ]):stuckThenClarity?(enMode?[
-    'The earlier difficulty suggests that the route taken has stopped offering a workable answer. The present situation brings the mismatch into focus: continuing to force it could require giving up something essential.',
-    'The next step is to put the difficulty into clear words, distinguish what can be discussed from what cannot be compromised, and see whether a different way forward is possible. The cards point to a conversation and a choice, rather than a guaranteed outcome.'
-  ]:[
-    'Une difficulté ancienne semble avoir épuisé la voie suivie jusqu’ici. Ce qui coince aujourd’hui n’est peut-être pas un simple manque d’efforts : certaines attentes ou façons d’avancer ne s’accordent plus, et insister risque de demander trop de renoncements.',
-    'La suite invite à nommer clairement le désaccord, à distinguer ce qui peut se négocier de ce qui compte vraiment pour vous, puis à regarder si une autre voie est possible. Le tirage suggère une mise au clair et un choix, sans promettre une issue précise.'
-  ]):chosen.map((c,i)=>{
-    const role=r[i]||'evolution';
-    if(enMode)return en(c,role,sc,i);
-    const part=distinctiveFr(c,role,sc)||preciseFr(c,role)||fr(c,role,sc,i);
-    const detail=developFr(c,role);
-    return detail&&part.split(/\s+/).length<(chosen.length===1?50:27)?part+' '+detail:part;
+  const enMode=state.lang==='en', chosen=cards.slice(), r=roles(chosen.length);
+  const reversedAt=i=>state.oracle==='tarot'&&state.draw?.[i]===chosen[i]&&state.tarotReversed?.[i]===true;
+  const sc=scope();
+  const q=String(state.question||'').trim();
+  const parts=chosen.map((card,i)=>{
+    const titled=motif({...card,_semanticPass:true,keywords:'',definition:'',meaning:'',category:'',en:{name:card.en?.name}},false);
+    const faithful=!reversedAt(i)?faithfulSymbol(card,r[i],enMode)||
+      (titled?(enMode?semanticEn(card,r[i],sc,i):distinctiveFr(card,r[i],sc)||preciseFr(card,r[i])):''):'';
+    let part='';
+    if(faithful){
+      part=faithful;
+    }else if(reversedAt(i)){
+      part=reversedPart(card,r[i],sc,i,enMode);
+    }else if(meaningPart(card,r[i],enMode)){
+      part=meaningPart(card,r[i],enMode);
+    }else if(state.oracle==='tarot'){
+      part=groundedText(tarotMixedPart(card,r[i],sc,i,enMode),card,enMode);
+    }else if(enMode){
+      /* The card definition stays in the card commentary. The story must
+         interpret the card's role in the spread instead of paraphrasing it. */
+      part=semanticEn(card,r[i],sc,i);
+    }else{
+      /* Prefer a distinctive symbolic motif, then a role-specific reading,
+         then the broad thematic fallback. Never reuse the displayed
+         definition here: that would merely duplicate the card commentary. */
+      part=distinctiveFr(card,r[i],sc)||preciseFr(card,r[i])||fr(card,r[i],sc,i);
+    }
+    const sources=sourceSentences(chosen,enMode);
+    // A transformed source reading must keep every clause: deleting shared
+    // phrases here used to erase the defining meaning of a card.
+    if(!reversedAt(i)&&faithful)part=withoutCatalogue(part,sources);
+    if(!part)part=enMode?semanticEn(card,r[i],sc,i):fr(card,r[i],sc,i);
+    const cleaned=(!reversedAt(i)&&faithful)?withoutCatalogue(part,sources):part;
+    // A catalogue filter must never erase an entire position, including
+    // the final card. Preserve its role-specific interpretation as a fallback.
+    return roleGrounded(groundedText(cleaned||part,faithful?{name:'',en:{name:''}}:card,enMode),r[i],enMode);
   }).filter(Boolean);
-  if(!enMode&&chosen.length>=5&&!clarifyingCommitment&&!stuckThenClarity){
-    const context=contextFr(q,sc,chosen);
-    if(context)parts.splice(3,0,context);
+  const seen=new Set();
+  const narrative=parts.join(' ').match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[];
+  let body=narrative.filter(s=>{const key=norm(s).replace(/^(cependant|enfin|un element determinant apparait neanmoins|la situation evolue ensuite)\s*[:,]?\s*/,'').trim();if(seen.has(key))return false;seen.add(key);return true;}).join(' ').replace(/\s+/g,' ').trim();
+  if(sc==='relation'&&/retour|revenir|revienne|return|come back/.test(norm(q))&&chosen.some(c=>motif(c,false)==='separation')){
+    body+=' '+(enMode?'For the return you are asking about, the break remains a real issue: renewed contact would need mutual willingness and a different way of relating. A favourable direction does not by itself confirm that this person will come back.':'Concernant le retour que vous évoquez, la coupure reste donc un élément central : une reprise demanderait une volonté partagée et une autre manière de vivre le lien. Une direction favorable ne suffit pas, à elle seule, à confirmer le retour de cette personne.');
   }
-  const lead=!enMode?questionLead(q,sc):'';
-  if(lead&&parts.length){
-    const first=parts[0].replace(/^Au départ, /,'');
-    parts[0]=lead+(first===parts[0]?'':'il faut d’abord reconnaître que ')+first.charAt(0).toLowerCase()+first.slice(1);
+  if(sc==='relation'&&/retour|revenir|revienne|return|come back/.test(norm(q))&&state.oracle==='tarot'&&chosen.at(-1)?.id===54&&!reversedAt(chosen.length-1)){
+    body+=' '+(enMode?'For the return you are asking about, the need for a pause limits the opening: a clearer understanding remains possible, but neither an immediate return nor a lasting reunion is established.':'Concernant le retour que vous évoquez, le besoin de pause limite cette ouverture : une clarification reste possible, mais ni un retour immédiat ni une reprise durable ne sont établis.');
   }
   const question=q?`<p class="reading-question">${enMode?'Your question':'Votre question'} : « ${esc(q)} »</p>`:'';
-  return `<div class="story-reading" data-story-engine="universal-fluid-${VERSION}"><h3>${enMode?'The story told by your cards':'L’histoire racontée par vos cartes'}</h3>${question}<p class="story-continuous">${esc(parts.join(' ').replace(/\s+/g,' ').trim())}</p></div>`;
+  return `<div class="story-reading" data-story-engine="universal-fluid-${VERSION}"><h3>${enMode?'The story told by your cards':'L’histoire racontée par vos cartes'}</h3>${question}<p class="story-continuous">${esc(body)}</p></div>`;
 }
 
 storyInterpretation=build;
 interpretation=build;
 window.CR_UNIVERSAL_FLUID_STORY=build;
 window.CR_UNIVERSAL_FLUID_STORY_VERSION=VERSION;
+// The final consultation uses concise implications, rather than copying the
+// catalogue or reproducing the developed story paragraph.
+window.CR_UNIVERSAL_ROLE_SUMMARY=function(card,role,enMode){
+  role=role==='movement'?'evolution':role;
+  const i=state.draw.indexOf(card),reversed=state.oracle==='tarot'&&state.tarotReversed?.[i]===true;
+  const semantic=reversed?{id:card.id,name:'',keywords:window.CR_TAROT_REVERSED?.[card.id]?.fr||''}:card;
+  let text=(reversed?meaningPart(card,role,enMode,true):faithfulSymbol(card,role,enMode)||meaningPart(card,role,enMode))||(enMode?semanticEn(semantic,role,scope(),i):developFr(semantic,role));
+  if(!text)text=enMode?en(semantic,role,scope(),i):fr(semantic,role,scope(),i);
+  return text;
+};
 
 function refresh(){
   try{

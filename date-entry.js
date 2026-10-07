@@ -28,7 +28,7 @@
   const pairs=[];
   for(const id of ids){
    const original=document.getElementById(id);
-   if(!original)return;
+   if(!original)continue;
    const input=document.createElement('input');
    input.type='text';input.id=id+'Direct';input.placeholder='JJ/MM/AAAA';input.inputMode='numeric';
    input.autocomplete='bday';input.maxLength=10;
@@ -36,6 +36,7 @@
    input.value=displayDate(original.value);
    const hint=document.createElement('small');hint.id=id+'DateHelp';hint.className='date-entry-help';
    input.setAttribute('aria-describedby',hint.id);
+   document.querySelectorAll(`label[for="${id}"]`).forEach(label=>label.htmlFor=input.id);
    original.removeAttribute('required');original.type='hidden';original.insertAdjacentElement('afterend',input);
    input.insertAdjacentElement('afterend',hint);
    const required=id==='numDate'||id==='relationBirthdate';
@@ -53,11 +54,12 @@
     return !!iso;
    };
    input.addEventListener('input',event=>{
+    if(!input.value.trim())original.value='';
     if(input.selectionStart===input.value.length)input.value=formatTyping(input.value,event.inputType==='deleteContentBackward');
     sync();
    });
    input.addEventListener('blur',()=>{if(sync())input.value=displayDate(original.value);else if(input.value.trim())help(true);});
-   original.addEventListener('change',()=>{const formatted=displayDate(original.value);if(formatted&&input.value!==formatted)input.value=formatted;});
+   original.addEventListener('change',()=>{const formatted=displayDate(original.value);if(input.value!==formatted&&document.activeElement!==input)input.value=formatted;});
    pairs.push({id,input,original,sync,help});
   }
   // The astrology controls use click handlers rather than native form validation.

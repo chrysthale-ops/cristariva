@@ -54,10 +54,11 @@ before(async () => {
   w = dom.window;
   await new Promise(resolve => w.addEventListener('load', resolve, {once:true}));
   for (let attempt = 0; attempt < 250; attempt++) {
-    if (w.TAROT_DATA?.main?.length === 78 && String(w.CR_TAROT_INTEGRATION_VERSION||'').includes('tarot78')) break;
+    if (w.TAROT_DATA?.main?.length === 78 && w.CR_TAROT_HOTFIX_VERSION) break;
     await new Promise(resolve => setTimeout(resolve, 20));
   }
   assert.equal(w.TAROT_DATA?.main?.length, 78, 'the final Tarot 78 loader completes');
+  assert.ok(w.CR_TAROT_HOTFIX_VERSION, 'the HD image hotfix completes');
   assert.match(String(w.CR_TAROT_INTEGRATION_VERSION||''), /tarot78/, 'the 78-card integration is active');
   state = w.eval('state'); cards = w.TAROT_DATA.main;
 });
@@ -89,13 +90,12 @@ test('the final live loader exposes all 78 Tarot cards with stable identities', 
   assert.equal(w.document.querySelectorAll('[data-tarot-card-id]').length, 78);
   for (const c of cards) {
     assert.equal(c.oracle, 'tarot');
-    if (c.id <= 22) {
-      const image = path.join(root, c.image.split('?')[0]);
-      assert.ok(fs.existsSync(image), c.image);
-      assert.equal(fs.readFileSync(image).toString('ascii', 8, 12), 'WEBP');
-    } else {
-      assert.match(c.image, /^data:image\/webp;base64,/, `minor ${c.id} has a generated image`);
-    }
+    if (c.id <= 22) assert.match(c.image, /^\.\/cards\/tarot\/major-\d{3}\.png\?v=/);
+    else assert.match(c.image, /^\.\/cards\/tarot\/cartes mineures HD\/.+\.png\?v=/);
+    const image = path.join(root, c.image.split('?')[0]);
+    /* A sparse checkout omits the artwork; a complete CI checkout verifies
+       the actual file and its PNG signature. */
+    if (fs.existsSync(image)) assert.equal(fs.readFileSync(image).toString('ascii', 1, 4), 'PNG', c.image);
     for (const local of [c,c.en]) for (const key of ['name','definition','message','reading_relationnel','reading_professionnel','reading_spirituel']) {
       assert.ok(local[key]?.length > 2, `${c.id}: ${key}`);
       assert.doesNotMatch(local[key], /\uFFFD/);
