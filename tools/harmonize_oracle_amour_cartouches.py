@@ -23,13 +23,24 @@ GOLD_LIGHT = (211, 190, 132)
 NAVY = (25, 48, 72)
 NUMBER = (126, 104, 60)
 
-# R12 — le cartouche haut reste entièrement dans la carte.
+# R13 — cartouche haut entièrement dans la carte, identique sur les 80 cartes.
 TOP_OUTER = (198, 2, 314, 54)
 TOP_INNER = (204, 7, 308, 48)
 TOP_RADIUS = 18
 TOP_INNER_RADIUS = 14
 TOP_NUMBER_CENTER = (256, 27)
 NUMBER_FONT_SIZE = 23
+
+# Zone occupée par l'ancien grand médaillon circulaire.
+# Avant de poser le nouveau cartouche, cette zone est reconstruite à partir de
+# deux bandes latérales de LA MÊME illustration. Cela supprime les anciens arcs,
+# doubles contours, ombres et débordements sans prendre une autre carte comme
+# modèle graphique.
+TOP_RESTORE_LEFT_SOURCE = (70, 0, 174, 94)
+TOP_RESTORE_RIGHT_SOURCE = (338, 0, 442, 94)
+TOP_RESTORE_TARGET = (154, 0, 358, 94)
+TOP_RESTORE_ELLIPSE = (154, -24, 358, 94)
+TOP_RESTORE_FEATHER = 8
 
 # Cartouche inférieur compact validé sur le principe.
 BOTTOM_BODY = (76, 689, 436, 741)
@@ -44,8 +55,8 @@ TITLE_FONT_SIZE = 22
 TITLE_TRACKING = 1.0
 TITLE_LINE_GAP = 1
 
-# Zone de restauration de l'ancien cartouche. Elle commence assez haut pour
-# englober le filet blanc horizontal visible sur les captures utilisateur.
+# Zone de restauration de l'ancien cartouche inférieur. Elle commence assez
+# haut pour englober le filet blanc horizontal signalé sur les captures.
 RESTORE_BOX = (48, 628, 464, 694)
 
 
@@ -77,16 +88,47 @@ def read_titles() -> dict[int, str]:
     return out
 
 
-def restore_old_bottom_cartouche(im: Image.Image) -> Image.Image:
-    """Supprime les restes de l'ancien cartouche sans créer de barres latérales.
+def restore_old_top_cartouche(im: Image.Image) -> Image.Image:
+    """Supprime le grand médaillon haut historique avant de poser le nouveau.
 
-    La correction r12 combine trois garde-fous :
-    - ciblage par couleur des pixels ivoire/blanc/or de l'ancienne plaque ;
-    - intersection avec la géométrie réelle de l'ancien cartouche pour ne jamais
-      toucher aux lanternes ou aux vêtements situés sur les côtés ;
-    - masque obligatoire sur la bande du filet supérieur afin d'éliminer aussi
-      les pixels anti-crénelés plus sombres responsables de la ligne résiduelle.
+    Les zones latérales immédiatement voisines du médaillon servent de matière
+    de restauration. Elles sont étirées vers le centre puis fondues par un masque
+    elliptique progressif. Le centre est ensuite largement recouvert par le
+    nouveau cartouche maître ; seules les zones qui dépassaient auparavant
+    restent visibles, sans ancien liseré ni double contour.
     """
+    lx0, ly0, lx1, ly1 = TOP_RESTORE_LEFT_SOURCE
+    rx0, ry0, rx1, ry1 = TOP_RESTORE_RIGHT_SOURCE
+    tx0, ty0, tx1, ty1 = TOP_RESTORE_TARGET
+    target_w = tx1 - tx0
+    target_h = ty1 - ty0
+
+    left = im.crop((lx0, ly0, lx1, ly1)).resize(
+        (target_w, target_h), Image.Resampling.LANCZOS
+    )
+    right = im.crop((rx0, ry0, rx1, ry1)).resize(
+        (target_w, target_h), Image.Resampling.LANCZOS
+    )
+
+    la = np.asarray(left, dtype=np.float32)
+    ra = np.asarray(right, dtype=np.float32)
+    blend_axis = np.linspace(0.0, 1.0, target_w, dtype=np.float32)[None, :, None]
+    blended = np.clip(la * (1.0 - blend_axis) + ra * blend_axis, 0, 255).astype(np.uint8)
+    donor = Image.fromarray(blended, mode="RGB")
+
+    replacement = im.copy()
+    replacement.paste(donor, (tx0, ty0))
+
+    mask = Image.new("L", CANVAS, 0)
+    md = ImageDraw.Draw(mask)
+    md.ellipse(TOP_RESTORE_ELLIPSE, fill=255)
+    mask = mask.filter(ImageFilter.GaussianBlur(TOP_RESTORE_FEATHER))
+
+    return Image.composite(replacement, im, mask)
+
+
+def restore_old_bottom_cartouche(im: Image.Image) -> Image.Image:
+    """Supprime les restes de l'ancien cartouche inférieur sans barres parasites."""
     x0, y0, x1, y1 = RESTORE_BOX
     arr = np.array(im, dtype=np.uint8)
     roi = arr[y0:y1, x0:x1]
@@ -104,8 +146,6 @@ def restore_old_bottom_cartouche(im: Image.Image) -> Image.Image:
     )
     color_mask = pale | seam | goldish
 
-    # Géométrie approximative de l'ancien cartouche, exprimée en coordonnées
-    # globales puis ramenée dans la zone de restauration.
     geom = Image.new("L", (x1 - x0, y1 - y0), 0)
     gd = ImageDraw.Draw(geom)
     old_shape = [
@@ -119,7 +159,6 @@ def restore_old_bottom_cartouche(im: Image.Image) -> Image.Image:
     gd.polygon(old_shape, fill=255)
     geom_mask = np.array(geom) > 0
 
-    # Bande supérieure obligatoire : c'est là que subsistait le trait blanc.
     yy = np.arange(y0, y1)[:, None]
     xx = np.arange(x0, x1)[None, :]
     mandatory_top_band = (
@@ -286,6 +325,20 @@ def count_white_seam_pixels(im: Image.Image) -> int:
     return int(((mx > 215) & ((mx - mn) < 32)).sum())
 
 
+def top_residual_metric(im: Image.Image) -> int:
+    """Mesure les grandes plages blanc/ivoire hors du nouveau cartouche haut."""
+    arr = np.array(im, dtype=np.uint8)
+    yy, xx = np.mgrid[0:100, 0:512]
+    old_area = (((xx - 256) / 105.0) ** 2 + ((yy + 8) / 100.0) ** 2) <= 1.0
+    new_area = (xx >= 190) & (xx <= 322) & (yy <= 61)
+    roi = old_area & (~new_area)
+    top = arr[:100]
+    mx = top.max(axis=2)
+    mn = top.min(axis=2)
+    neutral_bright = (mx > 238) & ((mx - mn) < 18)
+    return int((neutral_bright & roi).sum())
+
+
 def process_one(path: Path, idx: int, title: str) -> None:
     im = Image.open(path).convert("RGB")
     if im.size != CANVAS:
@@ -301,6 +354,9 @@ def process_one(path: Path, idx: int, title: str) -> None:
             raise RuntimeError(f"Dimensions incorrectes : {patch_path}")
         im.paste(patch, (0, 0), patch)
 
+    # Ordre impératif : supprimer d'abord les anciens cartouches, puis poser le
+    # gabarit maître unique. Ainsi aucun ancien contour ne peut rester dessous.
+    im = restore_old_top_cartouche(im)
     im = restore_old_bottom_cartouche(im)
 
     draw = ImageDraw.Draw(im)
@@ -324,19 +380,27 @@ def main() -> None:
 
     titles = read_titles()
     seam_scores: dict[int, int] = {}
+    top_scores: dict[int, int] = {}
     for i, path in enumerate(EXPECTED, start=1):
         process_one(path, i, titles[i])
         with Image.open(path) as check:
-            seam_scores[i] = count_white_seam_pixels(check.convert("RGB"))
-        print(f"HARMONISÉ {path.name}: {titles[i]} — score couture={seam_scores[i]}")
+            rgb = check.convert("RGB")
+            seam_scores[i] = count_white_seam_pixels(rgb)
+            top_scores[i] = top_residual_metric(rgb)
+        print(
+            f"HARMONISÉ {path.name}: {titles[i]} — "
+            f"couture-bas={seam_scores[i]} résidu-haut={top_scores[i]}"
+        )
 
     sizes = {Image.open(p).size for p in EXPECTED}
     if sizes != {CANVAS}:
         raise RuntimeError(f"Canevas finaux incohérents: {sizes}")
 
-    worst = sorted(seam_scores.items(), key=lambda kv: kv[1], reverse=True)[:10]
-    print("Top scores couture blanche:", worst)
-    print("80/80 cartes harmonisées r12 : cartouche haut contenu et couture blanche supprimée.")
+    worst_bottom = sorted(seam_scores.items(), key=lambda kv: kv[1], reverse=True)[:10]
+    worst_top = sorted(top_scores.items(), key=lambda kv: kv[1], reverse=True)[:10]
+    print("Top scores couture blanche bas:", worst_bottom)
+    print("Top scores résidu ancien cartouche haut:", worst_top)
+    print("80/80 cartes harmonisées r13 : ancien cartouche haut neutralisé avant le nouveau.")
 
 
 if __name__ == "__main__":
