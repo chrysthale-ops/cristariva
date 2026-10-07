@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Numérologie — CRISTARIVA</title>
+<meta name="description" content="Découvrez votre chemin de vie, votre année personnelle, vos relations et les nombres de votre tirage avec CRISTARIVA.">
+<link rel="canonical" href="https://chrysthale-ops.github.io/cristariva/numerologie.html">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&display=swap">
+<link rel="stylesheet" href="./numerologie.css?v=1">
+<script defer src="./numerologie-navigation.js?v=1"></script>
+<script defer src="./date-entry.js?v=3"></script>
+<script defer src="./numerologie.js?v=3"></script>
+</head><body>
+<header class="topbar"><div class="shell nav">
+<a class="brand" href="./index.html"><span class="seal">C</span><span><b>CRISTARIVA</b><small data-num-fr="Les Reflets du Soir" data-num-en="Evening Reflections">Les Reflets du Soir</small></span></a>
+<nav class="main-navigation" aria-label="Navigation principale" data-num-aria-fr="Navigation principale" data-num-aria-en="Main navigation">
+<a href="./index.html#tirage" data-num-fr="Faire un tirage" data-num-en="Start a reading">Faire un tirage</a>
+<a href="./index.html#deepening" data-num-fr="Tirage complémentaire" data-num-en="Complementary reading">Tirage complémentaire</a>
+<a href="./index.html#catalogue" data-num-fr="Les jeux de cartes" data-num-en="Card decks">Les jeux de cartes</a>
+<a href="./index.html#deepening" data-num-fr="Que disent les planètes" data-num-en="What do the planets say">Que disent les planètes</a>
+<a href="./numerologie.html" aria-current="page" data-num-fr="Numérologie" data-num-en="Numerology">Numérologie</a>
+</nav><button type="button" class="lang" id="langBtn" aria-label="Changer de langue" data-num-aria-fr="Changer de langue" data-num-aria-en="Change language">EN</button>
+</div></header>
+<main>
+<div class="num-hero"><div class="shell">
+<a href="./index.html" data-num-fr="← Retour à l’accueil" data-num-en="← Back to home">← Retour à l’accueil</a>
+<h1 data-num-fr="Numérologie" data-num-en="Numerology">Numérologie</h1>
+<p data-num-fr="Un autre reflet de votre histoire, à travers votre chemin de vie, vos cycles et vos liens." data-num-en="Another reflection of your story, through your life path, cycles and relationships.">Un autre reflet de votre histoire, à travers votre chemin de vie, vos cycles et vos liens.</p>
+</div></div>
+<section class="shell panel numerologie" id="numerologie" aria-labelledby="numTitle">
+<h2 id="numTitle" data-num-fr="Les nombres et votre histoire" data-num-en="Numbers and your story">Les nombres et votre histoire</h2>
+<p data-num-fr="Votre date de naissance et votre nom dessinent une trame symbolique. Découvrez les nombres qui accompagnent votre chemin, vos cycles et vos relations." data-num-en="Your birth date and name form a symbolic pattern. Explore the numbers connected with your path, cycles and relationships.">Votre date de naissance et votre nom dessinent une trame symbolique. Découvrez les nombres qui accompagnent votre chemin, vos cycles et vos relations.</p>
+<form id="numForm" autocomplete="off">
+<div class="grid g2">
+<div><label for="numMode" data-num-fr="Votre lecture" data-num-en="Your reading">Votre lecture</label><select id="numMode"><option value="chemin" data-num-fr="Mon chemin de vie" data-num-en="My life path">Mon chemin de vie</option><option value="annee" data-num-fr="Mon année personnelle" data-num-en="My personal year">Mon année personnelle</option><option value="relation" data-num-fr="Nos nombres" data-num-en="Our numbers">Nos nombres</option><option value="tirage" data-num-fr="Les nombres de mon tirage" data-num-en="The numbers in my reading">Les nombres de mon tirage</option></select></div>
+<div><label for="numDate" data-num-fr="Votre date de naissance" data-num-en="Your date of birth">Votre date de naissance</label><input id="numDate" type="date" required min="1900-01-01" max="2100-12-31"/><button id="numUseBirth" class="num-link" type="button" data-num-fr="Reprendre la date du profil astral" data-num-en="Use the birth date from your astrology profile">Reprendre la date du profil astral</button></div>
+<div><label for="numName" data-num-fr="Prénom(s) et nom de naissance" data-num-en="Birth names">Prénom(s) et nom de naissance</label><input id="numName" type="text" maxlength="120" data-num-placeholder-fr="Utilisé pour le portrait complet" data-num-placeholder-en="Used for your full portrait" placeholder="Utilisé pour le portrait complet"/></div>
+<div id="numYearField" hidden><label for="numYear" data-num-fr="Année à explorer" data-num-en="Year to explore">Année à explorer</label><input id="numYear" type="number" min="1900" max="2100"/></div>
+<div id="numOtherFields" hidden><label for="numOtherDate" data-num-fr="Date de naissance de l’autre personne" data-num-en="Other person’s date of birth">Date de naissance de l’autre personne</label><input id="numOtherDate" type="date"/><label for="numOtherName" data-num-fr="Son nom de naissance (facultatif)" data-num-en="Their birth name (optional)">Son nom de naissance (facultatif)</label><input id="numOtherName" maxlength="120"/></div>
+</div><button class="btn primary" type="submit" data-num-fr="Découvrir mes nombres" data-num-en="Explore my numbers">Découvrir mes nombres</button></form>
+<div id="numResult" class="reading" aria-live="polite" hidden></div>
+<p class="muted" data-num-fr="Convention pythagoricienne : A=1 à I=9, puis répétition ; accents et ponctuation ignorés, Y compté comme voyelle. Les sommes conservent 11, 22 et 33 pour le chemin et le nom ; les périodes se réduisent de 1 à 9. Calcul local dans votre navigateur, sans enregistrement permanent des noms et dates. La date du profil astral peut être transmise temporairement dans cet onglet." data-num-en="Pythagorean convention: A=1 through I=9, then repeated; accents and punctuation are ignored and Y counts as a vowel. Name and life path retain 11, 22 and 33; periods reduce to 1–9. Calculations run locally in your browser, without permanently saving names or dates. The astrology birth date may be passed temporarily within this tab.">Convention pythagoricienne : A=1 à I=9, puis répétition ; accents et ponctuation ignorés, Y compté comme voyelle. Les sommes conservent 11, 22 et 33 pour le chemin et le nom ; les périodes se réduisent de 1 à 9. Calcul local dans votre navigateur, sans enregistrement permanent des noms et dates. La date du profil astral peut être transmise temporairement dans cet onglet.</p>
+</section>
+</main><footer class="footer"><b>CRISTARIVA</b><p data-num-fr="Les Reflets du Soir" data-num-en="Evening Reflections">Les Reflets du Soir</p></footer>
+</body></html>

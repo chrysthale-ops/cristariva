@@ -1,10 +1,16 @@
 /* CRISTARIVA — service worker v51 — position stable du cartouche cartes renversées. */
-const CACHE_NAME='cristariva-v122-20261006-reversal-inline-r3';
-const APP_VERSION='2026.10.06-reversal-inline-r3';
+const CACHE_NAME='cristariva-v123-20261007-numerologie-page';
+const APP_VERSION='2026.10.07-numerologie-page';
 const IMMERSIVE_URL='./immersive-reading-ui.js?v=20261006-remove-active-label-r16';
 const TAROT_INTEGRATION_URL='./tarot-divinatoire-integration-v78.js?v=20261006-reversal-cartouche-r2';
 const TAROT_HOTFIX_URL='./tarot-title-image-hotfix.js?v=20261006-reversal-inline-r3';
 const SHELL=[
+  './numerologie.html',
+  './numerologie.css?v=1',
+  './numerologie.js?v=3',
+  './numerologie-navigation.js?v=1',
+  './date-entry.js?v=3',
+  './time-entry.js?v=1',
   './',
   './index.html',
   IMMERSIVE_URL,
