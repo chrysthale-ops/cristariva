@@ -4,9 +4,12 @@
 if(typeof window==='undefined')return;
 const sprite='./cards/reflets/reflets-sprite.webp?v=20261008-v1';
 function start(){
- if(!window.REFLETS_DATA||!window.state)return;
+ if(!window.REFLETS_DATA||typeof state==='undefined')return;
  const oracle=document.querySelector('#oracleChoice');
  if(!oracle)return;
+ const style=document.createElement('style');
+ style.textContent='.reflets-card .art,#refletsCatalogGrid .catalog-image{aspect-ratio:1055/1491;height:auto;}';
+ document.head.appendChild(style);
  if(!oracle.querySelector('[value="reflets"]')){
    const o=new Option(state.lang==='en'?'Lake Reflections Oracle':'Oracle des Reflets du Lac','reflets');
    oracle.insertBefore(o,oracle.querySelector('[value="tarot"]')||null);
