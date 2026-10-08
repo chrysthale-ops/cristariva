@@ -13,6 +13,7 @@ test('Reflets : activation avec état lexical, catalogue et tirages 1/3/5',async
  w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};
  w.Image=class{set src(v){queueMicrotask(()=>this.onload?.());}};
  const setup=w.document.createElement('script');setup.textContent=`let state={oracle:'reflets',lang:'fr',format:1};const POSITIONS_FR={1:[['Éclairage']],3:[['Avant'],['Maintenant'],['Élan']],5:[['Origine'],['Obstacle'],['Force'],['Évolution'],['Synthèse']]};const POSITIONS_EN=POSITIONS_FR;function rand(cards,n){return cards.slice(0,n);}function readingEscape(s){return String(s);}function interpretation(cards){return cards.map(c=>domainReading(c)).join(' ');}function domainReading(){return 'ancien';}`;w.document.head.appendChild(setup);
+ w.cardName=()=> 'Ancien titre';
  assert.equal(w.state,undefined,'state is a lexical global as in the actual page');
  w.eval(fs.readFileSync(path.join(root,'oracle-reflets-data.js'),'utf8'));
  w.eval(fs.readFileSync(path.join(root,'oracle-reflets-integration.js'),'utf8'));
@@ -24,6 +25,7 @@ test('Reflets : activation avec état lexical, catalogue et tirages 1/3/5',async
  w.eval(`state.format=${n}`);w.document.querySelector('#drawBtn').click();
  assert.equal(w.eval('state.draw.length'),n);
  assert.equal(w.document.querySelectorAll('.reflets-card').length,n);
+ assert.match(w.document.querySelector('.reflets-card h3').textContent,/Aurore sur le lac/);
  assert.match(w.document.querySelector('#reading').textContent,/mouvement neuf/);
  }
  const search=w.document.querySelector('#refletsCatalogSearch');search.value='RUPTURE';search.dispatchEvent(new w.Event('input'));

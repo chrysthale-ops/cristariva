@@ -18,6 +18,10 @@ function start(){
    window.CRISTARIVA_GAMES.splice(Math.max(0,window.CRISTARIVA_GAMES.length-1),0,{id:'reflets',nameFr:'Oracle des Reflets du Lac',nameEn:'Lake Reflections Oracle',count:50});
  }
  const isReflets=()=>state.oracle==='reflets';
+ if(typeof cardName==='function'){
+   const previousName=cardName;
+   cardName=function(c){return c?.oracle==='reflets'?c.name:previousName(c);};
+ }
  function spriteStyle(c){
    const i=Math.max(0,Number(c.spriteIndex)||0),col=i%5,row=Math.floor(i/5);
    return `background-image:url('${sprite}');background-size:500% 1000%;background-position:${col*25}% ${row*(100/9)}%;background-repeat:no-repeat;`;
