@@ -24,7 +24,6 @@
   const n=normalize(text).replace(/\s+/g,' ');
   for(const card of input.cards||[]){
    const title=normalize(card.name).trim().replace(/\s+/g,' ');
-   // Single-word symbols are too ambiguous to police as labels in continuous prose.
    if(!title||title.split(/\s+/).length<2)continue;
    const safe=escapeRegExp(title).replace(/\s+/g,'\\s+');
    const named=new RegExp(`\\b(?:la\\s+carte|cette\\s+carte|the\\s+card|this\\s+card)\\s+[«"“”']?${safe}[»"“”']?(?=\\s|[.,;:!?…]|$)`,'iu');
@@ -37,7 +36,6 @@
   if(typeof text!=='string'||text.trim().length<40||text.length>50000)return 'length';
   const value=text.trim(), n=normalize(value);
   if(/[\uFFFD\u0000-\u0008]/u.test(value)||!/[.!?…][»”"']?$/.test(value))return 'incomplete';
-  // An isolated French elision without its apostrophe is a damaged word.
   if(input.lang==='fr'&&(/(?<![\p{L}\p{N}])[dlcjnmsqt]\s+\p{L}{2}/iu.test(value)||/\b(?:promise|promising|the|with|follow-through)\b/i.test(value)||/\b(?:ancienne attachement|anciennes attachements)\b/.test(n)))return 'language';
   if(hasExplicitCardName(value,input))return 'card_names';
   const source=normalize((input.cards||[]).map(c=>c.local+' '+c.meaning).join(' '));
@@ -46,3 +44,12 @@
  }
  return {system,validate,editorialIssues,hasExplicitCardName};
 });
+
+/* Browser only — load the 50-card Oracle des Reflets du Lac. */
+if(typeof window!=='undefined'&&typeof document!=='undefined'){
+ (function(){
+  function load(src){return new Promise((resolve,reject)=>{if([...document.scripts].some(s=>String(s.src||'').includes(src.split('?')[0])))return resolve();const el=document.createElement('script');el.src=src;el.async=false;el.onload=resolve;el.onerror=reject;document.head.appendChild(el);});}
+  function boot(){load('./oracle-reflets-data.js?v=20261008-v1').then(()=>load('./oracle-reflets-integration.js?v=20261008-v1')).catch(e=>console.error('CRISTARIVA : chargement des Reflets du Lac impossible.',e));}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+ })();
+}
