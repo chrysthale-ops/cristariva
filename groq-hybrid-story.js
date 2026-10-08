@@ -11,7 +11,7 @@ function requestData(cards){
  const reversed=state.oracle==='tarot'&&state.draw?.[i]===c&&state.tarotReversed?.[i]===true;
  const l=en?(c.en||c):c;
  const domain=String(state.domain||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
- const field=/profession|travail|projet|work|career/.test(domain)?'reading_professionnel':/sentiment|relation|romantic|love/.test(domain)?'reading_relationnel':'reading_spirituel';
+ const field=/profession|travail|projet|work|career/.test(domain)?'reading_professionnel':c.oracle==='reflets'&&/sentiment|romantic|love/.test(domain)?'reading_sentimental':/sentiment|relation|romantic|love/.test(domain)?'reading_relationnel':'reading_spirituel';
  const rev=window.CR_TAROT_REVERSED?.[c.id];
  return {index:i,name:String(l.name||c.name||''),role:roles[i],reversed,meaning:String(reversed?(rev?.[en?'en':'fr']||l.definition||l.meaning||''):(l[field]||l.definition||l.meaning||l.keywords||'')),local:''};
  })};

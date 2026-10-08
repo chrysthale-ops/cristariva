@@ -6,6 +6,25 @@ const path=require('node:path');
 const source=fs.readFileSync(path.join(__dirname,'../groq-hybrid-story.js'),'utf8');
 const quality=require('../story-quality.js');
 
+test('Reflets : le moteur externe reçoit la signification du domaine choisi',async()=>{
+ const dom=new JSDOM('<main></main>',{runScripts:'outside-only'}),w=dom.window;
+ try{
+ w.eval(fs.readFileSync(path.join(__dirname,'../oracle-reflets-data.js'),'utf8'));
+ const cards=[w.REFLETS_DATA.all[37]];
+ w.state={lang:'fr',question:'Essai domaines',oracle:'reflets',draw:cards};
+ w.storyInterpretation=()=>{};w.interpretation=()=>{};w.AbortSignal=AbortSignal;w.CR_STORY_QUALITY=quality;
+ const timers=[];w.setTimeout=fn=>timers.push(fn);
+ let sent;w.fetch=async(_url,options)=>{sent=JSON.parse(options.body);return {ok:true,status:200,json:async()=>({text:'Une information manque encore pour comprendre la situation.'})};};
+ w.eval(source);
+ for(const [domain,field] of [['Sentimental','reading_sentimental'],['Relations','reading_relationnel'],['Professionnelle / Projet','reading_professionnel'],['Général / spirituel','reading_spirituel']]){
+ w.state.domain=domain;w.document.querySelector('main').innerHTML=w.CR_UNIVERSAL_FLUID_STORY(cards);
+ await timers.shift()();
+ assert.equal(sent.cards[0].meaning,cards[0][field],domain);
+ assert.equal(sent.oracle,'reflets');
+ }
+ }finally{w.close();}
+});
+
 test('official external story exposes status, retries temporary failures and keeps roles and reversals',async()=>{
  const dom=new JSDOM('<main></main>',{runScripts:'outside-only'}),w=dom.window;
  const cards=[{id:1,name:'Première',reading_relationnel:'Initiative'},{id:2,name:'Deuxième',reading_relationnel:'Clarté'},{id:3,name:'Dernière',reading_relationnel:'Pause'}];

@@ -1,10 +1,12 @@
 /* CRISTARIVA — service worker v51 — position stable du cartouche cartes renversées. */
-const CACHE_NAME='cristariva-v124-20261008-reflets-fast-retry';
-const APP_VERSION='2026.10.08-reflets-fast-retry';
+const CACHE_NAME='cristariva-v125-20261008-reflets-consultation';
+const APP_VERSION='2026.10.08-reflets-consultation';
 const IMMERSIVE_URL='./immersive-reading-ui.js?v=20261006-remove-active-label-r16';
 const TAROT_INTEGRATION_URL='./tarot-divinatoire-integration-v78.js?v=20261006-reversal-cartouche-r2';
 const TAROT_HOTFIX_URL='./tarot-title-image-hotfix.js?v=20261006-reversal-inline-r3';
 const SHELL=[
+  './oracle-reflets-data.js?v=20261008-consultation-v2',
+  './oracle-reflets-integration.js?v=20261008-consultation-v3',
   './numerologie.html',
   './numerologie.css?v=1',
   './numerologie.js?v=3',
@@ -14,8 +16,8 @@ const SHELL=[
   './',
   './index.html',
   IMMERSIVE_URL,
-  './story-quality.js?v=4-reflets-fast',
-  './groq-hybrid-story.js?v=6-quality-retry',
+  './story-quality.js?v=5-reflets-consultation',
+  './groq-hybrid-story.js?v=7-reflets-domains',
   './manifest.webmanifest',
   './manifest-en.webmanifest',
   './icon-192.png',
