@@ -1,12 +1,15 @@
 /* CRISTARIVA — service worker v51 — position stable du cartouche cartes renversées. */
-const CACHE_NAME='cristariva-v126-20261008-reflets-thumbnails';
-const APP_VERSION='2026.10.08-reflets-thumbnails';
+const CACHE_NAME='cristariva-v127-20261008-all-thumbnails';
+const APP_VERSION='2026.10.08-all-thumbnails';
 // Les chemins v2, v3 et thumbs-v1 sont versionnés : conserver ces images d'une mise à jour à l'autre.
 const REFLETS_IMAGE_CACHE='cristariva-reflets-images-v1';
+const CATALOG_IMAGE_CACHE='cristariva-catalog-images-v1';
 const IMMERSIVE_URL='./immersive-reading-ui.js?v=20261006-remove-active-label-r16';
-const TAROT_INTEGRATION_URL='./tarot-divinatoire-integration-v78.js?v=20261006-reversal-cartouche-r2';
-const TAROT_HOTFIX_URL='./tarot-title-image-hotfix.js?v=20261006-reversal-inline-r3';
+const TAROT_INTEGRATION_URL='./tarot-divinatoire-integration-v78.js?v=20261008-all-thumbnails-r1';
+const TAROT_HOTFIX_URL='./tarot-title-image-hotfix.js?v=20261008-all-thumbnails-r1';
 const SHELL=[
+  './catalog-thumbnails-data.js?v=20261008-all1',
+  './catalog-thumbnails.js?v=20261008-all1',
   './oracle-reflets-data.js?v=20261008-consultation-v2',
   './oracle-reflets-integration.js?v=20261008-thumbnails-v4',
   './numerologie.html',
@@ -33,7 +36,7 @@ const SHELL=[
   './oracle-selection.js?v=20261003-domains-restored-r1',
   './oracle-amour-data.js?v=20260923-love-story6',
   './oracle-amour-card62-fix.js?v=20260923-love-story6',
-  './oracle-amour-integration.js?v=20260923-love-story6',
+  './oracle-amour-integration.js?v=20261008-all-thumbnails-r1',
   './oracle-amour-compat.js?v=20260923-love-story6',
   './tarot-divinatoire-data.js?v=20260924-tarot78-base-r9',
   './tarot-divinatoire-integration.js?v=20260924-tarot78-r4-compat',
@@ -65,7 +68,7 @@ self.addEventListener('message',event=>{
 self.addEventListener('activate',event=>{
   event.waitUntil((async()=>{
     const keys=await caches.keys();
-    await Promise.all(keys.filter(k=>k.startsWith('cristariva-')&&k!==CACHE_NAME&&k!==REFLETS_IMAGE_CACHE).map(k=>caches.delete(k)));
+    await Promise.all(keys.filter(k=>k.startsWith('cristariva-')&&k!==CACHE_NAME&&k!==REFLETS_IMAGE_CACHE&&k!==CATALOG_IMAGE_CACHE).map(k=>caches.delete(k)));
     await self.clients.claim();
     const clients=await self.clients.matchAll({type:'window',includeUncontrolled:true});
     for(const client of clients){
@@ -148,6 +151,11 @@ self.addEventListener('fetch',event=>{
 
   if(/\/cards\/reflets\/(?:v2|v3|thumbs-v1)\//.test(url.pathname)){
     event.respondWith(cacheFirst(request,REFLETS_IMAGE_CACHE));
+    return;
+  }
+
+  if(url.pathname.includes('/cards/catalog-thumbs/v1/')){
+    event.respondWith(cacheFirst(request,CATALOG_IMAGE_CACHE));
     return;
   }
 

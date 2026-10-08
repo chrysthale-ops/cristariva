@@ -40,7 +40,7 @@
   const LOVE_SCRIPTS=[
     './oracle-amour-data.js?v=20260918-pdf80',
     './oracle-amour-card62-fix.js?v=20260919-card62',
-    './oracle-amour-integration.js?v=20260918-pdf80',
+    './oracle-amour-integration.js?v=20261008-all-thumbnails-r1',
     './oracle-amour-compat.js?v=20260918-pdf80'
   ];
 
@@ -54,7 +54,7 @@
         catch(e){console.error('CRISTARIVA Oracle Amour',e);}
       }
       if(window.AMOUR_DATA&&!hasSentimental()){
-        try{await loadScript('./oracle-amour-integration.js?v=20260918-pdf80-repair','love-integration-repair',true);}
+        try{await loadScript('./oracle-amour-integration.js?v=20261008-all-thumbnails-r1','love-integration-repair',true);}
         catch(e){console.error('CRISTARIVA réparation Sentimental',e);}
       }
       return !!(window.AMOUR_DATA&&hasSentimental());

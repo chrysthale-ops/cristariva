@@ -177,7 +177,7 @@
       }
 
       delete window.__CRISTARIVA_TAROT_READY__;
-      await appendScript('./tarot-divinatoire-integration-v78.js?v='+VERSION+'-reversals-r1');
+      await appendScript('./tarot-divinatoire-integration-v78.js?v=20261008-all-thumbnails-r1');
       await appendScript('./tarot-story-fluid-v6.2.js?v=6.6-'+VERSION);
       installTarotReversalLayoutGuard();
       compactTarotReversalOption();

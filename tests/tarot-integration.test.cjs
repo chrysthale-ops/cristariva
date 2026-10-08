@@ -87,6 +87,9 @@ test('the final live loader exposes all 78 Tarot cards with stable identities', 
   assert.equal(cards[77].name, 'Roi de Deniers');
   assert.equal(cards.filter(c => c.arcana === 'minor').length, 56);
   assert.equal(w.CR_TAROT_MINOR_COUNT, 56);
+  assert.equal(w.document.querySelectorAll('[data-tarot-card-id]').length, 0, 'hidden catalogue does not request images');
+  w.document.querySelector('#catalogGame').value='tarot';
+  w.document.querySelector('#catalogGame').dispatchEvent(new w.Event('change'));
   assert.equal(w.document.querySelectorAll('[data-tarot-card-id]').length, 78);
   for (const c of cards) {
     assert.equal(c.oracle, 'tarot');
@@ -145,6 +148,8 @@ test('one, three and five card draws use Tarot 78 and keep complementary reading
 });
 
 test('every Tarot catalogue card opens its matching bilingual definition and picture', () => {
+  w.document.querySelector('#catalogGame').value='tarot';
+  w.document.querySelector('#catalogGame').dispatchEvent(new w.Event('change'));
   for (const lang of ['fr','en']) {
     state.lang = lang; w.applyLanguage();
     for (const card of cards) {
@@ -214,3 +219,24 @@ test('all 9 allowed domain × oracle combinations keep the previous reading func
   }
   assert.deepEqual(errors, []);
 });
+
+ test('all three catalogues use matching thumbnails and preserve image elements on repeated searches',async()=>{
+  await waitForLove();
+  for(const lang of ['fr','en']){
+   state.lang=lang;w.applyLanguage();
+   for(const [deck,selector,total] of [['cristariva','#catalogGrid',130],['amour','#loveCatalogGrid',80],['tarot','#tarotCatalogGrid',78]]){
+    const select=w.document.querySelector('#catalogGame');select.value=deck;select.dispatchEvent(new w.Event('change'));
+    const grid=w.document.querySelector(selector),images=[...grid.querySelectorAll('img')];
+    assert.equal(images.length,total,deck);
+    for(let i=0;i<images.length;i++){
+     const image=images[i],id=i+1,record=w.CR_CATALOG_THUMBNAILS.decks[deck][id][lang];
+     assert.equal(image.getAttribute('src'),record.src,deck+' '+id);
+     assert.equal(image.loading||image.getAttribute('loading'),i<6?'eager':'lazy');
+     assert.equal(image.getAttribute('fetchpriority'),i<2?'high':'auto');
+     assert.equal(image.getAttribute('width'),String(record.width));
+    }
+    w.document.querySelector('#catalogSearch').dispatchEvent(new w.Event('input'));
+    assert.equal(grid.querySelector('img'),images[0],deck+' retains loaded images');
+   }
+  }
+ });

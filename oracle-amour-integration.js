@@ -113,10 +113,12 @@
   function renderLoveCatalog(){
     const f=document.querySelector('#loveCatalogFilter'),s=document.querySelector('#loveCatalogSearch'),grid=document.querySelector('#loveCatalogGrid'),count=document.querySelector('#loveCatalogCount');
     if(!f||!s||!grid||!count)return;
+    const game=document.querySelector('#catalogGame');if(game&&game.value!=='amour')return;
     const group=f.value,q=s.value.trim().toLocaleLowerCase();
     const filtered=LOVE_ALL.filter(c=>(group==='all'||c.group===group)&&(!q||c.name.toLocaleLowerCase().includes(q)||String(c.id).includes(q)||String(c.keywords||'').toLocaleLowerCase().includes(q)));
     count.textContent=`${filtered.length} / 80 cartes affichées`;
-    grid.innerHTML=filtered.map(c=>{const key=readingEscape(c.group+'-'+c.id),name=readingEscape(cardName(c));return `<button type="button" class="catalog-item" data-love-card-key="${key}" aria-label="Voir la carte : ${name}"><span class="catalog-image"><img src="${readingEscape(cardImage(c))}" alt="${name}" loading="lazy"></span><span class="catalog-name">${String(c.id).padStart(2,'0')} · ${name}</span></button>`;}).join('')||'<p class="muted">Aucune carte trouvée.</p>';
+    const renderKey=JSON.stringify([group,q,state.lang]);if(grid.dataset.renderKey===renderKey&&grid.childElementCount)return;grid.dataset.renderKey=renderKey;
+    grid.innerHTML=filtered.map((c,i)=>{const key=readingEscape(c.group+'-'+c.id),name=readingEscape(cardName(c));const image=window.CR_CATALOG_IMAGE_HTML?window.CR_CATALOG_IMAGE_HTML(c,'amour',cardName(c),i,cardImage(c)):`<img src="${readingEscape(cardImage(c))}" alt="${name}" loading="lazy">`;return `<button type="button" class="catalog-item" data-love-card-key="${key}" aria-label="Voir la carte : ${name}"><span class="catalog-image">${image}</span><span class="catalog-name">${String(c.id).padStart(2,'0')} · ${name}</span></button>`;}).join('')||'<p class="muted">Aucune carte trouvée.</p>';
   }
   document.querySelector('#loveCatalogSearch')?.addEventListener('input',renderLoveCatalog);
   document.querySelector('#loveCatalogFilter')?.addEventListener('change',renderLoveCatalog);

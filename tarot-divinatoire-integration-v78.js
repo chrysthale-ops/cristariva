@@ -228,6 +228,7 @@ if(main&&!document.querySelector('#tarot-divinatoire-catalog'))main.insertAdjace
 function renderTarotCatalog(){
   const search=document.querySelector('#tarotCatalogSearch'),grid=document.querySelector('#tarotCatalogGrid'),count=document.querySelector('#tarotCatalogCount');
   if(!search||!grid||!count)return;
+  const game=document.querySelector('#catalogGame');if(game&&game.value!=='tarot')return;
   const en=state?.lang==='en',q=search.value.trim().toLocaleLowerCase(en?'en':'fr');
   const cards=window.TAROT_DATA.main.map(fixTarotCard).filter(card=>{
     const l=en?(card.en||{}):card;
@@ -239,9 +240,11 @@ function renderTarotCatalog(){
   if(label)label.textContent=en?'Search the Divinatory Tarot':'Rechercher une carte du Tarot divinatoire';
   search.placeholder=en?'Search the Divinatory Tarot…':'Rechercher dans le Tarot divinatoire…';
   count.textContent=en?`${cards.length} / ${tarotCount} cards displayed`:`${cards.length} / ${tarotCount} cartes affichées`;
-  grid.innerHTML=cards.map(card=>{
-    const name=esc(en?(card.en?.name||card.name):card.name);
-    return `<button type="button" class="catalog-item" data-tarot-card-id="${card.id}" aria-label="${esc(en?'View card':'Voir la carte')} : ${name}"><span class="catalog-image"><img src="${esc(cardImage(card))}" alt="${name}" loading="lazy"></span><span class="catalog-name">${String(card.id).padStart(2,'0')} · ${name}</span></button>`;
+  const renderKey=JSON.stringify([q,en,tarotCount]);if(grid.dataset.renderKey===renderKey&&grid.childElementCount)return;grid.dataset.renderKey=renderKey;
+  grid.innerHTML=cards.map((card,i)=>{
+    const rawName=en?(card.en?.name||card.name):card.name,name=esc(rawName);
+    const image=window.CR_CATALOG_IMAGE_HTML?window.CR_CATALOG_IMAGE_HTML(card,'tarot',rawName,i,cardImage(card)):`<img src="${esc(cardImage(card))}" alt="${name}" loading="lazy">`;
+    return `<button type="button" class="catalog-item" data-tarot-card-id="${card.id}" aria-label="${esc(en?'View card':'Voir la carte')} : ${name}"><span class="catalog-image">${image}</span><span class="catalog-name">${String(card.id).padStart(2,'0')} · ${name}</span></button>`;
   }).join('')||(en?'<p class="muted">No card found.</p>':'<p class="muted">Aucune carte trouvée.</p>');
 }
 document.querySelector('#tarotCatalogSearch')?.addEventListener('input',renderTarotCatalog);

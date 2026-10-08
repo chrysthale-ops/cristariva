@@ -34,8 +34,8 @@ test('Reflets : le cache évite un second téléchargement et survit à l’acti
  const caches={open:async name=>open(name),keys:async()=>[...stores.keys()],delete:async name=>{deleted.push(name);return stores.delete(name);}};
  const context={self,caches,URL,Request,Response,fetch:async()=>{downloads++;return new Response('image',{status:200});}};
  vm.runInNewContext(fs.readFileSync(path.join(root,'service-worker.js'),'utf8'),context);
- async function get(file){let response;handlers.fetch({request:new Request('https://cristariva.test/cristariva/cards/reflets/'+file),respondWith:p=>response=p});return await response;}
- for(const file of ['thumbs-v1/03.webp','v2/05.webp','v3/33.webp']){
+ async function get(file){let response;handlers.fetch({request:new Request('https://cristariva.test/cristariva/cards/'+file),respondWith:p=>response=p});return await response;}
+ for(const file of ['reflets/thumbs-v1/03.webp','reflets/v2/05.webp','reflets/v3/33.webp','catalog-thumbs/v1/tarot/001-abcdef.webp']){
   const count=downloads;
   assert.equal(await (await get(file)).text(),'image');
   assert.equal(await (await get(file)).text(),'image');
@@ -46,5 +46,7 @@ test('Reflets : le cache évite un second téléchargement et survit à l’acti
  assert.ok(deleted.includes('cristariva-v125-old'));
  assert.ok(!deleted.includes(imageCache));
  assert.ok(stores.has(imageCache));
- const count=downloads;assert.equal(await (await get('thumbs-v1/03.webp')).text(),'image');assert.equal(downloads,count);
+ assert.ok(stores.has('cristariva-catalog-images-v1'));
+ assert.ok(!deleted.includes('cristariva-catalog-images-v1'));
+ const count=downloads;assert.equal(await (await get('reflets/thumbs-v1/03.webp')).text(),'image');assert.equal(downloads,count);
 });
