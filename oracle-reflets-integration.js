@@ -2,6 +2,7 @@
 (function(){
 'use strict';
 if(typeof window==='undefined')return;
+const sprite='./cards/reflets/reflets-sprite.webp?v=20261008-v1';
 function start(){
  if(!window.REFLETS_DATA||!window.state)return;
  const oracle=document.querySelector('#oracleChoice');
@@ -14,7 +15,6 @@ function start(){
    window.CRISTARIVA_GAMES.splice(Math.max(0,window.CRISTARIVA_GAMES.length-1),0,{id:'reflets',nameFr:'Oracle des Reflets du Lac',nameEn:'Lake Reflections Oracle',count:50});
  }
  const isReflets=()=>state.oracle==='reflets';
- const sprite='./cards/reflets/reflets-sprite.webp?v=20261008-v1';
  function spriteStyle(c){
    const i=Math.max(0,Number(c.spriteIndex)||0),col=i%5,row=Math.floor(i/5);
    return `background-image:url('${sprite}');background-size:500% 1000%;background-position:${col*25}% ${row*(100/9)}%;background-repeat:no-repeat;`;
@@ -63,5 +63,11 @@ function start(){
  if(typeof oldApply==='function')window.applyLanguage=function(){oldApply();const o=oracle.querySelector('[value="reflets"]');if(o)o.textContent=state.lang==='en'?'Lake Reflections Oracle':'Oracle des Reflets du Lac';renderCatalog();};
  document.documentElement.dataset.cristarivaReflets='50';
 }
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else setTimeout(start,0);
+function boot(){
+ const probe=new Image();
+ probe.onload=start;
+ probe.onerror=()=>console.warn('CRISTARIVA : Oracle des Reflets du Lac prêt, activation différée jusqu’à la disponibilité des illustrations.');
+ probe.src=sprite;
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else setTimeout(boot,0);
 })();
