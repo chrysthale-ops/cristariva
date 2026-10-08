@@ -1,12 +1,14 @@
 /* CRISTARIVA — service worker v51 — position stable du cartouche cartes renversées. */
-const CACHE_NAME='cristariva-v125-20261008-reflets-consultation';
-const APP_VERSION='2026.10.08-reflets-consultation';
+const CACHE_NAME='cristariva-v126-20261008-reflets-thumbnails';
+const APP_VERSION='2026.10.08-reflets-thumbnails';
+// Les chemins v2, v3 et thumbs-v1 sont versionnés : conserver ces images d'une mise à jour à l'autre.
+const REFLETS_IMAGE_CACHE='cristariva-reflets-images-v1';
 const IMMERSIVE_URL='./immersive-reading-ui.js?v=20261006-remove-active-label-r16';
 const TAROT_INTEGRATION_URL='./tarot-divinatoire-integration-v78.js?v=20261006-reversal-cartouche-r2';
 const TAROT_HOTFIX_URL='./tarot-title-image-hotfix.js?v=20261006-reversal-inline-r3';
 const SHELL=[
   './oracle-reflets-data.js?v=20261008-consultation-v2',
-  './oracle-reflets-integration.js?v=20261008-consultation-v3',
+  './oracle-reflets-integration.js?v=20261008-thumbnails-v4',
   './numerologie.html',
   './numerologie.css?v=1',
   './numerologie.js?v=3',
@@ -16,7 +18,7 @@ const SHELL=[
   './',
   './index.html',
   IMMERSIVE_URL,
-  './story-quality.js?v=5-reflets-consultation',
+  './story-quality.js?v=6-reflets-thumbnails',
   './groq-hybrid-story.js?v=7-reflets-domains',
   './manifest.webmanifest',
   './manifest-en.webmanifest',
@@ -63,7 +65,7 @@ self.addEventListener('message',event=>{
 self.addEventListener('activate',event=>{
   event.waitUntil((async()=>{
     const keys=await caches.keys();
-    await Promise.all(keys.filter(k=>k.startsWith('cristariva-')&&k!==CACHE_NAME).map(k=>caches.delete(k)));
+    await Promise.all(keys.filter(k=>k.startsWith('cristariva-')&&k!==CACHE_NAME&&k!==REFLETS_IMAGE_CACHE).map(k=>caches.delete(k)));
     await self.clients.claim();
     const clients=await self.clients.matchAll({type:'window',includeUncontrolled:true});
     for(const client of clients){
@@ -92,14 +94,15 @@ async function networkFirst(request){
   }
 }
 
-async function cacheFirst(request){
-  const cached=await caches.match(request,{ignoreSearch:true});
+async function cacheFirst(request,cacheName=CACHE_NAME){
+  const cache=await caches.open(cacheName);
+  const cached=await cache.match(request,{ignoreSearch:true});
   if(cached)return cached;
   try{
     const response=await fetch(request);
     if(response&&response.ok){
       const copy=response.clone();
-      caches.open(CACHE_NAME).then(cache=>cache.put(request,copy)).catch(()=>{});
+      await cache.put(request,copy).catch(()=>{});
     }
     return response;
   }catch(e){return Response.error();}
@@ -143,8 +146,8 @@ self.addEventListener('fetch',event=>{
     return;
   }
 
-  if(url.pathname.includes('/cards/reflets/v2/')){
-    event.respondWith(cacheFirst(request));
+  if(/\/cards\/reflets\/(?:v2|v3|thumbs-v1)\//.test(url.pathname)){
+    event.respondWith(cacheFirst(request,REFLETS_IMAGE_CACHE));
     return;
   }
 

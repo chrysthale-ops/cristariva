@@ -3,7 +3,8 @@
 'use strict';
 if(typeof window==='undefined')return;
 const imageBase='./cards/reflets/v2/';
-const imageURL=c=>imageBase+String(c.id).padStart(2,'0')+'.webp';
+const imageURL=c=>(c.id===33?'./cards/reflets/v3/':imageBase)+String(c.id).padStart(2,'0')+'.webp';
+const thumbnailURL=c=>'./cards/reflets/thumbs-v1/'+String(c.id).padStart(2,'0')+'.webp';
 function start(){
  if(!window.REFLETS_DATA||typeof state==='undefined')return;
  const oracle=document.querySelector('#oracleChoice');
@@ -55,11 +56,16 @@ function start(){
    const catalogue=document.querySelector('#catalogue');
    (catalogue||main).insertAdjacentHTML('beforeend',`<section class="${catalogue?'embedded-game-catalog':'shell panel'}" id="oracle-reflets-catalog"><div class="section-title"><span class="eyebrow">Oracle CRISTARIVA</span><h2>L’Oracle des Reflets du Lac</h2><p class="muted">50 cartes. Consultez leur définition, leur tonalité, leur force et leurs significations dans les quatre domaines.</p><p class="muted">La force indique l’intensité symbolique : douce, modérée, forte ou très forte. Elle ne représente pas une probabilité. Une carte neutre décrit un contexte ou une transition ; la position et les cartes voisines nuancent toujours la lecture.</p></div><div class="catalog-tools"><label class="sr-only" for="refletsCatalogSearch">Rechercher une carte des Reflets du Lac</label><input id="refletsCatalogSearch" type="search" placeholder="Nom, numéro, mot-clé…" autocomplete="off"></div><p class="muted" aria-live="polite" id="refletsCatalogCount"></p><div class="cards catalog-grid" id="refletsCatalogGrid"></div></section>`);
  }
+ let renderedQuery=null;
  function renderCatalog(){
    const grid=document.querySelector('#refletsCatalogGrid'),q=(document.querySelector('#refletsCatalogSearch')?.value||'').toLocaleLowerCase(),count=document.querySelector('#refletsCatalogCount');if(!grid)return;
+   // Aucun chargement de vignettes tant que ce jeu n'est pas sélectionné.
+   const game=document.querySelector('#catalogGame');if(game&&game.value!=='reflets')return;
+   if(renderedQuery===q&&grid.childElementCount)return;
+   renderedQuery=q;
    const list=REFLETS_DATA.all.filter(c=>!q||c.name.toLocaleLowerCase().includes(q)||c.title.toLocaleLowerCase().includes(q)||c.keywords.toLocaleLowerCase().includes(q)||String(c.id).includes(q));
    if(count)count.textContent=`${list.length} / 50 cartes affichées`;
-   grid.innerHTML=list.map(c=>`<button type="button" class="catalog-item" data-reflets-id="${c.id}" aria-label="Consulter la carte ${String(c.id).padStart(2,'0')} : ${readingEscape(c.name)}"><span class="catalog-image"><img src="${imageURL(c)}" alt="${readingEscape(c.name)}" width="640" height="904" loading="lazy" decoding="async"></span><span class="catalog-name">${String(c.id).padStart(2,'0')} · ${readingEscape(c.title)} — ${readingEscape(c.name)}</span></button>`).join('')||'<p class="muted">Aucune carte trouvée.</p>';
+   grid.innerHTML=list.map((c,i)=>`<button type="button" class="catalog-item" data-reflets-id="${c.id}" aria-label="Consulter la carte ${String(c.id).padStart(2,'0')} : ${readingEscape(c.name)}"><span class="catalog-image"><img src="${thumbnailURL(c)}" alt="${readingEscape(c.name)}" width="320" height="452" loading="${i<6?'eager':'lazy'}" decoding="async" fetchpriority="${i<2?'high':'auto'}"></span><span class="catalog-name">${String(c.id).padStart(2,'0')} · ${readingEscape(c.title)} — ${readingEscape(c.name)}</span></button>`).join('')||'<p class="muted">Aucune carte trouvée.</p>';
  }
  document.querySelector('#refletsCatalogSearch')?.addEventListener('input',renderCatalog);
  function openRefletsCard(e){
