@@ -240,3 +240,40 @@ test('all 9 allowed domain × oracle combinations keep the previous reading func
    }
   }
  });
+
+
+test('all 338 card titles follow the selected language in catalogues and detail dialogs',async()=>{
+ await waitForLove();
+ const data=w.eval('DATA');
+ const decks=[['cristariva',[...data.main,...data.relation,...data.dating],'#catalogGrid','[data-card-key]'],['amour',w.AMOUR_DATA.all,'#loveCatalogGrid','[data-love-card-key]'],['reflets',w.REFLETS_DATA.all,'#refletsCatalogGrid','[data-reflets-id]'],['tarot',cards,'#tarotCatalogGrid','[data-tarot-card-id]']];
+ for(const lang of ['en','fr']){
+  state.lang=lang;w.applyLanguage();
+  for(const [deck,list,gridSelector,buttonSelector] of decks){
+   const select=w.document.querySelector('#catalogGame');select.value=deck;select.dispatchEvent(new w.Event('change'));
+   const buttons=[...w.document.querySelector(gridSelector).querySelectorAll(buttonSelector)];assert.equal(buttons.length,list.length,deck);
+   for(let i=0;i<list.length;i++){
+    const card=list[i],name=lang==='en'?card.en.name:card.name;
+    assert.ok(name&&buttons[i].textContent.includes(name),deck+' '+card.id+' '+lang);
+    if(deck==='reflets')assert.ok(buttons[i].textContent.includes(lang==='en'?card.en.title:card.title));
+    buttons[i].click();assert.ok(w.document.querySelector('#cardDialogTitle').textContent.includes(name));
+    assert.equal(w.document.querySelector('#cardDialogBody img').getAttribute('alt'),name);
+    w.document.querySelector('#cardDialog').close();
+   }
+  }
+ }
+ assert.equal(data.main[1].en.name,'Betrayal');assert.equal(data.main[1].name,'Trahison');
+ assert.equal(w.AMOUR_DATA.all[5].en.name,'Friendship');assert.equal(w.REFLETS_DATA.all[37].en.name,'The Sealed Letter');
+});
+
+test('English search and language changes refresh oracle titles without losing the selected card',async()=>{
+ await waitForLove();
+ const game=w.document.querySelector('#catalogGame'),search=w.document.querySelector('#catalogSearch');
+ for(const [deck,query,buttonSelector,expected] of [['cristariva','Betrayal','#catalogGrid [data-card-key]','Betrayal'],['amour','Friendship','#loveCatalogGrid [data-love-card-key]','Friendship'],['reflets','Sealed Letter','#refletsCatalogGrid [data-reflets-id]','SECRET — The Sealed Letter']]){
+  state.lang='en';w.applyLanguage();game.value=deck;game.dispatchEvent(new w.Event('change'));search.value=query;search.dispatchEvent(new w.Event('input'));
+  const buttons=w.document.querySelectorAll(buttonSelector);assert.equal(buttons.length,1,deck+' English search');buttons[0].click();
+  assert.equal(w.document.querySelector('#cardDialogTitle').textContent,expected);
+  state.lang='fr';w.applyLanguage();assert.ok(w.document.querySelector('#cardDialog').open);assert.notEqual(w.document.querySelector('#cardDialogTitle').textContent,expected);
+  state.lang='en';w.applyLanguage();assert.equal(w.document.querySelector('#cardDialogTitle').textContent,expected);
+  w.document.querySelector('#cardDialog').close();search.value='';search.dispatchEvent(new w.Event('input'));
+ }
+});

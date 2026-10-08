@@ -112,5 +112,6 @@ for(const c of all){
  Object.assign(c,{intensity,strengthNote,message,polarity:c.category==='Favorable'?'positive':c.category==='Ombre'?'negative':'neutral',reading_sentimental:sentimental,reading_relationnel:relationnel,reading_professionnel:professionnel,reading_spirituel:spirituel});
 }
 window.REFLETS_DATA={main:all,all};
+window.CR_APPLY_TITLE_TRANSLATIONS?.(window.REFLETS_DATA,'reflets');
 window.CR_ORACLE_REFLETS_VERSION='2026.10.08-consultation-v2';
 })();

@@ -26,12 +26,13 @@ function start(){
  }
  if(typeof cardName==='function'){
    const previousName=cardName;
-   cardName=function(c){return c?.oracle==='reflets'?c.name:previousName(c);};
+   cardName=function(c){return c?.oracle==='reflets'?(state.lang==='en'?(c.en?.name||c.name):c.name):previousName(c);};
  }
+ const title=c=>state.lang==='en'?(c.en?.title||c.title):c.title;
  function refletsCardHTML(c,pos){
    const name=(typeof cardName==='function'?cardName(c):c.name)||c.name;
    const safe=typeof readingEscape==='function'?readingEscape:String;
-   return `<article class="card reflets-card"><div class="art"><img src="${imageURL(c)}" alt="${safe(name)}" width="640" height="904" loading="eager" decoding="async" fetchpriority="high"></div><div class="body"><div class="num">${String(c.id).padStart(2,'0')} · ${safe(c.title||'')}</div><h3>${safe(name)}</h3>${pos?`<p><b>${safe(pos)}</b></p>`:''}<p><b>${safe(state.domain||'Relations')}</b><br>${safe(reading(c,state.domain))}</p><button type="button" data-reflets-id="${c.id}">Consulter la fiche complète</button></div></article>`;
+   return `<article class="card reflets-card"><div class="art"><img src="${imageURL(c)}" alt="${safe(name)}" width="640" height="904" loading="eager" decoding="async" fetchpriority="high"></div><div class="body"><div class="num">${String(c.id).padStart(2,'0')} · ${safe(title(c)||'')}</div><h3>${safe(name)}</h3>${pos?`<p><b>${safe(pos)}</b></p>`:''}<p><b>${safe(state.domain||'Relations')}</b><br>${safe(reading(c,state.domain))}</p><button type="button" data-reflets-id="${c.id}">Consulter la fiche complète</button></div></article>`;
  }
  if(typeof domainReading==='function'){
    const prev=domainReading; domainReading=function(c){return c?.oracle==='reflets'?reading(c,state.domain):prev(c);};
@@ -61,29 +62,32 @@ function start(){
    const grid=document.querySelector('#refletsCatalogGrid'),q=(document.querySelector('#refletsCatalogSearch')?.value||'').toLocaleLowerCase(),count=document.querySelector('#refletsCatalogCount');if(!grid)return;
    // Aucun chargement de vignettes tant que ce jeu n'est pas sélectionné.
    const game=document.querySelector('#catalogGame');if(game&&game.value!=='reflets')return;
-   if(renderedQuery===q&&grid.childElementCount)return;
-   renderedQuery=q;
-   const list=REFLETS_DATA.all.filter(c=>!q||c.name.toLocaleLowerCase().includes(q)||c.title.toLocaleLowerCase().includes(q)||c.keywords.toLocaleLowerCase().includes(q)||String(c.id).includes(q));
-   if(count)count.textContent=`${list.length} / 50 cartes affichées`;
-   grid.innerHTML=list.map((c,i)=>`<button type="button" class="catalog-item" data-reflets-id="${c.id}" aria-label="Consulter la carte ${String(c.id).padStart(2,'0')} : ${readingEscape(c.name)}"><span class="catalog-image"><img src="${thumbnailURL(c)}" alt="${readingEscape(c.name)}" width="320" height="452" loading="${i<6?'eager':'lazy'}" decoding="async" fetchpriority="${i<2?'high':'auto'}"></span><span class="catalog-name">${String(c.id).padStart(2,'0')} · ${readingEscape(c.title)} — ${readingEscape(c.name)}</span></button>`).join('')||'<p class="muted">Aucune carte trouvée.</p>';
+   const renderKey=JSON.stringify([q,state.lang]);
+   if(renderedQuery===renderKey&&grid.childElementCount)return;
+   renderedQuery=renderKey;
+   const list=REFLETS_DATA.all.filter(c=>!q||cardName(c).toLocaleLowerCase().includes(q)||title(c).toLocaleLowerCase().includes(q)||c.name.toLocaleLowerCase().includes(q)||c.title.toLocaleLowerCase().includes(q)||c.keywords.toLocaleLowerCase().includes(q)||String(c.id).includes(q));
+   if(count)count.textContent=`${list.length} / 50 ${state.lang==='en'?'cards displayed':'cartes affichées'}`;
+   grid.innerHTML=list.map((c,i)=>`<button type="button" class="catalog-item" data-reflets-id="${c.id}" aria-label="Consulter la carte ${String(c.id).padStart(2,'0')} : ${readingEscape(cardName(c))}"><span class="catalog-image"><img src="${thumbnailURL(c)}" alt="${readingEscape(cardName(c))}" width="320" height="452" loading="${i<6?'eager':'lazy'}" decoding="async" fetchpriority="${i<2?'high':'auto'}"></span><span class="catalog-name">${String(c.id).padStart(2,'0')} · ${readingEscape(title(c))} — ${readingEscape(cardName(c))}</span></button>`).join('')||'<p class="muted">Aucune carte trouvée.</p>';
  }
  document.querySelector('#refletsCatalogSearch')?.addEventListener('input',renderCatalog);
- function openRefletsCard(e){
-   const b=e.target.closest('[data-reflets-id]');if(!b)return;const c=REFLETS_DATA.all.find(x=>x.id===Number(b.dataset.refletsId));if(!c)return;
-   const body=document.querySelector('#cardDialogBody');if(!body)return;
+ let refletsSelected=null;
+ function renderRefletsDialog(c){
+   refletsSelected=c;
+   const body=document.querySelector('#cardDialogBody');if(!body)return;body.dataset.oracle='reflets';
    const row=(label,value)=>`<div class="card-detail-row"><h4>${readingEscape(label)}</h4><p>${readingEscape(value)}</p></div>`;
    const tone=c.polarity==='positive'?'Positive — favorable':c.polarity==='negative'?'Négative — ombre / difficulté':'Neutre — contexte / transition';
    const fields=row('Définition générale',c.definition)+row('Tonalité',tone)+row('Force symbolique',c.intensity+' — '+c.strengthNote)+row('Mots-clés',c.keywords)+row('Sentimental',c.reading_sentimental)+row('Relationnel',c.reading_relationnel)+row('Professionnel / projet',c.reading_professionnel)+row('Général / spirituel',c.reading_spirituel)+row('Conseil',c.message);
-   body.innerHTML=`<div class="card-detail-layout"><div><img class="card-detail-image" src="${imageURL(c)}" alt="${readingEscape(c.name)}" width="640" height="904" decoding="async" style="width:100%;height:auto;aspect-ratio:1055/1491;object-fit:contain;"></div><div><p class="muted">Oracle des Reflets du Lac · Carte ${String(c.id).padStart(2,'0')}</p><h2 id="cardDialogTitle">${readingEscape(c.title)} — ${readingEscape(c.name)}</h2>${fields}</div></div>`;
+   body.innerHTML=`<div class="card-detail-layout"><div><img class="card-detail-image" src="${imageURL(c)}" alt="${readingEscape(cardName(c))}" width="640" height="904" decoding="async" style="width:100%;height:auto;aspect-ratio:1055/1491;object-fit:contain;"></div><div><p class="muted">Oracle des Reflets du Lac · Carte ${String(c.id).padStart(2,'0')}</p><h2 id="cardDialogTitle">${readingEscape(title(c))} — ${readingEscape(cardName(c))}</h2>${fields}</div></div>`;
    // Empêche le rafraîchissement de langue d'afficher une ancienne fiche d'un autre jeu.
    if(typeof catalogSelected!=='undefined')catalogSelected=null;
    const dialog=document.querySelector('#cardDialog');if(dialog&&!dialog.open)dialog.showModal();
  }
+ function openRefletsCard(e){const b=e.target.closest('[data-reflets-id]');if(!b)return;const c=REFLETS_DATA.all.find(x=>x.id===Number(b.dataset.refletsId));if(c)renderRefletsDialog(c);}
  document.querySelector('#refletsCatalogGrid')?.addEventListener('click',openRefletsCard);
  document.querySelector('#drawCards')?.addEventListener('click',openRefletsCard);
  renderCatalog();
  const oldApply=window.applyLanguage;
- if(typeof oldApply==='function')window.applyLanguage=function(){oldApply();const o=oracle.querySelector('[value="reflets"]');if(o)o.textContent=state.lang==='en'?'Lake Reflections Oracle':'Oracle des Reflets du Lac';renderCatalog();};
+ if(typeof oldApply==='function')window.applyLanguage=function(){oldApply();const o=oracle.querySelector('[value="reflets"]');if(o)o.textContent=state.lang==='en'?'Lake Reflections Oracle':'Oracle des Reflets du Lac';renderCatalog();if(refletsSelected&&document.querySelector('#cardDialog')?.open&&document.querySelector('#cardDialogBody')?.dataset.oracle==='reflets'&&document.querySelector('#cardDialogBody img')?.getAttribute('src')===imageURL(refletsSelected))renderRefletsDialog(refletsSelected);if(isReflets()&&state.draw?.length){const positions=(state.lang==='en'?POSITIONS_EN:POSITIONS_FR)[state.draw.length];document.querySelector('#drawCards').innerHTML=state.draw.map((c,i)=>refletsCardHTML(c,positions?.[i]?.[0]||'')).join('');}};
  document.documentElement.dataset.cristarivaReflets='50';
  if(typeof window.renderCatalog==='function')window.renderCatalog();
 }

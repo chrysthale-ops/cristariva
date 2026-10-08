@@ -210,9 +210,9 @@
   function ensureLoveLoaded(){
     if(typeof AMOUR_DATA!=='undefined')return Promise.resolve();
     if(loveLoadPromise)return loveLoadPromise;
-    loveLoadPromise=loadScript('./oracle-amour-data.js?v=20260923-story6')
+    loveLoadPromise=loadScript('./oracle-amour-data.js?v=20261008-en-titles1')
       .then(()=>loadScript('./oracle-amour-card62-fix.js?v=20260923-story6'))
-      .then(()=>loadScript('./oracle-amour-integration.js?v=20261008-all-thumbnails-r1'))
+      .then(()=>loadScript('./oracle-amour-integration.js?v=20261008-en-titles1'))
       .then(()=>loadScript('./oracle-amour-compat.js?v=20260923-story6'))
       .catch(()=>{});
     return loveLoadPromise;

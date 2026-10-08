@@ -1,6 +1,6 @@
 /* CRISTARIVA — service worker v51 — position stable du cartouche cartes renversées. */
-const CACHE_NAME='cristariva-v127-20261008-all-thumbnails';
-const APP_VERSION='2026.10.08-all-thumbnails';
+const CACHE_NAME='cristariva-v128-20261008-english-titles';
+const APP_VERSION='2026.10.08-english-titles';
 // Les chemins v2, v3 et thumbs-v1 sont versionnés : conserver ces images d'une mise à jour à l'autre.
 const REFLETS_IMAGE_CACHE='cristariva-reflets-images-v1';
 const CATALOG_IMAGE_CACHE='cristariva-catalog-images-v1';
@@ -8,10 +8,11 @@ const IMMERSIVE_URL='./immersive-reading-ui.js?v=20261006-remove-active-label-r1
 const TAROT_INTEGRATION_URL='./tarot-divinatoire-integration-v78.js?v=20261008-all-thumbnails-r1';
 const TAROT_HOTFIX_URL='./tarot-title-image-hotfix.js?v=20261008-all-thumbnails-r1';
 const SHELL=[
+  './oracle-title-translations.js?v=20261008-en-titles1',
   './catalog-thumbnails-data.js?v=20261008-all1',
   './catalog-thumbnails.js?v=20261008-all1',
-  './oracle-reflets-data.js?v=20261008-consultation-v2',
-  './oracle-reflets-integration.js?v=20261008-thumbnails-v4',
+  './oracle-reflets-data.js?v=20261008-en-titles1',
+  './oracle-reflets-integration.js?v=20261008-en-titles1',
   './numerologie.html',
   './numerologie.css?v=1',
   './numerologie.js?v=3',
@@ -21,7 +22,7 @@ const SHELL=[
   './',
   './index.html',
   IMMERSIVE_URL,
-  './story-quality.js?v=6-reflets-thumbnails',
+  './story-quality.js?v=7-en-titles',
   './groq-hybrid-story.js?v=7-reflets-domains',
   './manifest.webmanifest',
   './manifest-en.webmanifest',
@@ -33,10 +34,10 @@ const SHELL=[
   './question-context-story-v5.2.js?v=5.2.2',
   './question-intent-story-v5.3.js?v=5.6',
   './question-project-story-v5.5.js?v=5.21',
-  './oracle-selection.js?v=20261003-domains-restored-r1',
-  './oracle-amour-data.js?v=20260923-love-story6',
+  './oracle-selection.js?v=20261008-en-titles1',
+  './oracle-amour-data.js?v=20261008-en-titles1',
   './oracle-amour-card62-fix.js?v=20260923-love-story6',
-  './oracle-amour-integration.js?v=20261008-all-thumbnails-r1',
+  './oracle-amour-integration.js?v=20261008-en-titles1',
   './oracle-amour-compat.js?v=20260923-love-story6',
   './tarot-divinatoire-data.js?v=20260924-tarot78-base-r9',
   './tarot-divinatoire-integration.js?v=20260924-tarot78-r4-compat',
@@ -48,7 +49,7 @@ const SHELL=[
   './tarot-minors-data-epees.js?v=20260924-tarot78-r9',
   './tarot-minors-data-deniers.js?v=20260924-tarot78-r9',
   './tarot-minors-v1.js?v=20260924-tarot78-r9',
-  './relation-astrology.js?v=20261002-cross-analysis-restore-r1'
+  './relation-astrology.js?v=20261008-en-titles1'
 ];
 
 self.addEventListener('install',event=>{

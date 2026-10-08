@@ -115,22 +115,28 @@
     if(!f||!s||!grid||!count)return;
     const game=document.querySelector('#catalogGame');if(game&&game.value!=='amour')return;
     const group=f.value,q=s.value.trim().toLocaleLowerCase();
-    const filtered=LOVE_ALL.filter(c=>(group==='all'||c.group===group)&&(!q||c.name.toLocaleLowerCase().includes(q)||String(c.id).includes(q)||String(c.keywords||'').toLocaleLowerCase().includes(q)));
+    const filtered=LOVE_ALL.filter(c=>(group==='all'||c.group===group)&&(!q||cardName(c).toLocaleLowerCase().includes(q)||c.name.toLocaleLowerCase().includes(q)||String(c.id).includes(q)||String(c.keywords||'').toLocaleLowerCase().includes(q)));
     count.textContent=`${filtered.length} / 80 cartes affichées`;
     const renderKey=JSON.stringify([group,q,state.lang]);if(grid.dataset.renderKey===renderKey&&grid.childElementCount)return;grid.dataset.renderKey=renderKey;
     grid.innerHTML=filtered.map((c,i)=>{const key=readingEscape(c.group+'-'+c.id),name=readingEscape(cardName(c));const image=window.CR_CATALOG_IMAGE_HTML?window.CR_CATALOG_IMAGE_HTML(c,'amour',cardName(c),i,cardImage(c)):`<img src="${readingEscape(cardImage(c))}" alt="${name}" loading="lazy">`;return `<button type="button" class="catalog-item" data-love-card-key="${key}" aria-label="Voir la carte : ${name}"><span class="catalog-image">${image}</span><span class="catalog-name">${String(c.id).padStart(2,'0')} · ${name}</span></button>`;}).join('')||'<p class="muted">Aucune carte trouvée.</p>';
   }
   document.querySelector('#loveCatalogSearch')?.addEventListener('input',renderLoveCatalog);
   document.querySelector('#loveCatalogFilter')?.addEventListener('change',renderLoveCatalog);
-  document.querySelector('#loveCatalogGrid')?.addEventListener('click',e=>{
-    const b=e.target.closest('[data-love-card-key]'); if(!b)return;
-    const [group,id]=b.dataset.loveCardKey.split('-');
-    const c=AMOUR_DATA[group].find(x=>x.id===Number(id)); if(!c)return;
-    const body=document.querySelector('#cardDialogBody');
+  let loveSelected=null;
+  function renderLoveCardDialog(c){
+    loveSelected=c;
+    if(typeof catalogSelected!=='undefined')catalogSelected=null;
+    const body=document.querySelector('#cardDialogBody');body.dataset.oracle='amour';
     const name=readingEscape(cardName(c)), image=readingEscape(cardImage(c));
     body.innerHTML=`<div class="card-detail-layout"><div><img class="card-detail-image" src="${image}" alt="${name}"></div><div><p class="muted">Oracle Amour CRISTARIVA · Carte ${String(c.id).padStart(2,'0')}</p><h2 id="cardDialogTitle">${name}</h2><p><b>Type</b><br>${c.group==='main'?'Carte générale':c.group==='relation'?'Carte Relation':'Carte Datation'}</p><p><b>Définition</b><br>${readingEscape(c.definition)}</p>${c.keywords?`<p><b>Mots-clés</b><br>${readingEscape(c.keywords)}</p>`:''}</div></div>`;
-    document.querySelector('#cardDialog').showModal();
+    const dialog=document.querySelector('#cardDialog');if(!dialog.open)dialog.showModal();
+  }
+  document.querySelector('#loveCatalogGrid')?.addEventListener('click',e=>{
+    const b=e.target.closest('[data-love-card-key]');if(!b)return;
+    const [group,id]=b.dataset.loveCardKey.split('-'),c=AMOUR_DATA[group].find(x=>x.id===Number(id));if(c)renderLoveCardDialog(c);
   });
+  const oldLanguage=window.applyLanguage;
+  if(typeof oldLanguage==='function')window.applyLanguage=function(){oldLanguage();renderLoveCatalog();if(loveSelected&&document.querySelector('#cardDialog')?.open&&document.querySelector('#cardDialogBody')?.dataset.oracle==='amour'&&document.querySelector('#cardDialogBody img')?.getAttribute('src')===cardImage(loveSelected))renderLoveCardDialog(loveSelected);};
 
   updateOracleContext(); renderLoveCatalog();
 })();
