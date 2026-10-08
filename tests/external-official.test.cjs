@@ -79,10 +79,23 @@ test('official external story exposes status, retries temporary failures and kee
  w.fetch=async()=>{calls++;return {ok:true,status:200,json:async()=>({text:'fragment'})};};
  render();await runNext();
  assert.equal(calls,1);
+ assert.equal(w.document.querySelector('.story-reading').dataset.externalStatus,'retrying');
+ await runNext();
+ assert.equal(calls,2);
  assert.equal(w.document.querySelector('.story-reading').dataset.storyEngine,'external-error');
  assert.equal(w.document.querySelector('.story-reading').dataset.externalStatus,'quality');
  assert.match(w.document.querySelector('.story-engine-status').textContent,/contrôle qualité/);
  assert.equal(w.CR_EXTERNAL_ENGINE_LAST_STATUS.state,'quality');
 
+ const savedCards=JSON.stringify(w.state.draw);
+ w.fetch=async()=>({ok:true,status:200,json:async()=>({text:good})});
+ w.document.querySelector('.story-retry').click();await runNext();
+ assert.equal(w.CR_EXTERNAL_ENGINE_LAST_STATUS.state,'active');
+ assert.equal(JSON.stringify(w.state.draw),savedCards);
+
+ w.state.question='Rejet serveur corrigé';calls=0;const payloads=[];
+ w.fetch=async(_url,options)=>{payloads.push(options.body);calls++;return calls===1?{ok:false,status:502,json:async()=>({error:'quality',reason:'external_grounding'})}:{ok:true,status:200,json:async()=>({text:good})};};
+ render();await runNext();assert.equal(w.CR_EXTERNAL_ENGINE_LAST_STATUS.state,'retrying');await runNext();
+ assert.equal(w.CR_EXTERNAL_ENGINE_LAST_STATUS.state,'active');assert.equal(calls,2);assert.equal(payloads[0],payloads[1]);
  dom.window.close();
 });

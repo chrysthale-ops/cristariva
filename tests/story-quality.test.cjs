@@ -60,15 +60,16 @@ test('browser rejects malformed external prose and uses domain meaning',async()=
  w.state={lang:'fr',domain:'Sentimental',question:'Le retour de Kinya',oracle:'cristariva',draw:[]};
  w.CR_UNIVERSAL_FLUID_STORY=()=>'<div class="story-reading"><p class="story-continuous">Récit local complet.</p></div>';
  w.CR_UNIVERSAL_ROLE_SUMMARY=()=>input.cards[0].local;
- let sent,finish;
- const fetched=new Promise(resolve=>finish=resolve);
- w.fetch=async(url,opts)=>{sent=JSON.parse(opts.body);return {ok:true,json:async()=>{finish();return {text};}};};
+ w.AbortSignal=AbortSignal;
+ let sent;const timers=[];w.setTimeout=fn=>timers.push(fn);
+ w.fetch=async(url,opts)=>{sent=JSON.parse(opts.body);return {ok:true,json:async()=>({text})};};
  w.eval(fs.readFileSync(require.resolve('../story-quality.js'),'utf8'));
  w.eval(fs.readFileSync(require.resolve('../groq-hybrid-story.js'),'utf8'));
  const cards=[{id:1,name:'Clarté',definition:'Idée générale.',reading_relationnel:'Un échange sentimental se précise.'}];
  w.state.draw=cards;
  w.document.getElementById('reading').innerHTML=w.CR_UNIVERSAL_FLUID_STORY(cards);
- await fetched;await new Promise(resolve=>setImmediate(resolve));
+ await timers.shift()();
+ if(text===broken){assert.equal(w.CR_EXTERNAL_ENGINE_LAST_STATUS.state,'retrying');await timers.shift()();}
  assert.equal(sent.cards[0].meaning,cards[0].reading_relationnel);
  assert.equal(w.document.querySelector('.story-continuous').textContent,text===valid?valid:'Le récit ne satisfait pas aux exigences de qualité. Veuillez réessayer.');
  }finally{w.close();}

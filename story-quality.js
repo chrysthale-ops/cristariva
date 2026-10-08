@@ -49,7 +49,7 @@
 if(typeof window!=='undefined'&&typeof document!=='undefined'){
  (function(){
   function load(src){return new Promise((resolve,reject)=>{if([...document.scripts].some(s=>String(s.src||'').includes(src.split('?')[0])))return resolve();const el=document.createElement('script');el.src=src;el.async=false;el.onload=resolve;el.onerror=reject;document.head.appendChild(el);});}
-  function boot(){load('./oracle-reflets-data.js?v=20261008-v1').then(()=>load('./oracle-reflets-integration.js?v=20261008-v1')).catch(e=>console.error('CRISTARIVA : chargement des Reflets du Lac impossible.',e));}
+  function boot(){load('./oracle-reflets-data.js?v=20261008-v1').then(()=>load('./oracle-reflets-integration.js?v=20261008-v2-fast')).catch(e=>console.error('CRISTARIVA : chargement des Reflets du Lac impossible.',e));}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
  })();
 }

@@ -1,6 +1,6 @@
 /* CRISTARIVA — service worker v51 — position stable du cartouche cartes renversées. */
-const CACHE_NAME='cristariva-v123-20261007-numerologie-page';
-const APP_VERSION='2026.10.07-numerologie-page';
+const CACHE_NAME='cristariva-v124-20261008-reflets-fast-retry';
+const APP_VERSION='2026.10.08-reflets-fast-retry';
 const IMMERSIVE_URL='./immersive-reading-ui.js?v=20261006-remove-active-label-r16';
 const TAROT_INTEGRATION_URL='./tarot-divinatoire-integration-v78.js?v=20261006-reversal-cartouche-r2';
 const TAROT_HOTFIX_URL='./tarot-title-image-hotfix.js?v=20261006-reversal-inline-r3';
@@ -14,8 +14,8 @@ const SHELL=[
   './',
   './index.html',
   IMMERSIVE_URL,
-  './story-quality.js?v=3-card-name-context',
-  './groq-hybrid-story.js?v=5-external-diagnostics',
+  './story-quality.js?v=4-reflets-fast',
+  './groq-hybrid-story.js?v=6-quality-retry',
   './manifest.webmanifest',
   './manifest-en.webmanifest',
   './icon-192.png',
@@ -138,6 +138,11 @@ self.addEventListener('fetch',event=>{
 
   if(url.pathname.includes('/cards/tarot/cartes%20mineures%20HD/') || url.pathname.includes('/cards/tarot/cartes mineures HD/')){
     event.respondWith(networkFirst(request));
+    return;
+  }
+
+  if(url.pathname.includes('/cards/reflets/v2/')){
+    event.respondWith(cacheFirst(request));
     return;
   }
 

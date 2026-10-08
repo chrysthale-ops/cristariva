@@ -54,20 +54,33 @@ function safeErrorBody(response){
  return response.json().catch(()=>({}));
 }
 function reasonFrom(body,status){return String(body?.reason||body?.error||('http_'+status));}
+function qualityFailure(reason){return /^(?:quality|coverage|length|incomplete|language|card_names|unsupported_reciprocity|external_grounding|quality_unavailable)$/.test(reason);}
 function retryableHttp(status,reason){
  if(status===429||status===504)return true;
  if(status===503)return reason!=='not_configured';
- if(status===502)return /provider_unavailable|incomplete|upstream|timeout|http_502/i.test(reason);
+ if(status===502)return qualityFailure(reason)||/provider_unavailable|upstream|timeout|http_502/i.test(reason);
  return status>=500&&status<600;
 }
 function finalStateForHttp(status,reason){
  if(status===429)return 'rate_limit';
  if(status===503&&reason==='not_configured')return 'config';
- if(/quality|coverage|card_names|external_grounding/i.test(reason))return 'quality';
+ if(qualityFailure(reason))return 'quality';
  return 'error';
 }
-function finishError(key,en,stateName,message,code='',reason='',attempt=1){
+function finishError(key,en,stateName,message,code='',reason='',attempt=1,data,messages){
  apply(key,message,'external-error');updateStatus(key,en,stateName,code,reason,attempt);pending.delete(key);
+ if(!data||!messages||stateName==='config')return;
+ document.querySelectorAll('[data-hybrid-key]').forEach(el=>{
+  if(el.getAttribute('data-hybrid-key')!==key||el.querySelector('.story-retry'))return;
+  const button=document.createElement('button');button.type='button';button.className='story-retry';
+  button.textContent=en?'Retry this reading':'Réessayer le récit';
+  button.addEventListener('click',()=>{
+   if(pending.has(key))return;
+   document.querySelectorAll('[data-hybrid-key]').forEach(node=>{if(node.getAttribute('data-hybrid-key')===key)node.querySelector('.story-retry')?.remove();});
+   pending.set(key,true);apply(key,messages.waiting,'external-pending');updateStatus(key,en,'connecting');
+   scheduleAttempt(key,data,en,messages,1);
+  });el.appendChild(button);
+ });
 }
 function scheduleAttempt(key,data,en,messages,attempt){
  const delay=attempt===1?0:1500;
@@ -82,11 +95,14 @@ function scheduleAttempt(key,data,en,messages,attempt){
     }
     const stateName=finalStateForHttp(response.status,reason);
     const text=stateName==='rate_limit'?messages.rate_limit:stateName==='quality'?messages.rejected:messages.failure;
-    finishError(key,en,stateName,text,response.status,reason,attempt);return;
+    finishError(key,en,stateName,text,response.status,reason,attempt,data,messages);return;
    }
    const result=await response.json();
    const qualityReason=!window.CR_STORY_QUALITY?'quality_unavailable':window.CR_STORY_QUALITY.validate(result.text,data);
-   if(qualityReason){finishError(key,en,'quality',messages.rejected,response.status||200,qualityReason,attempt);return;}
+   if(qualityReason){
+    if(attempt===1){updateStatus(key,en,'retrying',response.status||200,qualityReason,2);scheduleAttempt(key,data,en,messages,2);return;}
+    finishError(key,en,'quality',messages.rejected,response.status||200,qualityReason,attempt,data,messages);return;
+   }
    cache.set(key,result.text);if(cache.size>30)cache.delete(cache.keys().next().value);
    apply(key,result.text,'external');updateStatus(key,en,'active',response.status||200,'',attempt);pending.delete(key);
   }catch(error){
@@ -95,7 +111,7 @@ function scheduleAttempt(key,data,en,messages,attempt){
     updateStatus(key,en,'retrying','',isTimeout?'timeout':'network',2);
     scheduleAttempt(key,data,en,messages,2);return;
    }
-   finishError(key,en,isTimeout?'timeout':'network',isTimeout?messages.timeout:messages.failure,'',isTimeout?'timeout':'network',attempt);
+   finishError(key,en,isTimeout?'timeout':'network',isTimeout?messages.timeout:messages.failure,'',isTimeout?'timeout':'network',attempt,data,messages);
   }
  },delay);
 }
