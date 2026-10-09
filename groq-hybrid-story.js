@@ -141,5 +141,7 @@ function hybrid(cards){
  return doc.innerHTML;
 }
 storyInterpretation=hybrid;interpretation=hybrid;
+window.CR_EXTERNAL_STORY=hybrid;
 window.CR_UNIVERSAL_FLUID_STORY=hybrid;
 })();
+
