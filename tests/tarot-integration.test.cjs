@@ -137,6 +137,13 @@ test('one, three and five card draws use Tarot 78 and keep complementary reading
     assert.ok(w.document.querySelector('#reading').textContent.includes('Quelle évolution pour mon projet'));
     assert.doesNotMatch(w.document.querySelector('#reading').textContent, /undefined|\[object Object\]/);
     for (const c of state.draw) assert.ok(w.preciseReading(c, 'Professionnelle / Projet', false).length > 20);
+    // Provide a completed narrative: remote-engine timing is tested separately.
+    const externalStory=w.document.querySelector('#reading [data-story-engine^="external"]');
+    if(externalStory){
+      externalStory.dataset.storyEngine='external';
+      externalStory.querySelector('.story-continuous').textContent='La situation invite à clarifier les attentes et à avancer avec attention.';
+    }
+    w.syncRelationContext();
     w.document.querySelector('#relationBtn').click();
     w.document.querySelector('#dateBtn').click();
     assert.ok(state.relation && state.date);
@@ -211,6 +218,13 @@ test('all 9 allowed domain × oracle combinations keep the previous reading func
     if (o==='amour') assert.ok(state.draw.every(c=>c.oracle==='amour'));
     if (o==='cristariva') assert.ok(state.draw.every(c=>c.oracle!=='tarot'&&c.oracle!=='amour'));
     assert.ok(w.document.querySelector('#reading').textContent.length>30,`${d} × ${o}: story`);
+    // Provide a completed narrative: remote-engine timing is tested separately.
+    const externalStory=w.document.querySelector('#reading [data-story-engine^="external"]');
+    if(externalStory){
+      externalStory.dataset.storyEngine='external';
+      externalStory.querySelector('.story-continuous').textContent='La situation invite à clarifier les attentes et à avancer avec attention.';
+    }
+    w.syncRelationContext();
     w.document.querySelector('#relationBtn').click();
     w.document.querySelector('#dateBtn').click();
     assert.ok(state.relation && state.date,`${d} × ${o}: relation and timing`);
@@ -277,3 +291,4 @@ test('English search and language changes refresh oracle titles without losing t
   w.document.querySelector('#cardDialog').close();search.value='';search.dispatchEvent(new w.Event('input'));
  }
 });
+
