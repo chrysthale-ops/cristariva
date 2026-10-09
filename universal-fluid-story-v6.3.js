@@ -1017,6 +1017,9 @@ window.CR_UNIVERSAL_ROLE_SUMMARY=function(card,role,enMode){
 
 function refresh(){
   try{
+    // The external engine owns the displayed narrative, including pending/error
+    // states. Lifecycle events must never replace it with the legacy builder.
+    if(typeof window.CR_EXTERNAL_STORY==='function')return;
     if(!state?.draw?.length)return;
     for(const id of ['reading','interpretation','readingResult','story','result']){
       const el=document.getElementById(id);
@@ -1031,3 +1034,4 @@ try{refresh();}catch(e){}
 window.addEventListener('pageshow',refresh);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refresh();});
 })();
+

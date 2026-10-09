@@ -1,6 +1,6 @@
 /* CRISTARIVA — service worker v51 — position stable du cartouche cartes renversées. */
-const CACHE_NAME='cristariva-v129-20261009-relation-context';
-const APP_VERSION='2026.10.09-relation-context';
+const CACHE_NAME='cristariva-v130-20261009-preserve-external';
+const APP_VERSION='2026.10.09-preserve-external';
 // Les chemins v2, v3 et thumbs-v1 sont versionnés : conserver ces images d'une mise à jour à l'autre.
 const REFLETS_IMAGE_CACHE='cristariva-reflets-images-v1';
 const CATALOG_IMAGE_CACHE='cristariva-catalog-images-v1';
@@ -24,14 +24,14 @@ const SHELL=[
   './index.html',
   IMMERSIVE_URL,
   './story-quality.js?v=7-en-titles',
-  './groq-hybrid-story.js?v=7-reflets-domains',
+  './groq-hybrid-story.js?v=8-preserve-external',
   './manifest.webmanifest',
   './manifest-en.webmanifest',
   './icon-192.png',
   './icon-512.png',
   './story-fluid-v5.1.js?v=5.30',
   './tarot-reversals.js?v=20260929-r2',
-  './universal-fluid-story-v6.3.js?v=6.49-unicode-r1',
+  './universal-fluid-story-v6.3.js?v=6.50-preserve-external',
   './question-context-story-v5.2.js?v=5.2.2',
   './question-intent-story-v5.3.js?v=5.6',
   './question-project-story-v5.5.js?v=5.21',

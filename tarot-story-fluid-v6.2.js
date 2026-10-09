@@ -140,9 +140,11 @@
 
   window.CR_TAROT_STORY_FLUID_VERSION=VERSION;
   try{
+    if(typeof window.CR_EXTERNAL_STORY==='function')return;
     if(state?.oracle==='tarot'&&state?.draw?.length){
       const reading=document.getElementById('reading');
       if(reading)reading.innerHTML=fluidTarotStory(state.draw);
     }
   }catch(e){}
 })();
+
