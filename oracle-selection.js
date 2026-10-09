@@ -212,7 +212,7 @@
     if(loveLoadPromise)return loveLoadPromise;
     loveLoadPromise=loadScript('./oracle-amour-data.js?v=20261008-en-titles1')
       .then(()=>loadScript('./oracle-amour-card62-fix.js?v=20260923-story6'))
-      .then(()=>loadScript('./oracle-amour-integration.js?v=20261008-en-titles1'))
+      .then(()=>loadScript('./oracle-amour-integration.js?v=20261009-relation-context'))
       .then(()=>loadScript('./oracle-amour-compat.js?v=20260923-story6'))
       .catch(()=>{});
     return loveLoadPromise;
@@ -247,3 +247,4 @@
   domainObserver.observe(domain,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden','disabled','style','value']});
   window.addEventListener('pageshow',refresh);
 })();
+

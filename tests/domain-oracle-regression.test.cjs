@@ -200,6 +200,16 @@ test('matrice complète Domaine × Oracle : tirage, Relation, Datation, astrolog
       if (expectedOracle === 'cristariva') assert.ok(state.draw.every(card => card.oracle !== 'tarot' && card.oracle !== 'amour'), `${label} : Oracle CRISTARIVA utilisé`);
       assert.ok(w.document.querySelector('#reading').textContent.length > 40, `${label} : interprétation principale`);
 
+      // This matrix tests the business flow, independently of the remote engine.
+      // Supply a completed neutral narrative before the relationship selection;
+      // pending/late responses and contextual filtering have dedicated tests.
+      const externalStory = w.document.querySelector('#reading [data-story-engine^="external"]');
+      if (externalStory) {
+        externalStory.removeAttribute('data-hybrid-key');
+        externalStory.dataset.storyEngine = 'external';
+        externalStory.querySelector('.story-continuous').textContent = 'La situation invite à clarifier les attentes et à avancer avec attention.';
+      }
+      w.syncRelationContext();
       relationBtn.click();
       dateBtn.click();
       assert.ok(state.relation, `${label} : carte Relation`);
@@ -265,3 +275,4 @@ test('matrice complète Domaine × Oracle : tirage, Relation, Datation, astrolog
     dom.window.close();
   }
 });
+
