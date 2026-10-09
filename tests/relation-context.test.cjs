@@ -37,6 +37,10 @@ test('shared click handler: domain filter, pending narrative and late invalidati
   await new Promise(r=>w.setTimeout(r,0));assert(!button.disabled);
   button.click();assert.equal(w.eval('state.relation.id'),100);
   assert.deepEqual(Array.from(w.eval('eligibleRelationCards().map(c=>c.id)')),[100,106,113]);
+  // Re-rendering the same reading while computing astrology must preserve the card.
+  story.dataset.storyEngine='external-pending';
+  await new Promise(r=>w.setTimeout(r,0));assert(button.disabled);assert.equal(w.eval('state.relation.id'),100);
+  story.dataset.storyEngine='external';
   story.querySelector('p').textContent='Votre partenaire et votre histoire commune sont au centre du récit.';
   await new Promise(r=>w.setTimeout(r,0));assert.equal(w.eval('state.relation'),null);
   button.click();assert.equal(w.eval('state.relation.id'),96);

@@ -880,6 +880,8 @@ function storyInterpretation(cards){
 function interpretation(cards){return storyInterpretation(cards);}
 $('#drawBtn').addEventListener('click',()=>{
   state.question=$('#question').value.trim(); state.domain=$('#domain').value;
+  state.relation=null;
+  $('#relationResult').innerHTML='';
   const n=parseInt(state.format||1);
   state.draw=rand(DATA.main,n);
   const pset=(state.lang==='en'?POSITIONS_EN:POSITIONS_FR)[n];
@@ -911,7 +913,7 @@ function syncRelationContext(){
   const ready=relationReadingContext().ready;
   $('#relationBtn').disabled=!ready;
   $('#relationBtn').title=ready?'':(state.lang==='en'?'Wait for the reading before drawing a relationship card.':'Attendez le récit avant de tirer une carte Relation.');
-  if(state.relation&&(!ready||!eligibleRelationCards().some(c=>c.id===state.relation.id))){
+  if(state.relation&&ready&&!eligibleRelationCards().some(c=>c.id===state.relation.id)){
     state.relation=null;
     $('#relationResult').innerHTML='';
     if(!$('#synthesis').classList.contains('hidden'))renderSynthesis();
