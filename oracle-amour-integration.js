@@ -75,9 +75,7 @@
   document.querySelector('#relationBtn')?.addEventListener('click',function(ev){
     if(!isLove())return;
     ev.stopImmediatePropagation(); ev.preventDefault();
-    state.relation=rand(AMOUR_DATA.relation,1)[0];
-    document.querySelector('#relationResult').innerHTML=cardHTML(state.relation,t('Relation'));
-    if(!document.querySelector('#synthesis').classList.contains('hidden'))renderSynthesis();
+    drawContextualRelation();
   },true);
   document.querySelector('#dateBtn')?.addEventListener('click',function(ev){
     if(!isLove())return;
@@ -140,3 +138,4 @@
 
   updateOracleContext(); renderLoveCatalog();
 })();
+
