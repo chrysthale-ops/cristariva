@@ -140,6 +140,7 @@ test('one, three and five card draws use Tarot 78 and keep complementary reading
     // Provide a completed narrative: remote-engine timing is tested separately.
     const externalStory=w.document.querySelector('#reading [data-story-engine^="external"]');
     if(externalStory){
+      externalStory.removeAttribute('data-hybrid-key');
       externalStory.dataset.storyEngine='external';
       externalStory.querySelector('.story-continuous').textContent='La situation invite à clarifier les attentes et à avancer avec attention.';
     }
@@ -221,6 +222,7 @@ test('all 9 allowed domain × oracle combinations keep the previous reading func
     // Provide a completed narrative: remote-engine timing is tested separately.
     const externalStory=w.document.querySelector('#reading [data-story-engine^="external"]');
     if(externalStory){
+      externalStory.removeAttribute('data-hybrid-key');
       externalStory.dataset.storyEngine='external';
       externalStory.querySelector('.story-continuous').textContent='La situation invite à clarifier les attentes et à avancer avec attention.';
     }

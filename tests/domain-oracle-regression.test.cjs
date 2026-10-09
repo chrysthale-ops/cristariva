@@ -205,6 +205,7 @@ test('matrice complète Domaine × Oracle : tirage, Relation, Datation, astrolog
       // pending/late responses and contextual filtering have dedicated tests.
       const externalStory = w.document.querySelector('#reading [data-story-engine^="external"]');
       if (externalStory) {
+        externalStory.removeAttribute('data-hybrid-key');
         externalStory.dataset.storyEngine = 'external';
         externalStory.querySelector('.story-continuous').textContent = 'La situation invite à clarifier les attentes et à avancer avec attention.';
       }
