@@ -40,10 +40,14 @@
   function domainRule(value){return DOMAIN_RULES.find(item=>item.value===value)||null;}
   function namedKnownPerson(question,context=''){
     const q=normalize(question),ctx=normalize(context),text=(q+' '+ctx).trim();
+    const personToken="(?!il\\b|elle\\b|on\\b|ils\\b|elles\\b|qui\\b|quoi\\b|comment\\b|quand\\b|ou\\b|maintenant\\b|actuellement\\b|ce\\b|cet\\b|cette\\b|cela\\b|ca\\b|mon\\b|ma\\b|mes\\b|ton\\b|ta\\b|tes\\b|son\\b|sa\\b|ses\\b|notre\\b|votre\\b|leur\\b|un\\b|une\\b|quelqu)([a-z][a-z'-]{2,})\\b";
     const namedContact=/(?:appel|message|contact|reponse|réponse|nouvelles?)\s+(?:de|d'|avec|from|with)\s+(?!mon\b|ma\b|mes\b|son\b|sa\b|ses\b|un\b|une\b|quelqu)([a-z][a-z'-]{2,})\b/.test(q);
     const directNamed=/(?:avec|de|d'|concernant|about|with)\s+(?!mon\b|ma\b|mes\b|son\b|sa\b|ses\b|un\b|une\b|quelqu)([a-z][a-z'-]{2,})\b/.test(q);
+    const subjectNamed=new RegExp("\\b(?:que\\s+)?(?:fait|pense|ressent|veut|souhaite|vit|travaille|prepare|cherche|attend|devient|revient|repond|aime|envisage|decide)\\s+"+personToken).test(q);
+    const stateNamed=new RegExp("\\b(?:comment\\s+va|ou\\s+est)\\s+"+personToken).test(q);
+    const leadingNamed=new RegExp("\\b"+personToken+"\\s+(?:fait|pense|ressent|veut|souhaite|vit|travaille|prepare|cherche|attend|devient|revient|repond|aime|envisage|decide|va-t-il|va-t-elle|est-il|est-elle)\\b").test(q);
     const priorLink=/\b(?:silence radio|plus de nouvelles|ne me parle plus|ne repond plus|ne répond plus|attends? (?:un )?(?:appel|message|reponse|réponse)|reprendre contact|radio silence|no longer replies|waiting for (?:a )?(?:call|message|reply)|reconnect)\b/.test(text);
-    return namedContact||(directNamed&&priorLink);
+    return namedContact||subjectNamed||stateNamed||leadingNamed||(directNamed&&priorLink);
   }
   function questionProfile(question,extraContext='',explicitDomain=''){
     const q=normalize(question),ctx=normalize(extraContext),text=(q+' '+ctx).trim();
