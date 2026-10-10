@@ -46,6 +46,32 @@ function editorialIssues(text,input){
  const shared=typeof quality.editorialIssues==='function'?quality.editorialIssues(text,input):[];
  return [...new Set([...externalOnlyIssues(text,input),...shared])];
 }
+const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+function parseRetryAfter(value){
+ if(!value)return 0;
+ const seconds=Number(value);
+ if(Number.isFinite(seconds))return Math.max(0,Math.round(seconds*1000));
+ const date=Date.parse(value);
+ return Number.isFinite(date)?Math.max(0,date-Date.now()):0;
+}
+function rateLimitMeta(headers){
+ const num=name=>{const value=headers.get(name);if(value===null)return null;const parsed=Number(value);return Number.isFinite(parsed)?parsed:null;};
+ const text=name=>headers.get(name)||null;
+ return {
+  retryAfterMs:parseRetryAfter(headers.get('retry-after')),
+  remainingRequests:num('x-ratelimit-remaining-requests'),
+  remainingTokens:num('x-ratelimit-remaining-tokens'),
+  resetRequests:text('x-ratelimit-reset-requests'),
+  resetTokens:text('x-ratelimit-reset-tokens')
+ };
+}
+function rateLimitPayload(call){
+ const payload={error:call.error};
+ if(call.rateLimitSource)payload.rateLimitSource=call.rateLimitSource;
+ if(typeof call.retried==='boolean')payload.retried=call.retried;
+ for(const key of ['retryAfterMs','remainingRequests','remainingTokens','resetRequests','resetTokens'])if(call[key]!==null&&call[key]!==undefined)payload[key]=call[key];
+ return payload;
+}
 async function interpret(event,env){
  const origin=event.headers.origin||event.headers.Origin;
  const headers={'Content-Type':'application/json','Cache-Control':'no-store','Vary':'Origin'};
@@ -65,8 +91,19 @@ async function interpret(event,env){
  const system=externalOnly?quality.system+' '+EXTERNAL_ONLY_GUIDANCE+' '+EXTERNAL_EDITORIAL_REQUIREMENTS:quality.system;
  try{
   const callProvider=async(systemPrompt,userPayload)=>{
-   const response=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{Authorization:'Bearer '+env.GROQ_API_KEY,'Content-Type':'application/json'},signal:AbortSignal.timeout(18000),body:JSON.stringify({model:env.GROQ_MODEL||'openai/gpt-oss-120b',messages:[{role:'system',content:systemPrompt},{role:'user',content:userPayload}],response_format:{type:'json_schema',json_schema:{name:'reading',strict:true,schema}},max_completion_tokens:6000})});
-   if(!response.ok)return response.status===429?{status:429,error:'rate_limit'}:{status:502,error:'provider_unavailable'};
+   const requestProvider=()=>fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{Authorization:'Bearer '+env.GROQ_API_KEY,'Content-Type':'application/json'},signal:AbortSignal.timeout(18000),body:JSON.stringify({model:env.GROQ_MODEL||'openai/gpt-oss-120b',messages:[{role:'system',content:systemPrompt},{role:'user',content:userPayload}],response_format:{type:'json_schema',json_schema:{name:'reading',strict:true,schema}},max_completion_tokens:6000})});
+   let response=await requestProvider();
+   let retried=false;
+   if(response.status===429){
+    const first=rateLimitMeta(response.headers);
+    if(first.retryAfterMs>0&&first.retryAfterMs<=5000){
+     await sleep(first.retryAfterMs);
+     retried=true;
+     response=await requestProvider();
+    }
+    if(response.status===429)return {status:429,error:'rate_limit',rateLimitSource:'groq',retried,...rateLimitMeta(response.headers)};
+   }
+   if(!response.ok)return {status:502,error:'provider_unavailable'};
    const data=await response.json();
    if(data.choices?.[0]?.finish_reason!=='stop')return {status:502,error:'incomplete'};
    try{return {status:200,result:JSON.parse(data.choices[0].message.content)};}catch{return {status:502,error:'incomplete'};}
@@ -76,7 +113,7 @@ async function interpret(event,env){
    return result.segments.map(s=>s.text.trim()).join(' ');
   };
   let call=await callProvider(system,JSON.stringify(input));
-  if(call.error)return reply(call.status,{error:call.error});
+  if(call.error)return reply(call.status,rateLimitPayload(call));
   let text=readText(call.result);
   if(!text)return reply(502,{error:'coverage'});
   if(externalOnly){
@@ -87,7 +124,7 @@ async function interpret(event,env){
     const sentenceFeedback=(text.match(/[^.!?…]+[.!?…]*/g)||[]).map(sentence=>({sentence:sentence.trim(),issues:editorialIssues(sentence,input)})).filter(item=>item.issues.length);
     const rewritePayload={lang:input.lang,question:input.question,context:input.context||'',domain:input.domain,oracle:input.oracle,cards:input.cards.map(({index,name,meaning,role,reversed})=>({index,name,meaning,role,reversed})),draft_to_rewrite:text,detected_issues:[...new Set(issues)],sentence_feedback:sentenceFeedback};
     call=await callProvider(system+' '+REWRITE_GUIDANCE+' '+quality.rewriteGuidance,JSON.stringify(rewritePayload));
-    if(call.error)return reply(call.status,{error:call.error});
+    if(call.error)return reply(call.status,rateLimitPayload(call));
     text=readText(call.result);
     if(!text)return reply(502,{error:'coverage'});
    }
@@ -106,7 +143,7 @@ export default {
    return Response.json({service:'cristariva-groq',configured:Boolean(env.GROQ_API_KEY)});
   if(request.method==='POST'&&env.GROQ_LIMITER){
    const {success}=await env.GROQ_LIMITER.limit({key:request.headers.get('CF-Connecting-IP')||'unknown'});
-   if(!success)return Response.json({error:'rate_limit'},{status:429});
+   if(!success)return Response.json({error:'rate_limit',rateLimitSource:'cloudflare',retried:false},{status:429});
   }
   const event={httpMethod:request.method,headers:Object.fromEntries(request.headers),body:request.method==='POST'?await request.text():''};
   const result=await interpret(event,env);
