@@ -13,6 +13,20 @@ test('detecte une reprise avec une personne connue et recommande une lecture app
   assert.equal(p.recommendedFormat,5);
 });
 
+test('respecte le domaine choisi explicitement par utilisateur',()=>{
+  const p=intelligence.adaptivePlan("J'attends un appel de Kinya",'il est en silence radio','Sentimental');
+  assert.equal(p.domain,'Sentimental');
+  assert.equal(p.intent,'return');
+  assert.equal(p.relation.kind,'known');
+  assert.equal(p.recommendedFormat,5);
+});
+
+test('une personne nommee avec silence radio est consideree comme deja connue',()=>{
+  const p=intelligence.questionProfile("J'attends un appel de Kinya",'il est en silence radio','Sentimental');
+  assert.equal(p.relation.kind,'known');
+  assert.ok(p.reasons.includes('named_known_person'));
+});
+
 test('detecte un contexte professionnel connu',()=>{
   const p=intelligence.questionProfile('Que pense mon collègue de mon projet professionnel ?');
   assert.equal(p.domain,'Professionnelle / Projet');
