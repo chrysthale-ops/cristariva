@@ -1,9 +1,3 @@
-$('#question')?.addEventListener('input',()=>{
-  state.relation=null;
-  $('#relationResult').innerHTML='';
-  if(!$('#synthesis').classList.contains('hidden'))$('#synthesis').classList.add('hidden');
-  syncRelationContext();
-});
 <!DOCTYPE html>
 
 <html lang="fr">
@@ -936,6 +930,12 @@ function syncRelationContext(){
   }
 }
 new MutationObserver(syncRelationContext).observe($('#reading'),{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['data-story-engine']});
+$('#question')?.addEventListener('input',()=>{
+  state.relation=null;
+  $('#relationResult').innerHTML='';
+  if(!$('#synthesis').classList.contains('hidden'))$('#synthesis').classList.add('hidden');
+  syncRelationContext();
+});
 function drawContextualRelation(){
   if(!relationReadingContext().ready)return;
   const relationCards=eligibleRelationCards();
@@ -1689,6 +1689,7 @@ window.renderCristarivaGamesPresentation=render;document.addEventListener('DOMCo
  observer.observe(main,{childList:true,subtree:true});
 })();
 </script></body></html>
+
 
 
 
