@@ -84,6 +84,26 @@
   // Browser-only extension: keep the proven relation engine independent while
   // loading the broader CRISTARIVA intelligence layer beside it.
   if(root.document){
+    const improveSuggestedReading=()=>{
+      const box=root.document.getElementById('cristarivaQuestionInsight');
+      if(!box)return;
+      const english=root.document.documentElement.lang==='en';
+      const label=Array.from(box.querySelectorAll('.cr-intelligence-grid b')).find(node=>/^(Format conseillé|Suggested format)$/.test(node.textContent.trim()));
+      if(!label)return;
+      const card=label.parentElement;
+      const value=card&&card.querySelector('span');
+      const count=parseInt(value?.textContent||'',10)||0;
+      label.textContent=english?'Suggested reading':'Lecture conseillée';
+      if(card&&!card.querySelector('.cr-reading-reason')){
+        const reason=root.document.createElement('small');
+        reason.className='cr-reading-reason';
+        reason.style.cssText='display:block;margin-top:5px;color:#6d7580;font-size:.72rem;line-height:1.25';
+        reason.textContent=english?
+          (count===1?'For an essential answer.':count===3?'For a short evolution reading.':'Suited to an evolving question with several factors.'):
+          (count===1?'Pour un éclairage essentiel.':count===3?'Pour une lecture courte de l’évolution.':'Adaptée à une question d’évolution comportant plusieurs facteurs.');
+        card.appendChild(reason);
+      }
+    };
     const load=()=>{
       if(root.CRISTARIVA_INTELLIGENCE||root.document.querySelector('script[data-cristariva-intelligence]'))return;
       const script=root.document.createElement('script');
@@ -93,5 +113,8 @@
       root.document.head.appendChild(script);
     };
     load();
+    const observer=new MutationObserver(()=>setTimeout(improveSuggestedReading,0));
+    observer.observe(root.document.documentElement,{childList:true,subtree:true});
+    setTimeout(improveSuggestedReading,0);
   }
 })(typeof window==='undefined'?globalThis:window);
