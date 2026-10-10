@@ -54,7 +54,7 @@ function safeErrorBody(response){
  return response.json().catch(()=>({}));
 }
 function reasonFrom(body,status){return String(body?.reason||body?.error||('http_'+status));}
-function qualityFailure(reason){return /^(?:quality|coverage|length|incomplete|language|card_names|unsupported_reciprocity|external_grounding|quality_unavailable)$/.test(reason);}
+function qualityFailure(reason){return /^(?:quality|coverage|length|incomplete|language|card_names|unsupported_reciprocity|external_grounding|quality_unavailable|user_controls_return|invented_relationship_cause)$/.test(reason);}
 function retryableHttp(status,reason){
  if(status===429||status===504)return true;
  if(status===503)return reason!=='not_configured';
