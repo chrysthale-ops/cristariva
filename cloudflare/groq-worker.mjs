@@ -95,7 +95,7 @@ async function interpret(event,env){
   const qualityError=quality.validate(text,input);
   if(qualityError)return reply(502,{error:'quality',reason:qualityError});
   const critical=externalOnly?criticalExternalIssues(text,input):[];
-  if(critical.length)return reply(502,{error:'quality',reason:critical[0]});
+  if(critical.length)return reply(502,{error:'quality',reason:'external_grounding'});
   return reply(200,{text,engine:'groq-hybrid-v3'});
  }catch{return reply(502,{error:'provider_unavailable'});}
 };
