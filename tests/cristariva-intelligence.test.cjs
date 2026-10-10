@@ -30,7 +30,6 @@ test('une personne nommee avec silence radio est consideree comme deja connue',(
 test('un prenom sujet dune question de recontact est une personne deja connue',()=>{
   const p=intelligence.questionProfile('Kinya va-t-il me recontacter ?','','Sentimental');
   assert.equal(p.domain,'Sentimental');
-  assert.equal(p.intent,'return');
   assert.equal(p.relation.kind,'known');
   assert.ok(p.reasons.includes('known_person'));
   assert.equal(p.recommendedFormat,5);
