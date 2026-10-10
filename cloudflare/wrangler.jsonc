@@ -1,6 +1,6 @@
 {
   "name": "cristariva",
-  "main": "worker-entry.mjs",
+  "main": "worker-entry-v6.mjs",
   "compatibility_date": "2026-10-04",
   "workers_dev": true,
   "ratelimits": [
