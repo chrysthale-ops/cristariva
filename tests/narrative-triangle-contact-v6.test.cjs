@@ -35,7 +35,29 @@ test('Communication et Choix ne deviennent pas des conditions causales du recont
   assert.equal(g.hasInventedContactMechanism("Il ne sera probable que si les positions se clarifient.",input),true);
   assert.equal(g.hasInventedContactMechanism("Des messages explicites sont nécessaires pour que le lien se définisse et qu'un contact reprenne.",input),true);
   assert.equal(g.hasInventedContactMechanism("Une décision consciente déterminera si un nouveau contact s'établira.",input),true);
+  assert.equal(g.hasInventedContactMechanism("Seule une communication fondée sur des faits précis pourra déclencher une reprise du contact.",input),true);
   assert.equal(g.hasInventedContactMechanism("Le tirage laisse le contact possible mais ne permet pas d'annoncer qu'il aura lieu.",input),false);
+});
+
+test('une carte de pause ne crée pas un état actuel non fourni', async()=>{
+  const g=await guards();
+  assert.equal(g.hasUnsupportedPresentState("Actuellement, la situation se caractérise par une pause silencieuse.",input),true);
+  assert.equal(g.hasUnsupportedPresentState("Une dynamique de retenue pèse sur le tirage sans établir un silence réel.",input),false);
+  const contextual={...input,context:'Nous sommes sans nouvelles depuis plusieurs semaines.'};
+  assert.equal(g.hasUnsupportedPresentState("Actuellement, une période de silence pèse sur le lien.",contextual),false);
+});
+
+test('le moteur ne prête pas une réflexion ou un ressourcement à Kinya', async()=>{
+  const g=await guards();
+  assert.equal(g.hasInventedMentalState("Chacun semble se retirer pour réfléchir et se ressourcer.",input),true);
+  assert.equal(g.hasInventedMentalState("Kinya prend du recul pour faire le point.",input),true);
+  assert.equal(g.hasInventedMentalState("Le tirage évoque une retenue sans permettre de connaître ce que Kinya pense.",input),false);
+});
+
+test('le travail sur soi ne devient pas un levier causal du retour', async()=>{
+  const g=await guards();
+  assert.equal(g.hasSelfWorkReturnLever("En poursuivant un travail soutenu sur soi-même, on renforce progressivement la stabilité du lien.",input),true);
+  assert.equal(g.hasSelfWorkReturnLever("Un travail personnel peut aider à mieux vivre l'attente, sans déterminer le choix de Kinya.",input),false);
 });
 
 test('wrangler active le garde-fou v6',()=>{
