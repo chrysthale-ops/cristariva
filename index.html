@@ -533,6 +533,7 @@ html{scroll-padding-top:130px}
 <h2 data-i18n="s29">Votre espace de tirage</h2>
 <div class="grid reading-fields">
 <div><label data-i18n="s30" for="question">Quelle question souhaitez-vous éclairer ?</label><textarea data-i18n-placeholder="s66" id="question" maxlength="220" placeholder="Formulez une question ouverte…"></textarea></div>
+<div><label data-i18n="readingContextLabel" for="readingContext">Un contexte utile à votre question ? (facultatif)</label><textarea id="readingContext" maxlength="2000" data-i18n-placeholder="readingContextPlaceholder" placeholder="Quelques faits utiles, sans obligation de partager des détails personnels…"></textarea></div>
 <div><label data-i18n="s31" for="domain">Domaine</label><select id="domain"><option value="Sentimental">Sentimental</option><option value="Relations">Relationnel</option><option value="Professionnelle / Projet">Professionnel / projet</option><option value="Général / spirituel">Général / spirituel</option></select></div>
 <div><label for="oracleChoice" id="oracleChoiceLabel">Oracle à questionner</label><select id="oracleChoice"><option value="cristariva">Oracle CRISTARIVA</option><option value="amour">Oracle sentimental CRISTARIVA</option><option value="tarot">Tarot CRISTARIVA</option></select></div>
 </div>
@@ -879,7 +880,7 @@ function storyInterpretation(cards){
 }
 function interpretation(cards){return storyInterpretation(cards);}
 $('#drawBtn').addEventListener('click',()=>{
-  state.question=$('#question').value.trim(); state.domain=$('#domain').value;
+  state.question=$('#question').value.trim(); state.context=$('#readingContext').value.trim(); state.domain=$('#domain').value;
   state.relation=null;
   $('#relationResult').innerHTML='';
   const n=parseInt(state.format||1);
@@ -1300,6 +1301,8 @@ STATIC_I18N.s69={fr:"Un éclairage du fil de la vie, comme une inspiration au bo
 const CATALOG_ALL=[...DATA.main,...DATA.relation,...DATA.dating];
 const DOMAIN_EN={"Relations":"Relationships","Professionnelle / Projet":"Professional / Project","Général / spirituel":"General / Spiritual"};
 function t(s){return state.lang==='en'?(DOMAIN_EN[s]||UI_TEXT_EN[s]||s):s;}
+STATIC_I18N.readingContextLabel={fr:"Un contexte utile à votre question ? (facultatif)",en:"Any useful context for your question? (optional)"};
+STATIC_I18N.readingContextPlaceholder={fr:"Quelques faits utiles, sans obligation de partager des détails personnels…",en:"A few useful facts; share only what you feel comfortable sharing…"};
 function applyStaticLanguage(){
  document.documentElement.lang=state.lang;
  document.title=state.lang==='en'?'CRISTARIVA — The Oracle of Evening Reflections':'CRISTARIVA — L’Oracle des Reflets du Soir';
@@ -1657,7 +1660,7 @@ const cristarivaCheckUpdate=()=>navigator.serviceWorker.register(
 window.addEventListener('load',cristarivaCheckUpdate);
 window.addEventListener('pageshow',cristarivaCheckUpdate);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')cristarivaCheckUpdate();});
-}</script><script src="./interpretation-engine-v2.js?v=3.0.1"></script><script src="./natal-influences-v3.1.js?v=3.1"></script><script src="./period-overview-v3.2.js?v=3.2"></script><script src="./integrated-period-reading-v3.3.js?v=3.5.1"></script><script src="./natal-profile-v3.4.js?v=3.4.1"></script><script src="./natal-special-plain-v3.4.2.js?v=3.4.2"></script><script src="./synthesis-cleanup-v3.5.2.js?v=3.6.3"></script><script src="./synthesis-french-fix-v3.6.3.js?v=3.6.9"></script><script src="./story-conclusion-v3.6.js?v=3.6.2"></script><script src="./validated-card-titles-v3.6.3.js?v=20260922-tarot32"></script><script src="./story-narrative-v4.js?v=5.0"></script><script src="./story-fluid-v5.1.js?v=5.31"></script><script src="./question-context-story-v5.2.js?v=5.2.2"></script><script src="./question-intent-story-v5.3.js?v=5.6"></script><script src="./question-project-story-v5.5.js?v=5.21"></script><script src="./tarot-reversals.js?v=20260929-r2"></script><script src="./universal-fluid-story-v6.3.js?v=6.50-preserve-external"></script><script src="./story-quality.js?v=7-en-titles"></script><script src="./groq-hybrid-story.js?v=8-preserve-external"></script><script src="./period-windows-v3.7.js?v=3.7"></script><script src="./period-window-limit-v3.8.js?v=3.9.1"></script><script src="./peak-label-fix-v3.9.2.js?v=3.9.4"></script><script src="./trigger-date-guard-v3.9.7.js?v=3.9.7"></script><script src="./unique-peak-dates-v3.9.8.js?v=4.0"></script><script src="./oracle-selection.js?v=20261009-relation-context"></script><script src="./relation-astrology.js?v=20261010-question-r2"></script><script src="./immersive-reading-ui.js?v=20261005-r2"></script><script src="./tarot-title-image-hotfix.js?v=20261008-all-thumbnails-r1"></script><script>
+}</script><script src="./interpretation-engine-v2.js?v=3.0.1"></script><script src="./natal-influences-v3.1.js?v=3.1"></script><script src="./period-overview-v3.2.js?v=3.2"></script><script src="./integrated-period-reading-v3.3.js?v=3.5.1"></script><script src="./natal-profile-v3.4.js?v=3.4.1"></script><script src="./natal-special-plain-v3.4.2.js?v=3.4.2"></script><script src="./synthesis-cleanup-v3.5.2.js?v=3.6.3"></script><script src="./synthesis-french-fix-v3.6.3.js?v=3.6.9"></script><script src="./story-conclusion-v3.6.js?v=3.6.2"></script><script src="./validated-card-titles-v3.6.3.js?v=20260922-tarot32"></script><script src="./story-narrative-v4.js?v=5.0"></script><script src="./story-fluid-v5.1.js?v=5.31"></script><script src="./question-context-story-v5.2.js?v=5.2.2"></script><script src="./question-intent-story-v5.3.js?v=5.6"></script><script src="./question-project-story-v5.5.js?v=5.21"></script><script src="./tarot-reversals.js?v=20260929-r2"></script><script src="./universal-fluid-story-v6.3.js?v=6.50-preserve-external"></script><script src="./story-quality.js?v=8-context-dynamics"></script><script src="./groq-hybrid-story.js?v=9-context-dynamics"></script><script src="./period-windows-v3.7.js?v=3.7"></script><script src="./period-window-limit-v3.8.js?v=3.9.1"></script><script src="./peak-label-fix-v3.9.2.js?v=3.9.4"></script><script src="./trigger-date-guard-v3.9.7.js?v=3.9.7"></script><script src="./unique-peak-dates-v3.9.8.js?v=4.0"></script><script src="./oracle-selection.js?v=20261009-relation-context"></script><script src="./relation-astrology.js?v=20261010-question-r2"></script><script src="./immersive-reading-ui.js?v=20261005-r2"></script><script src="./tarot-title-image-hotfix.js?v=20261008-all-thumbnails-r1"></script><script>
 /* Registre évolutif des jeux : modifier/ajouter ici un nom ou un nombre suffit pour la présentation. */
 window.CRISTARIVA_GAMES=window.CRISTARIVA_GAMES||[
 {id:'cristariva',nameFr:'Oracle CRISTARIVA',nameEn:'CRISTARIVA Oracle',count:130},

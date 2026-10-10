@@ -50,7 +50,7 @@ async function interpret(event,env){
  let input;
  try{input=JSON.parse(event.body);}catch{return reply(400,{error:'json'});}
  const bounded=(s,n)=>typeof s==='string'&&s.length<=n;
- if(!['fr','en'].includes(input.lang)||!bounded(input.question,2000)||!bounded(input.domain,100)||!bounded(input.oracle,100)||!Array.isArray(input.cards)||input.cards.length<1||input.cards.length>15||input.cards.some((c,i)=>c.index!==i||!bounded(c.name,150)||!bounded(c.meaning,4000)||!bounded(c.role,100)||!bounded(c.local,4000)||typeof c.reversed!=='boolean'))return reply(400,{error:'input'});
+ if(!['fr','en'].includes(input.lang)||!bounded(input.question,2000)||(input.context!==undefined&&!bounded(input.context,2000))||!bounded(input.domain,100)||!bounded(input.oracle,100)||!Array.isArray(input.cards)||input.cards.length<1||input.cards.length>15||input.cards.some((c,i)=>c.index!==i||!bounded(c.name,150)||!bounded(c.meaning,4000)||!bounded(c.role,100)||!bounded(c.local,4000)||typeof c.reversed!=='boolean'))return reply(400,{error:'input'});
  const schema={type:'object',additionalProperties:false,required:['segments'],properties:{segments:{type:'array',items:{type:'object',additionalProperties:false,required:['index','text'],properties:{index:{type:'integer'},text:{type:'string'}}}}}};
  // The isolated external test deliberately sends no local interpretation.
  // Keep the hybrid prompt byte-for-byte unchanged whenever local guidance is present.
@@ -79,7 +79,7 @@ async function interpret(event,env){
    if(issues.length){
     // Editorial defects trigger one corrective pass. Only meaning/safety failures can reject the final prose.
     const sentenceFeedback=(text.match(/[^.!?…]+[.!?…]*/g)||[]).map(sentence=>({sentence:sentence.trim(),issues:editorialIssues(sentence,input)})).filter(item=>item.issues.length);
-    const rewritePayload={lang:input.lang,question:input.question,domain:input.domain,oracle:input.oracle,cards:input.cards.map(({index,name,meaning,role,reversed})=>({index,name,meaning,role,reversed})),draft_to_rewrite:text,detected_issues:[...new Set(issues)],sentence_feedback:sentenceFeedback};
+    const rewritePayload={lang:input.lang,question:input.question,context:input.context||'',domain:input.domain,oracle:input.oracle,cards:input.cards.map(({index,name,meaning,role,reversed})=>({index,name,meaning,role,reversed})),draft_to_rewrite:text,detected_issues:[...new Set(issues)],sentence_feedback:sentenceFeedback};
     call=await callProvider(system+' '+REWRITE_GUIDANCE,JSON.stringify(rewritePayload));
     if(call.error)return reply(call.status,{error:call.error});
     text=readText(call.result);

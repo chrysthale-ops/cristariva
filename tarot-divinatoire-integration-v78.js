@@ -208,6 +208,7 @@ drawBtn?.addEventListener('click',event=>{
   if(!isTarot())return;
   event.stopImmediatePropagation();event.preventDefault();
   state.question=document.querySelector('#question')?.value.trim()||'';
+  state.context=document.querySelector('#readingContext')?.value.trim()||'';
   const count=parseInt(state.format||1,10);
   state.draw=rand(window.TAROT_DATA.main,count).map(fixTarotCard);
   const allowReversals=document.querySelector('#tarotAllowReversals')?.checked===true;

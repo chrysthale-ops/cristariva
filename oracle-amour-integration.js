@@ -58,6 +58,7 @@
     if(!isLove()) return;
     ev.stopImmediatePropagation(); ev.preventDefault();
     state.question=document.querySelector('#question').value.trim();
+  state.context=document.querySelector('#readingContext')?.value.trim()||'';
     const n=parseInt(state.format||1,10);
     state.draw=rand(AMOUR_DATA.main,n);
     state.relation=null; state.date=null;
