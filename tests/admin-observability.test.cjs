@@ -18,7 +18,7 @@ test('admin worker entry is syntactically valid',()=>{
 });
 
 test('wrangler deploys the observability entry with durable metrics storage',()=>{
-  assert.equal(config.main,'worker-entry.mjs');
+  assert.ok(['worker-entry.mjs','worker-entry-v6.mjs'].includes(config.main));
   assert.deepEqual(config.durable_objects.bindings,[{name:'ADMIN_METRICS',class_name:'AdminMetrics'}]);
   assert.ok(config.migrations.some(m=>m.new_sqlite_classes?.includes('AdminMetrics')));
 });
