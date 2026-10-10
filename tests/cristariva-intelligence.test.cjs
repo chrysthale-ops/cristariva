@@ -27,6 +27,15 @@ test('une personne nommee avec silence radio est consideree comme deja connue',(
   assert.ok(p.reasons.includes('named_known_person'));
 });
 
+test('un prenom sujet dune question de recontact est une personne deja connue',()=>{
+  const p=intelligence.questionProfile('Kinya va-t-il me recontacter ?','','Sentimental');
+  assert.equal(p.domain,'Sentimental');
+  assert.equal(p.intent,'return');
+  assert.equal(p.relation.kind,'known');
+  assert.ok(p.reasons.includes('known_person'));
+  assert.equal(p.recommendedFormat,5);
+});
+
 test('detecte un contexte professionnel connu',()=>{
   const p=intelligence.questionProfile('Que pense mon collègue de mon projet professionnel ?');
   assert.equal(p.domain,'Professionnelle / Projet');
