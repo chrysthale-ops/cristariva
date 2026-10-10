@@ -79,5 +79,18 @@
   const api={classify,analyze,resolve,context,filter};
   if(typeof module==='object'&&module.exports)module.exports=api;
   else root.CR_RELATION_CONTEXT=api;
-})(typeof window==='undefined'?globalThis:window);
 
+  // Browser-only extension: keep the proven relation engine independent while
+  // loading the broader CRISTARIVA intelligence layer beside it.
+  if(root.document){
+    const load=()=>{
+      if(root.CRISTARIVA_INTELLIGENCE||root.document.querySelector('script[data-cristariva-intelligence]'))return;
+      const script=root.document.createElement('script');
+      script.src='./cristariva-intelligence.js?v=20261010-reflets1';
+      script.dataset.cristarivaIntelligence='1';
+      script.async=false;
+      root.document.head.appendChild(script);
+    };
+    load();
+  }
+})(typeof window==='undefined'?globalThis:window);
