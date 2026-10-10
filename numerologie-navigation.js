@@ -1,12 +1,27 @@
 (function(root){
   'use strict';
   const key='cristariva-numerologie-context';
+  const resultKey='cristariva-numerologie-last-reading';
   let context={},drawnAt=null;
   const currentLang=()=>document.documentElement.lang==='en'?'en':'fr';
   function translate(){
     const en=currentLang()==='en';
     document.querySelectorAll('[data-num-fr]').forEach(el=>{el.textContent=el.dataset[en?'numEn':'numFr'];});
     document.querySelectorAll('[data-num-aria-fr]').forEach(el=>{el.setAttribute('aria-label',el.dataset[en?'numAriaEn':'numAriaFr']);});
+  }
+  function watchNumerologyResult(){
+    const out=document.getElementById('numResult');
+    if(!out||typeof MutationObserver==='undefined')return;
+    let last='';
+    const save=()=>{
+      if(out.hidden)return;
+      const value=(out.textContent||'').replace(/\s+/g,' ').trim();
+      if(!value||value===last)return;
+      last=value;
+      try{localStorage.setItem(resultKey,JSON.stringify({savedAt:Date.now(),drawnAt:context.drawnAt||null,text:value,mode:document.getElementById('numMode')?.value||''}));}catch(e){}
+    };
+    new MutationObserver(save).observe(out,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['hidden']});
+    save();
   }
   root.CristarivaNumerologieContext=()=>context;
   document.addEventListener('DOMContentLoaded',()=>{
@@ -35,6 +50,7 @@
         updateLanguage();
       });
       updateLanguage();
+      watchNumerologyResult();
       return;
     }
     const save=()=>{
