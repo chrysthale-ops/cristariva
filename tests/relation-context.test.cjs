@@ -26,7 +26,7 @@ test('question facts and roles take priority over contradictory narrative',()=>{
   const cards=Array.from({length:20},(_,i)=>({id:96+i}));
   const pool=(q,story='Une nouvelle rencontre se dessine.')=>api.filter(cards,api.resolve(story,q)).map(c=>c.id);
   for(const q of ['Mon ex reviendra-t-il ?','Un nouveau départ avec mon conjoint ?','Une nouvelle rencontre avec mon ex ?','Vais-je rencontrer ma collègue ?','Que pense mon responsable ?','My partner and I: what next?'])assert.equal(api.resolve('Une nouvelle rencontre se dessine.',q).kind,'known',q);
-  for(const q of ['Une personne que je ne connais pas encore','Quelqu’un d’inconnu','Someone I do not know','Une nouvelle rencontre'])assert.equal(api.resolve('Votre partenaire actuel reste présent.',q).kind,'new',q);
+  for(const q of ['Une personne que je ne connais pas encore','Quelqu’un d’inconnu','Someone I do not know','Une nouvelle rencontre','Mon futur partenaire','Un responsable que je ne connais pas'])assert.equal(api.resolve('Votre partenaire actuel reste présent.',q).kind,'new',q);
   const ex=pool('Mon ex reviendra-t-il ?');
   assert(ex.includes(102));assert(ex.includes(112));
   for(const id of [96,98,100,103,104,106,109])assert(!ex.includes(id),String(id));
@@ -38,6 +38,7 @@ test('question facts and roles take priority over contradictory narrative',()=>{
   assert.equal(api.analyze('Que m’attend-il en amour ?').kind,'ambiguous');
   assert.equal(api.analyze('Pas de nouvelle rencontre : mon ex revient-il ?').kind,'known');
   assert.equal(api.analyze('Pas mon ex : une nouvelle personne ?').kind,'new');
+  assert.equal(api.analyze('Pas de personne inconnue : mon ex revient-il ?').kind,'known');
   assert.equal(api.analyze('La personne que j’ai déjà rencontrée').kind,'known');
   assert.equal(api.analyze('La personne avec qui j’échange des messages').kind,'known');
   const mixed=pool('Mon ex reviendra-t-il ou vais-je faire une nouvelle rencontre ?','Votre partenaire actuel est présent.');

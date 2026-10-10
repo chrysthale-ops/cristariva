@@ -35,12 +35,12 @@
   function analyze(question){
     let s=normalize(question);
     // Negated possibilities are not evidence of the person being asked about.
-    s=s.replace(/\b(?:pas|sans|aucune?|not|no|without)\s+(?:(?:une?|de|d'|a|an|any)\s*)?(?:nouvelle?\s+(?:personne|rencontre|relation)|new\s+(?:person|encounter|relationship))\b/g,'');
+    s=s.replace(/\b(?:pas|sans|aucune?|not|no|without)\s+(?:(?:une?|de|d'|a|an|any)\s*)?(?:nouvelle?\s+(?:personne|rencontre|relation)|personne\s+(?:inconnue|(?:deja\s+)?connue)|inconnu(?:e)?|new\s+(?:person|encounter|relationship)|stranger)\b/g,'');
     s=s.replace(/\b(?:pas|sans|not|without)\s+(?:mon|ma|mes|votre|my|your)\s+(?:ex(?:[- ]partenaire)?|partenaire|conjoint(?:e)?|collegue|ami(?:e)?|partner|friend|colleague)\b/g,'');
     // A new meeting with a known subject is a new event, not a new person.
     s=s.replace(/\b(?:nouvelle? rencontre|new encounter)\s+(?:avec|with)\s+(?=(?:mon|ma|votre|my|your)\s+(?:ex|partenaire|conjoint|collegue|ami|partner|friend|colleague)\b)/g,'avec ');
     const roles=roleRules.filter(([,rule])=>rule.test(s)).map(([role])=>role);
-    const fresh=/\b(?:nouvelle? (?:personne|rencontre)|personne (?:nouvelle|inconnue)|quelqu'un (?:de nouveau|d'inconnu)|(?:une?|un(?:e)? )?inconnu(?:e)?|new (?:person|encounter)|someone new|stranger)\b|(?:personne|quelqu'un|homme|femme) que (?:je|vous) (?:ne connais(?:sez)? pas|n'ai jamais rencontre|n'avez jamais rencontre)|(?:personne|quelqu'un) (?:que|qui).{0,20}(?:pas encore|jamais) (?:rencontr|connu)|someone (?:i|you) (?:do not|don't) know/.test(s);
+    const fresh=/\b(?:nouvelle? (?:personne|rencontre)|personne (?:nouvelle|inconnue)|quelqu'un (?:de nouveau|d'inconnu)|(?:une?|un(?:e)? )?inconnu(?:e)?|(?:futur(?:e)?|prochain(?:e)?) (?:partenaire|conjoint(?:e)?|compagnon|compagne|collegue)|new (?:person|encounter)|someone new|stranger)\b|que (?:je|vous) ne connais(?:sez)? pas|(?:personne|quelqu'un|homme|femme) que (?:je|vous) (?:n'ai jamais rencontre|n'avez jamais rencontre)|(?:personne|quelqu'un) (?:que|qui).{0,20}(?:pas encore|jamais) (?:rencontr|connu)|someone (?:i|you) (?:do not|don't) know/.test(s);
     const known=roles.length>0||/\b(?:personne (?:deja )?connue|quelqu'un que (?:je|vous) connais(?:sez)?|nous (?:nous )?connaissons|on se connait|histoire (?:commune|partagee)|lien (?:deja )?(?:existant|etabli|ancien)|relation (?:deja )?(?:existante|etablie|actuelle)|someone (?:i|you) (?:already )?know|shared history|revoir|retrouvailles)\b|(?:personne|quelqu'un|homme|femme) que (?:je|j'|vous)\s*(?:connais(?:sez)?|ai (?:deja )?rencontre|avez (?:deja )?rencontre)|(?:personne|quelqu'un|homme|femme) avec (?:qui|lequel|laquelle) (?:je|j'|nous).{0,50}(?:echange|parle|travaille|message|relation)|(?:je|nous).{0,25}(?:echange|parle).{0,25}(?:avec lui|avec elle|avec cette personne)/.test(s);
     const kind=fresh&&known?'mixed':fresh?'new':known?'known':'ambiguous';
     return {kind,roles};
