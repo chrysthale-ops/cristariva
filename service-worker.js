@@ -1,10 +1,10 @@
 /* CRISTARIVA — service worker v51 — position stable du cartouche cartes renversées. */
-const CACHE_NAME='cristariva-v130-20261010-narrative-review';
-const APP_VERSION='2026.10.10-narrative-review';
+const CACHE_NAME='cristariva-v131-20261010-reading-panel';
+const APP_VERSION='2026.10.10-reading-panel';
 // Les chemins v2, v3 et thumbs-v1 sont versionnés : conserver ces images d'une mise à jour à l'autre.
 const REFLETS_IMAGE_CACHE='cristariva-reflets-images-v1';
 const CATALOG_IMAGE_CACHE='cristariva-catalog-images-v1';
-const IMMERSIVE_URL='./immersive-reading-ui.js?v=20261006-remove-active-label-r16';
+const IMMERSIVE_URL='./immersive-reading-ui.js?v=20261010-panel-r17';
 const TAROT_INTEGRATION_URL='./tarot-divinatoire-integration-v78.js?v=20261010-context-dynamics';
 const TAROT_HOTFIX_URL='./tarot-title-image-hotfix.js?v=20261008-all-thumbnails-r1';
 const SHELL=[
