@@ -59,7 +59,7 @@ async function interpret(event,env){
  try{
   const callProvider=async(systemPrompt,userPayload)=>{
    const response=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{Authorization:'Bearer '+env.GROQ_API_KEY,'Content-Type':'application/json'},signal:AbortSignal.timeout(18000),body:JSON.stringify({model:env.GROQ_MODEL||'openai/gpt-oss-120b',messages:[{role:'system',content:systemPrompt},{role:'user',content:userPayload}],response_format:{type:'json_schema',json_schema:{name:'reading',strict:true,schema}},max_completion_tokens:6000})});
-   if(!response.ok)return {status:response.status===429?429:502,error:'provider_unavailable'};
+   if(!response.ok)return response.status===429?{status:429,error:'rate_limit'}:{status:502,error:'provider_unavailable'};
    const data=await response.json();
    if(data.choices?.[0]?.finish_reason!=='stop')return {status:502,error:'incomplete'};
    try{return {status:200,result:JSON.parse(data.choices[0].message.content)};}catch{return {status:502,error:'incomplete'};}
