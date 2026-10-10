@@ -28,7 +28,7 @@ test('la fidélité ne prouve pas des engagements existants',()=>{
 });
 
 test('une lecture trois cartes ne doit pas révéler avant maintenant élan',()=>{
-  const text="L’énergie initiale montre une ouverture. Cependant, une coupure limite l’échange. En outre, la fidélité devient le dernier repère.";
+  const text="L’énergie initiale montre une ouverture ; cependant une coupure limite l’échange ; en outre la fidélité devient le dernier repère.";
   assert.ok(quality.editorialIssues(text,input).includes('card_by_card_flow'));
 });
 
