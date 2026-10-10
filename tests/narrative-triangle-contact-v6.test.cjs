@@ -21,7 +21,7 @@ test('Triangle ne prouve pas une tierce personne ou une rivalité', async()=>{
   const bad="Le contexte révèle une dynamique triangulaire où une tierce personne ou une rivalité crée de l'incertitude.";
   assert.equal(g.hasInventedTriangle(bad,input),true);
   const safe="Le tirage évoque plusieurs directions possibles sans permettre d'affirmer l'existence d'une tierce personne.";
-  assert.equal(g.hasInventedTriangle(safe,input),true);
+  assert.equal(g.hasInventedTriangle(safe,input),false);
 });
 
 test('un fait utilisateur explicite autorise la mention dune tierce personne', async()=>{
