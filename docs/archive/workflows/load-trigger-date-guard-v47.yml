@@ -1,0 +1,70 @@
+name: Load Trigger date guard v47
+
+on:
+  push:
+    paths:
+      - '.github/workflows/load-trigger-date-guard-v47.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Load Trigger date guard
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          tag='<script src="./trigger-date-guard-v3.9.7.js?v=3.9.7"></script>'
+          if tag not in s:
+              s=s.replace('</body>',tag+'</body>',1)
+          p.write_text(s,encoding='utf-8')
+
+          sw=Path('service-worker.js')
+          w=sw.read_text(encoding='utf-8')
+          w=re.sub(r"const APP_VERSION='[^']+';","const APP_VERSION='2026.09.15-47';",w,count=1)
+          w=re.sub(r"const CACHE_NAME='[^']+';","const CACHE_NAME='cristariva-v47-20260915-trigger-date-guard';",w,count=1)
+
+          if "'./trigger-date-guard-v3.9.7.js'" not in w:
+              w=w.replace("'./peak-label-fix-v3.9.2.js'","'./peak-label-fix-v3.9.2.js','./trigger-date-guard-v3.9.7.js'",1)
+
+          old='''<script src="./peak-label-fix-v3.9.2.js?v=3.9.4"></script>'''
+          if 'trigger-date-guard-v3.9.7.js?v=3.9.7' not in w:
+              w=w.replace(old,old+'<script src="./trigger-date-guard-v3.9.7.js?v=3.9.7"></script>')
+
+          marker="    if(!html.includes('peak-label-fix-v3.9.2.js?v=3.9.4'))html=html.replace('</body>','<script src=\"./peak-label-fix-v3.9.2.js?v=3.9.4\"></script></body>');"
+          add="\n    if(!html.includes('trigger-date-guard-v3.9.7.js?v=3.9.7'))html=html.replace('</body>','<script src=\"./trigger-date-guard-v3.9.7.js?v=3.9.7\"></script></body>');"
+          if 'if(!html.includes(\'trigger-date-guard-v3.9.7.js?v=3.9.7\'))' not in w:
+              w=w.replace(marker,marker+add)
+
+          w=w.replace('period-window-limit-v3\\.8|peak-label-fix-v3\\.9\\.2)','period-window-limit-v3\\.8|peak-label-fix-v3\\.9\\.2|trigger-date-guard-v3\\.9\\.7)')
+          sw.write_text(w,encoding='utf-8')
+
+      - name: Validate Trigger date guard
+        shell: python
+        run: |
+          from pathlib import Path
+          s=Path('index.html').read_text(encoding='utf-8')
+          w=Path('service-worker.js').read_text(encoding='utf-8')
+          g=Path('trigger-date-guard-v3.9.7.js').read_text(encoding='utf-8')
+          assert 'trigger-date-guard-v3.9.7.js?v=3.9.7' in s
+          assert "APP_VERSION='2026.09.15-47'" in w
+          assert 'trigger-date-guard-v3.9.7.js' in w
+          assert 'cr397NextCalendarDay' in g
+          assert 'bestDate)>=cutoff' in g
+          print('Trigger date guard validated')
+
+      - name: Commit and publish
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html service-worker.js
+          git commit -m "Load Trigger reading-day exclusion v47"
+          git push
