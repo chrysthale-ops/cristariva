@@ -10,7 +10,7 @@ test('FR/EN: known, new, ambiguous and negated alternatives',()=>{
   for(const s of ['Une nouvelle rencontre se dessine.','Quelqu’un de nouveau entre dans votre vie.','Someone you do not know will approach.'])assert.equal(api.classify(s),'new',s);
   for(const s of ['Une ouverture est possible.','Une nouvelle rencontre ou une personne déjà connue.','Pas de nouvelle rencontre annoncée.'])assert.equal(api.classify(s),'ambiguous',s);
   assert.equal(api.classify('Pas de nouvelle rencontre : votre partenaire reste au cœur du récit.'),'known');
-  assert.equal(api.context('Une nouvelle rencontre se dessine.','Mon ex reviendra-t-il ?'),'new');
+  assert.equal(api.context('Une nouvelle rencontre se dessine.','Mon ex reviendra-t-il ?'),'known');
 });
 test('actual relationship deck: incompatible roles excluded, flexible roles retained',()=>{
   const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
@@ -21,6 +21,29 @@ test('actual relationship deck: incompatible roles excluded, flexible roles reta
   for(const id of [96,98,102,103,105,108,110,112])assert(!fresh.includes(id));
   for(const id of [100,106,113,115])assert(fresh.includes(id));
   assert.equal(api.filter(cards,'ambiguous').length,20);
+});
+test('question facts and roles take priority over contradictory narrative',()=>{
+  const cards=Array.from({length:20},(_,i)=>({id:96+i}));
+  const pool=(q,story='Une nouvelle rencontre se dessine.')=>api.filter(cards,api.resolve(story,q)).map(c=>c.id);
+  for(const q of ['Mon ex reviendra-t-il ?','Un nouveau départ avec mon conjoint ?','Une nouvelle rencontre avec mon ex ?','Vais-je rencontrer ma collègue ?','Que pense mon responsable ?','My partner and I: what next?'])assert.equal(api.resolve('Une nouvelle rencontre se dessine.',q).kind,'known',q);
+  for(const q of ['Une personne que je ne connais pas encore','Quelqu’un d’inconnu','Someone I do not know','Une nouvelle rencontre','Mon futur partenaire','Un responsable que je ne connais pas'])assert.equal(api.resolve('Votre partenaire actuel reste présent.',q).kind,'new',q);
+  const ex=pool('Mon ex reviendra-t-il ?');
+  assert(ex.includes(102));assert(ex.includes(112));
+  for(const id of [96,98,100,103,104,106,109])assert(!ex.includes(id),String(id));
+  const colleague=pool('Que pense ma collègue de moi ?');
+  assert(colleague.includes(103));assert(!colleague.includes(102));assert(!colleague.includes(98));assert(!colleague.includes(106));
+  const fresh=pool('Vais-je rencontrer une personne inconnue ?');
+  assert(fresh.includes(100));assert(fresh.includes(106));assert(fresh.includes(109));assert(fresh.includes(111));
+  assert.equal(api.analyze('Paul').kind,'ambiguous');
+  assert.equal(api.analyze('Que m’attend-il en amour ?').kind,'ambiguous');
+  assert.equal(api.analyze('Pas de nouvelle rencontre : mon ex revient-il ?').kind,'known');
+  assert.equal(api.analyze('Pas mon ex : une nouvelle personne ?').kind,'new');
+  assert.equal(api.analyze('Pas de personne inconnue : mon ex revient-il ?').kind,'known');
+  assert.equal(api.analyze('La personne que j’ai déjà rencontrée').kind,'known');
+  assert.equal(api.analyze('La personne avec qui j’échange des messages').kind,'known');
+  const mixed=pool('Mon ex reviendra-t-il ou vais-je faire une nouvelle rencontre ?','Votre partenaire actuel est présent.');
+  for(const id of [102,112,100,106])assert(mixed.includes(id));
+  assert(!mixed.includes(98));
 });
 test('shared click handler: domain filter, pending narrative and late invalidation',async()=>{
   const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
@@ -36,7 +59,7 @@ test('shared click handler: domain filter, pending narrative and late invalidati
   story.querySelector('p').textContent='Une nouvelle rencontre se dessine.';story.dataset.storyEngine='external';
   await new Promise(r=>w.setTimeout(r,0));assert(!button.disabled);
   button.click();assert.equal(w.eval('state.relation.id'),100);
-  assert.deepEqual(Array.from(w.eval('eligibleRelationCards().map(c=>c.id)')),[100,106,113]);
+  assert.deepEqual(Array.from(w.eval('eligibleRelationCards().map(c=>c.id)')),[100,106,109,111,113]);
   // Re-rendering the same reading while computing astrology must preserve the card.
   story.dataset.storyEngine='external-pending';
   await new Promise(r=>w.setTimeout(r,0));assert(button.disabled);assert.equal(w.eval('state.relation.id'),100);
@@ -50,10 +73,44 @@ test('shared click handler: domain filter, pending narrative and late invalidati
   w.eval("state.oracle='amour';state.domain='Sentimental'");
   story.querySelector('p').textContent='Une personne nouvelle arrive.';
   await new Promise(r=>w.setTimeout(r,0));
-  assert.deepEqual(Array.from(w.eval('eligibleRelationCards().map(c=>c.id)')),[62,69]);
+  assert.deepEqual(Array.from(w.eval('eligibleRelationCards().map(c=>c.id)')),[62,63,67,69,70]);
   button.click();assert.equal(w.eval('state.relation.id'),62);
   story.querySelector('p').textContent='Une personne déjà connue revient.';
   await new Promise(r=>w.setTimeout(r,0));assert.equal(w.eval('state.relation'),null);
   button.click();assert.equal(w.eval('state.relation.id'),61);
   dom.window.close();
 });
+test('editing the question clears the relationship and blocks use of an old reading',()=>{
+  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+  const dom=new JSDOM('<textarea id="question"></textarea><div id="reading"></div><p></p><button id="relationBtn"></button><div id="relationResult"></div><div id="synthesis"></div>',{runScripts:'outside-only'});
+  const w=dom.window;
+  w.eval(fs.readFileSync(path.join(root,'relation-context.js'),'utf8'));
+  w.eval(`var state={oracle:'cristariva',domain:'Sentimental',question:'Mon ex reviendra-t-il ?',lang:'fr',relation:{id:102}};var DATA={relation:Array.from({length:20},(_,i)=>({id:96+i}))};var $=s=>document.querySelector(s);var rand=a=>a.slice(0,1);var cardHTML=c=>String(c.id);var t=x=>x;var renderSynthesis=()=>{};`);
+  const input=w.document.querySelector('#question');
+  input.value='Mon ex reviendra-t-il ?';
+  w.document.querySelector('#reading').innerHTML='<div class="story-reading"><p>Une nouvelle rencontre se dessine.</p></div>';
+  w.eval(html.slice(html.indexOf('const CRISTARIVA_RELATION_IDS='),html.indexOf("$('#dateBtn').addEventListener")));
+  w.eval('syncRelationContext()');
+  const ids=Array.from(w.eval('eligibleRelationCards().map(c=>c.id)'));
+  assert(ids.includes(102));assert(!ids.includes(106));assert(!ids.includes(98));
+  input.value='Une nouvelle rencontre ?';input.dispatchEvent(new w.Event('input'));
+  assert.equal(w.eval('state.relation'),null);
+  assert(w.document.querySelector('#relationBtn').disabled);
+  assert(w.document.querySelector('#synthesis').classList.contains('hidden'));
+  assert.match(w.document.querySelector('#relationBtn').title,/Relancez le tirage/);
+  w.eval("state.question='Une nouvelle rencontre ?';syncRelationContext()");
+  assert(!w.document.querySelector('#relationBtn').disabled);
+  w.document.querySelector('#relationBtn').click();assert.equal(w.eval('state.relation.id'),100);
+  dom.window.close();
+});
+test('legacy random wrapper delegates without removing compatible roles again',()=>{
+  const s=fs.readFileSync(path.join(root,'relation-astrology.js'),'utf8');
+  const dom=new JSDOM('',{runScripts:'outside-only'}),w=dom.window;
+  w.eval('var eligibleRelationCards=()=>[];window.CR_RELATION_CONTEXT={};window.rand=(a,n)=>a.slice(0,n);');
+  w.eval(s.slice(s.indexOf('  function installRelationDomainFilter(){'),s.indexOf('  function updateRelationFilterUI(){')));
+  w.eval('installRelationDomainFilter()');
+  const cards=[{id:104,group:'relation'}];
+  assert.equal(w.rand(cards,1)[0].id,104);
+  dom.window.close();
+});
+

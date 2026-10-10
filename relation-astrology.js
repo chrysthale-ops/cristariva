@@ -146,6 +146,9 @@
       if(window.rand.__cristarivaRelationFilter)return true;
       const baseRand=window.rand;
       const wrapped=function(arr,n){
+        // The shared draw handler already applies domain, question and story.
+        // Do not apply the older role exclusions a second time.
+        if(window.CR_RELATION_CONTEXT&&typeof eligibleRelationCards==='function')return baseRand.call(this,arr,n);
         let pool=arr;
         try{
           if(isLoveRelationArray(arr))pool=filteredLoveRelations(arr);
@@ -162,6 +165,9 @@
 
   function updateRelationFilterUI(){
     try{
+      if(window.CR_RELATION_CONTEXT&&typeof syncRelationContext==='function'){
+        syncRelationContext();return;
+      }
       const btn=document.querySelector('#relationBtn');
       if(!btn)return;
       const domain=relNorm((typeof state==='object'&&state?.domain)||document.querySelector('#domain')?.value||'');
@@ -320,3 +326,4 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
   else boot();
 })();
+

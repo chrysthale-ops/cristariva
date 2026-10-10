@@ -39,6 +39,7 @@ test('Relation, Datation, visibility and late Tarot loading preserve the externa
     for(const oracle of ['cristariva','amour','tarot','reflets']){
       for(const lang of ['fr','en']){
         state.oracle=oracle;state.lang=lang;state.domain='Sentimental';state.question='Test '+oracle+' '+lang;
+        w.document.querySelector('#question').value=state.question;
         state.draw=[{id:1,name:'Clarté',definition:'Clarification',reading_relationnel:'Clarification'}];
         state.tarotReversed=[];state.relation=null;
         const reading=w.document.querySelector('#reading');
@@ -66,3 +67,4 @@ test('Relation, Datation, visibility and late Tarot loading preserve the externa
     }
   }finally{w.close();}
 });
+

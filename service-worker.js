@@ -1,6 +1,6 @@
 /* CRISTARIVA — service worker v51 — position stable du cartouche cartes renversées. */
-const CACHE_NAME='cristariva-v130-20261009-preserve-external';
-const APP_VERSION='2026.10.09-preserve-external';
+const CACHE_NAME='cristariva-v130-20261010-relation-question';
+const APP_VERSION='2026.10.10-relation-question';
 // Les chemins v2, v3 et thumbs-v1 sont versionnés : conserver ces images d'une mise à jour à l'autre.
 const REFLETS_IMAGE_CACHE='cristariva-reflets-images-v1';
 const CATALOG_IMAGE_CACHE='cristariva-catalog-images-v1';
@@ -8,7 +8,7 @@ const IMMERSIVE_URL='./immersive-reading-ui.js?v=20261006-remove-active-label-r1
 const TAROT_INTEGRATION_URL='./tarot-divinatoire-integration-v78.js?v=20261008-all-thumbnails-r1';
 const TAROT_HOTFIX_URL='./tarot-title-image-hotfix.js?v=20261008-all-thumbnails-r1';
 const SHELL=[
-  './relation-context.js?v=20261009-r1',
+  './relation-context.js?v=20261010-question-r2',
   './oracle-title-translations.js?v=20261008-en-titles1',
   './catalog-thumbnails-data.js?v=20261008-all1',
   './catalog-thumbnails.js?v=20261008-all1',
@@ -50,7 +50,7 @@ const SHELL=[
   './tarot-minors-data-epees.js?v=20260924-tarot78-r9',
   './tarot-minors-data-deniers.js?v=20260924-tarot78-r9',
   './tarot-minors-v1.js?v=20260924-tarot78-r9',
-  './relation-astrology.js?v=20261008-en-titles1'
+  './relation-astrology.js?v=20261010-question-r2'
 ];
 
 self.addEventListener('install',event=>{
@@ -173,4 +173,5 @@ self.addEventListener('fetch',event=>{
 
   event.respondWith(networkFirst(request));
 });
+
 
