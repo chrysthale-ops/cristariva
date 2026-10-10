@@ -25,7 +25,7 @@
     {value:'Général / spirituel',key:'general',weight:1,rule:/\b(?:vie|avenir|chemin|spirituel|spiritualite|spiritualité|sens|evolution personnelle|évolution personnelle|life|future|spiritual|personal path)\b/}
   ];
   const INTENT_RULES=[
-    {key:'return',weight:5,rule:/\b(?:retour|revenir|revient|reprendre contact|reprise de contact|recontact|retrouver|retrouvailles|reconciliation|réconciliation|come back|return|reconnect|reconciliation)\b/},
+    {key:'return',weight:6,rule:/\b(?:retour|revenir|revient|reprendre contact|reprise de contact|recontact|retrouver|retrouvailles|reconciliation|réconciliation|silence radio|attends? (?:un )?(?:appel|message|contact|reponse|réponse)|en attente (?:d'un|de) (?:appel|message|contact|reponse|réponse)|rappeler|me rappeler|repondre|répondre|come back|return|reconnect|reconciliation|radio silence|waiting for (?:a )?(?:call|message|reply)|call me back|reply)\b/},
     {key:'new_relation',weight:5,rule:/\b(?:nouvelle? rencontre|nouvelle? personne|rencontrer quelqu|prochaine? rencontre|futur(?:e)? partenaire|someone new|new person|new relationship|meet someone)\b/},
     {key:'feelings',weight:4,rule:/\b(?:pense de moi|pense-t-il|pense-t-elle|sentiment|ressent|aime|m'aime|attir|desir|désir|feel|feelings|think of me|love me|attract)\b/},
     {key:'timing',weight:4,rule:/\b(?:quand|quelle date|quelle periode|quelle période|combien de temps|bientot|bientôt|prochainement|when|what date|what period|how long|soon)\b/},
@@ -37,37 +37,50 @@
   function scoreRules(text,rules){
     return rules.map(item=>({...item,score:item.rule.test(text)?item.weight:0})).sort((a,b)=>b.score-a.score);
   }
-  function questionProfile(question,extraContext=''){
+  function domainRule(value){return DOMAIN_RULES.find(item=>item.value===value)||null;}
+  function namedKnownPerson(question,context=''){
+    const q=normalize(question),ctx=normalize(context),text=(q+' '+ctx).trim();
+    const namedContact=/(?:appel|message|contact|reponse|réponse|nouvelles?)\s+(?:de|d'|avec|from|with)\s+(?!mon\b|ma\b|mes\b|son\b|sa\b|ses\b|un\b|une\b|quelqu)([a-z][a-z'-]{2,})\b/.test(q);
+    const directNamed=/(?:avec|de|d'|concernant|about|with)\s+(?!mon\b|ma\b|mes\b|son\b|sa\b|ses\b|un\b|une\b|quelqu)([a-z][a-z'-]{2,})\b/.test(q);
+    const priorLink=/\b(?:silence radio|plus de nouvelles|ne me parle plus|ne repond plus|ne répond plus|attends? (?:un )?(?:appel|message|reponse|réponse)|reprendre contact|radio silence|no longer replies|waiting for (?:a )?(?:call|message|reply)|reconnect)\b/.test(text);
+    return namedContact||(directNamed&&priorLink);
+  }
+  function questionProfile(question,extraContext='',explicitDomain=''){
     const q=normalize(question),ctx=normalize(extraContext),text=(q+' '+ctx).trim();
     const domainScores=scoreRules(text,DOMAIN_RULES);
-    let domain=domainScores[0];
-    if(!domain||domain.score===0)domain=DOMAIN_RULES[3];
+    const selectedDomain=domainRule(explicitDomain);
+    let domain=selectedDomain||domainScores[0];
+    if(!domain||(!selectedDomain&&domain.score===0))domain=DOMAIN_RULES[3];
     const intentScores=scoreRules(text,INTENT_RULES);
     const intents=intentScores.filter(x=>x.score>0).map(x=>x.key);
     const primaryIntent=intents[0]||'general';
-    const relation=relationAnalysis(question);
+    let relation=relationAnalysis(question);
+    const namedKnown=namedKnownPerson(question,extraContext);
+    if(namedKnown&&relation.kind==='ambiguous')relation={...relation,kind:'known',source:'named-context'};
     const hasPerson=relation.kind!=='ambiguous'||relation.roles.length>0;
-    if(domain.key==='general'&&hasPerson)domain=DOMAIN_RULES[1];
-    if((primaryIntent==='feelings'||primaryIntent==='return'||primaryIntent==='new_relation')&&domain.key==='relations')domain=DOMAIN_RULES[0];
+    if(!selectedDomain&&domain.key==='general'&&hasPerson)domain=DOMAIN_RULES[1];
+    if(!selectedDomain&&(primaryIntent==='feelings'||primaryIntent==='return'||primaryIntent==='new_relation')&&domain.key==='relations')domain=DOMAIN_RULES[0];
     const explicitTiming=intents.includes('timing');
     const complexity=(ctx.length>120?2:0)+(q.length>95?1:0)+(intents.length>1?1:0)+(hasPerson?1:0);
     let cardCount=3;
     if(primaryIntent==='general'&&complexity===0&&q.length<55)cardCount=1;
     if(['return','decision','evolution','project'].includes(primaryIntent)||complexity>=3)cardCount=5;
     const reasons=[];
-    if(domain.key!=='general')reasons.push('domain');
+    if(selectedDomain)reasons.push('explicit_domain');
+    else if(domain.key!=='general')reasons.push('domain');
     if(primaryIntent!=='general')reasons.push(primaryIntent);
     if(relation.kind==='known')reasons.push('known_person');
     if(relation.kind==='new')reasons.push('new_person');
     if(relation.kind==='mixed')reasons.push('mixed_relation');
     if(relation.roles.length)reasons.push('role:'+relation.roles.join(','));
+    if(namedKnown)reasons.push('named_known_person');
     if(explicitTiming)reasons.push('timing');
-    const confidence=domainScores[0]?.score>0||primaryIntent!=='general'||hasPerson?'contextual':'open';
+    const confidence=selectedDomain||domainScores[0]?.score>0||primaryIntent!=='general'||hasPerson?'contextual':'open';
     return {domain:domain.value,domainKey:domain.key,intent:primaryIntent,intents,relation,explicitTiming,recommendedFormat:cardCount,reasons,confidence};
   }
 
-  function adaptivePlan(question,extraContext=''){
-    const profile=questionProfile(question,extraContext);
+  function adaptivePlan(question,extraContext='',explicitDomain=''){
+    const profile=questionProfile(question,extraContext,explicitDomain);
     const positions=profile.recommendedFormat===1?['essential']:
       profile.recommendedFormat===3?['before','now','momentum']:
       ['origin','obstacle','strength','evolution','synthesis'];
@@ -116,7 +129,7 @@
       {key:'numerology',label:'Numérologie',text:input.numerology||'',available:!!String(input.numerology||'').trim()}
     ];
     const result=convergence(candidates);
-    return {questionProfile:questionProfile(input.question||'',input.context||''),lenses:candidates.map(x=>({...x,tone:x.available?toneFromText(x.text):'unavailable'})),convergence:result,timing:timingSummary({astrology:input.astrologicalTiming||'',symbolic:input.symbolicTiming||''})};
+    return {questionProfile:questionProfile(input.question||'',input.context||'',input.domain||''),lenses:candidates.map(x=>({...x,tone:x.available?toneFromText(x.text):'unavailable'})),convergence:result,timing:timingSummary({astrology:input.astrologicalTiming||'',symbolic:input.symbolicTiming||''})};
   }
 
   function storageRead(storage,key,fallback){
@@ -157,8 +170,8 @@
     return text('relation non déterminée','relationship not determined');
   }
   function intentLabel(intent){
-    const fr={return:'retour ou reprise de lien',new_relation:'nouvelle rencontre',feelings:'sentiments / attirance',timing:'temporalité',decision:'choix ou décision',evolution:'évolution',project:'projet / évolution professionnelle',general:'lecture ouverte'};
-    const en={return:'return or reconnection',new_relation:'new encounter',feelings:'feelings / attraction',timing:'timing',decision:'choice or decision',evolution:'development',project:'project / professional development',general:'open reading'};
+    const fr={return:'contact / reprise de lien',new_relation:'nouvelle rencontre',feelings:'sentiments / attirance',timing:'temporalité',decision:'choix ou décision',evolution:'évolution',project:'projet / évolution professionnelle',general:'lecture ouverte'};
+    const en={return:'contact / reconnection',new_relation:'new encounter',feelings:'feelings / attraction',timing:'timing',decision:'choice or decision',evolution:'development',project:'project / professional development',general:'open reading'};
     return (lang()==='en'?en:fr)[intent]||intent;
   }
   function domainLabel(value){
@@ -188,13 +201,14 @@
     if(!doc)return {};
     const q=doc.getElementById('question')?.value||'';
     const context=doc.getElementById('readingContext')?.value||'';
+    const domain=doc.getElementById('domain')?.value||'';
     const cards=doc.getElementById('reading')?.textContent||'';
     const astro=[doc.getElementById('astroResult')?.textContent||'',doc.getElementById('relationAstroResult')?.textContent||''].filter(Boolean).join(' ');
     const symbolicTiming=doc.getElementById('dateResult')?.textContent||'';
     const periodNodes=doc.querySelectorAll('[data-period-window], .cr3-period-result, .period-window-result');
     const astrologicalTiming=Array.from(periodNodes).map(n=>n.textContent||'').filter(Boolean).join(' ');
     const numerology=loadNumerologyResult();
-    return {question:q,context,cards,astrology:astro,numerology:numerology?.text||'',symbolicTiming,astrologicalTiming};
+    return {question:q,context,domain,cards,astrology:astro,numerology:numerology?.text||'',symbolicTiming,astrologicalTiming};
   }
 
   function assistantMarkup(plan){
@@ -202,7 +216,7 @@
     return `<div class="cr-intelligence-head"><strong>${text('Ce que CRISTARIVA comprend de votre question','What CRISTARIVA understands from your question')}</strong><span>${text('Analyse contextuelle','Context analysis')}</span></div>`+
       `<div class="cr-intelligence-grid"><div><b>${text('Domaine','Domain')}</b><span>${escapeHtml(domainLabel(plan.domain))}</span></div><div><b>${text('Intention','Intent')}</b><span>${escapeHtml(intentLabel(plan.intent))}</span></div><div><b>${text('Contexte relationnel','Relationship context')}</b><span>${escapeHtml(relationLabel(plan.relation))}${roles}</span></div><div><b>${text('Format conseillé','Suggested format')}</b><span>${plan.recommendedFormat} ${text(plan.recommendedFormat>1?'cartes':'carte',plan.recommendedFormat>1?'cards':'card')}</span></div></div>`+
       `<button type="button" class="btn ghost cr-apply-plan">${text('Appliquer ces suggestions','Apply these suggestions')}</button>`+
-      `<small>${text('Vous gardez toujours la main : CRISTARIVA ne modifie rien sans votre action.','You remain in control: CRISTARIVA changes nothing unless you choose to apply it.')}</small>`;
+      `<small>${text('Les choix explicites du tirage restent prioritaires. CRISTARIVA complète leur contexte sans les contredire.','Explicit reading choices remain authoritative. CRISTARIVA adds context without contradicting them.')}</small>`;
   }
   function installStyle(){
     const doc=root.document;if(!doc||doc.getElementById('cristariva-intelligence-style'))return;
@@ -211,17 +225,17 @@
     doc.head.appendChild(style);
   }
   function setupQuestionAssistant(){
-    const doc=root.document,q=doc?.getElementById('question'),ctx=doc?.getElementById('readingContext');if(!q)return;
+    const doc=root.document,q=doc?.getElementById('question'),ctx=doc?.getElementById('readingContext'),domainSelect=doc?.getElementById('domain');if(!q)return;
     const fields=q.closest('.reading-fields')||doc.querySelector('.reading-fields');if(!fields)return;
     let box=doc.getElementById('cristarivaQuestionInsight');
     if(!box){box=doc.createElement('aside');box.id='cristarivaQuestionInsight';box.className='cr-intelligence';fields.insertAdjacentElement('afterend',box);}
     let timer=null;
-    const render=()=>{const question=q.value.trim();if(!question){box.hidden=true;return;}box.hidden=false;const plan=adaptivePlan(question,ctx?.value||'');box.innerHTML=assistantMarkup(plan);box.querySelector('.cr-apply-plan')?.addEventListener('click',()=>{
+    const render=()=>{const question=q.value.trim();if(!question){box.hidden=true;return;}box.hidden=false;const plan=adaptivePlan(question,ctx?.value||'',domainSelect?.value||'');box.innerHTML=assistantMarkup(plan);box.querySelector('.cr-apply-plan')?.addEventListener('click',()=>{
       const domain=doc.getElementById('domain');if(domain&&[...domain.options].some(o=>o.value===plan.domain)){domain.value=plan.domain;domain.dispatchEvent(new Event('change',{bubbles:true}));}
       const format=doc.querySelector(`.choice[data-group="format"][data-value="${plan.recommendedFormat}"]`);if(format)format.click();
     });};
     const schedule=()=>{clearTimeout(timer);timer=setTimeout(render,140);};
-    q.addEventListener('input',schedule);ctx?.addEventListener('input',schedule);doc.getElementById('langBtn')?.addEventListener('click',()=>setTimeout(render,0));render();
+    q.addEventListener('input',schedule);ctx?.addEventListener('input',schedule);domainSelect?.addEventListener('change',schedule);doc.getElementById('langBtn')?.addEventListener('click',()=>setTimeout(render,0));render();
   }
   function crossMarkup(result){
     const available=result.lenses.filter(x=>x.available);
