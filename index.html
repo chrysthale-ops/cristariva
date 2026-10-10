@@ -1630,7 +1630,7 @@ applyLanguage();
 <script src="./time-entry.js?v=1"></script>
 <script src="./numerologie-navigation.js?v=1"></script>
 <script>if('serviceWorker' in navigator){
-const CRISTARIVA_PWA_VERSION='2026.10.10-relation-question';
+const CRISTARIVA_PWA_VERSION='2026.10.10-reading-panel';
 let cristarivaReloading=false;
 const cristarivaRefreshOnce=()=>{
  if(cristarivaReloading)return;
@@ -1644,7 +1644,7 @@ navigator.serviceWorker.addEventListener('message',event=>{
  if(event.data&&event.data.type==='CRISTARIVA_UPDATED')cristarivaRefreshOnce();
 });
 const cristarivaCheckUpdate=()=>navigator.serviceWorker.register(
- './service-worker.js?v=20261010-relation-question',
+ './service-worker.js?v=20261010-reading-panel',
  {scope:'./',updateViaCache:'none'}
 ).then(reg=>{
  if(reg.waiting)reg.waiting.postMessage('SKIP_WAITING');
