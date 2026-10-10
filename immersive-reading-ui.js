@@ -2,20 +2,7 @@
 (function(){
   'use strict';
 
-  const VERSION='20261006-remove-active-label-r16';
-
-  const ORACLE_DESCRIPTIONS={
-    fr:{
-      cristariva:{title:'Oracle CRISTARIVA',text:'130 cartes pour une lecture symbolique, relationnelle, professionnelle ou spirituelle, complétée par les cartes de relation et de datation.'},
-      amour:{title:'Oracle sentimental CRISTARIVA',text:'80 cartes consacrées aux liens, aux émotions, aux attirances, aux obstacles et aux évolutions sentimentales.'},
-      tarot:{title:'Tarot divinatoire CRISTARIVA',text:'78 cartes : 22 arcanes majeurs et 56 arcanes mineurs · Bâtons, Coupes, Épées et Deniers.'}
-    },
-    en:{
-      cristariva:{title:'CRISTARIVA Oracle',text:'130 cards for symbolic, relationship, professional or spiritual readings, complemented by relationship and timing cards.'},
-      amour:{title:'CRISTARIVA Love Oracle',text:'80 cards devoted to bonds, emotions, attraction, obstacles and romantic developments.'},
-      tarot:{title:'CRISTARIVA Divinatory Tarot',text:'78 cards: 22 Major Arcana and 56 Minor Arcana · Wands, Cups, Swords and Pentacles.'}
-    }
-  };
+  const VERSION='20261010-reading-panel-r17';
 
   function hideLegacyTarotContext(){
     const legacy=document.getElementById('tarotContext');
@@ -28,38 +15,8 @@
   }
 
   function updateOracleDescription(){
-    const oracle=document.getElementById('oracleChoice');
-    if(!oracle)return;
-    const parent=oracle.parentElement;
-    if(!parent)return;
-
-    let context=document.getElementById('oracleContext');
-    if(!context){
-      context=document.createElement('p');
-      context.id='oracleContext';
-      context.className='cr-oracle-description';
-      context.setAttribute('aria-live','polite');
-    }
-
-    const actionRow=document.getElementById('drawBtn')?.closest('.actions');
-    if(actionRow){
-      const placeholder=[...actionRow.children].find(el=>el.tagName==='SPAN'&&!el.textContent.trim());
-      if(placeholder)actionRow.replaceChild(context,placeholder);
-      else if(context.parentElement!==actionRow)actionRow.insertBefore(context,actionRow.firstChild);
-    }else if(context.parentElement!==parent){
-      parent.appendChild(context);
-    }
-
-    const lang=(document.documentElement.lang||'fr').toLowerCase().startsWith('en')?'en':'fr';
-    const selected=oracle.value||'cristariva';
-    const selectedLabel=oracle.selectedOptions?.[0]?.textContent?.trim()||selected;
-    const copy=ORACLE_DESCRIPTIONS[lang][selected]||{
-      title:selectedLabel,
-      text:lang==='en'?'This deck is used for the current reading.':'Ce jeu est utilisé pour le tirage en cours.'
-    };
-    context.hidden=false;
-    context.removeAttribute('aria-hidden');
-    context.innerHTML=`<b>${copy.title}</b><span> · ${copy.text}</span>`;
+    // The selected deck is already named in the select field.
+    document.getElementById('oracleContext')?.remove();
     hideLegacyTarotContext();
   }
 
@@ -125,6 +82,34 @@
       if(/m[ée]langer|tirer|shuffle|draw/i.test(el.textContent||''))el.classList.add('cr-reading-immersive-cta');
     });
 
+    // Move existing nodes so values, IDs and event listeners are preserved.
+    const fields=question.closest('.reading-fields');
+    const actionRow=document.getElementById('drawBtn')?.closest('.actions');
+    const formatTitle=panel.querySelector('[data-i18n="s37"]');
+    if(fields&&actionRow){
+      const controls=document.createElement('div');
+      controls.className='cr-reading-controls';
+      fields.before(controls);
+      [question.parentElement,domain?.parentElement,oracle?.parentElement,
+        document.getElementById('readingContext')?.parentElement]
+        .filter(Boolean).forEach(field=>fields.appendChild(field));
+      [fields,formatTitle,spreads[0]?.parentElement,
+        document.getElementById('tarotReversalOption'),actionRow]
+        .filter(Boolean).forEach(node=>controls.appendChild(node));
+      actionRow.querySelectorAll(':scope > span:empty').forEach(el=>el.remove());
+    }
+    const syncSelection=()=>spreads.forEach(el=>
+      el.setAttribute('aria-pressed',String(el.classList.contains('selected'))));
+    syncSelection();
+    const selectionObserver=new MutationObserver(syncSelection);
+    spreads.forEach(el=>{
+      const icon=document.createElement('span');
+      icon.className='cr-spread-symbol';
+      icon.setAttribute('aria-hidden','true');
+      icon.textContent=el.dataset.value==='1'?'◇':el.dataset.value==='3'?'◇ ◇ ◇':'✦';
+      el.prepend(icon);
+      selectionObserver.observe(el,{attributes:true,attributeFilter:['class']});
+    });
     scheduleOracleDescriptionRefresh();
 
     if(document.getElementById('cr-reading-immersive-styles'))return;
@@ -391,6 +376,93 @@
       @media (prefers-reduced-motion:reduce){
         .cr-reading-immersive .cr-immersive-spread-choice,
         .cr-reading-immersive .cr-reading-immersive-cta{transition:none!important}
+      }
+
+      /* Unified consultation panel: question, settings, spread, action. */
+      #tirage .cr-reading-controls{
+        max-width:1000px;margin:24px auto 0;padding:clamp(18px,3vw,32px);
+        border:1px solid rgba(217,181,109,.48);border-radius:24px;
+        background:linear-gradient(145deg,rgba(19,48,75,.80),rgba(6,25,48,.76));
+        box-shadow:0 18px 46px rgba(0,12,30,.22),inset 0 1px 0 rgba(255,248,232,.09);
+        backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+      }
+      #tirage .reading-fields{
+        grid-template-columns:repeat(12,minmax(0,1fr));gap:20px 22px!important;
+        align-items:start;
+      }
+      #tirage .reading-fields>div:nth-child(1){grid-column:span 8}
+      #tirage .reading-fields>div:nth-child(2){grid-column:span 4}
+      #tirage .reading-fields>div:nth-child(3){grid-column:span 4}
+      #tirage .reading-fields>div:nth-child(4){grid-column:span 8}
+      #tirage .cr-reading-controls label{
+        font-size:.78rem;letter-spacing:.025em;line-height:1.4;margin-bottom:8px;
+      }
+      #tirage .cr-reading-controls textarea,
+      #tirage .cr-reading-controls select{
+        display:block;width:100%;min-height:52px!important;height:52px;
+        padding:14px 16px;border-radius:13px;font-size:.94rem;line-height:22px;
+        background:rgba(250,249,244,.96)!important;
+      }
+      #tirage .cr-reading-controls textarea{resize:vertical}
+      #tirage #readingContext{background:rgba(237,243,248,.93)!important}
+      #tirage .cr-reading-controls>h3{
+        display:flex;align-items:center;gap:16px;margin:28px 0 18px!important;
+        text-align:center;font-family:Cinzel,Georgia,serif;font-size:1rem;font-weight:500;
+      }
+      #tirage .cr-reading-controls>h3::before,
+      #tirage .cr-reading-controls>h3::after{
+        content:"";flex:1;height:1px;background:rgba(217,181,109,.35);
+      }
+      #tirage .cr-immersive-spread-grid{gap:14px!important}
+      #tirage .cr-immersive-spread-choice{
+        position:relative;min-width:0;min-height:130px;padding:18px 12px!important;
+        text-align:center;border-radius:17px;
+      }
+      #tirage .cr-spread-symbol{
+        display:block;margin-bottom:10px;color:#e7c78a!important;
+        font-size:1.5rem;line-height:1;letter-spacing:.12em;
+      }
+      #tirage .cr-immersive-spread-choice b{font-size:1rem;margin-bottom:6px}
+      #tirage .cr-immersive-spread-choice small{font-size:.8rem;line-height:1.4}
+      #tirage .cr-immersive-spread-choice.selected{
+        background:linear-gradient(145deg,rgba(43,78,106,.94),rgba(17,45,74,.92))!important;
+        border-color:#ddbe81!important;
+        box-shadow:0 0 0 2px rgba(221,190,129,.16),0 8px 24px rgba(0,12,30,.22)!important;
+      }
+      #tirage .cr-immersive-spread-choice.selected::after{
+        content:"✓";position:absolute;top:9px;right:12px;color:#f3d799;font-size:.85rem;
+      }
+      #tirage .cr-reading-controls .actions{
+        justify-content:center!important;align-items:center!important;margin-top:26px!important;
+      }
+      #tirage #drawBtn{
+        width:min(100%,320px);min-height:52px;align-self:center;
+        padding:15px 24px;font-size:.95rem;letter-spacing:.025em;
+      }
+      #tirage #oracleContext{display:none!important}
+      @media(max-width:860px){
+        #tirage .cr-reading-controls{padding:20px;margin-top:20px}
+        #tirage .reading-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+        #tirage .reading-fields>div:nth-child(1),
+        #tirage .reading-fields>div:nth-child(4){grid-column:1/-1}
+        #tirage .reading-fields>div:nth-child(2),
+        #tirage .reading-fields>div:nth-child(3){grid-column:span 1}
+        #tirage .cr-immersive-spread-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+      }
+      @media(max-width:560px){
+        #tirage.cr-reading-immersive{padding-left:14px;padding-right:14px}
+        #tirage .cr-reading-controls{padding:18px 14px;border-radius:18px}
+        #tirage .reading-fields{grid-template-columns:minmax(0,1fr);gap:16px!important}
+        #tirage .reading-fields>div:nth-child(n){grid-column:1/-1}
+        #tirage .cr-immersive-spread-grid{grid-template-columns:minmax(0,1fr)!important;gap:10px!important}
+        #tirage .cr-immersive-spread-choice{
+          display:grid;grid-template-columns:56px minmax(0,1fr);column-gap:12px;
+          align-items:center;min-height:82px;text-align:left;padding:14px 24px 14px 12px!important;
+        }
+        #tirage .cr-spread-symbol{grid-row:1/3;margin:0;text-align:center;font-size:1.2rem}
+        #tirage .cr-immersive-spread-choice b{margin:0 0 3px}
+        #tirage .cr-reading-controls>h3{font-size:.85rem;gap:10px}
+        #tirage #drawBtn{width:100%}
       }
     `;
     document.head.appendChild(style);
