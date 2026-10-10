@@ -90,6 +90,25 @@ test('incident diagnosis can filter rate limits, provider, quality and other err
   assert.match(entry,/Exception Worker/);
 });
 
+test('incident table separates CRISTARIVA diagnosis from source code',()=>{
+  assert.match(entry,/Diagnostic CRISTARIVA/);
+  assert.match(entry,/Code source/);
+  assert.match(entry,/Lecture des incidents/);
+  assert.match(entry,/statut HTTP lorsqu'il est explicite/);
+  assert.match(entry,/sourceCategory\(code\)/);
+  assert.match(entry,/isClassificationMismatch/);
+  assert.match(entry,/incidentInterpretation/);
+});
+
+test('HTTP 429 keeps rate-limit diagnosis while surfacing contradictory source codes',()=>{
+  assert.match(entry,/Number\(e\.status\)===429&&e\.category==='rate_limit'/);
+  assert.match(entry,/HTTP 429 prioritaire/);
+  assert.match(entry,/Codes source divergents/);
+  assert.match(entry,/mismatchCount/);
+  assert.match(entry,/⚠ Divergence/);
+  assert.match(entry,/provider_unavailable:'provider_unavailable'/);
+});
+
 test('dashboard prepares billing without processing payments',()=>{
   assert.match(entry,/transactions/);
   assert.match(entry,/revenueCents/);
