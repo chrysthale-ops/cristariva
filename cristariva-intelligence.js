@@ -46,8 +46,9 @@
     const subjectNamed=new RegExp("\\b(?:que\\s+)?(?:fait|pense|ressent|veut|souhaite|vit|travaille|prepare|cherche|attend|devient|revient|repond|aime|envisage|decide)\\s+"+personToken).test(q);
     const stateNamed=new RegExp("\\b(?:comment\\s+va|ou\\s+est)\\s+"+personToken).test(q);
     const leadingNamed=new RegExp("\\b"+personToken+"\\s+(?:fait|pense|ressent|veut|souhaite|vit|travaille|prepare|cherche|attend|devient|revient|repond|aime|envisage|decide|va-t-il|va-t-elle|est-il|est-elle)\\b").test(q);
+    const nominalNamed=new RegExp("\\b(?:travail|emploi|poste|carriere|projet|entreprise|avenir|vie|situation|relation|couple|sentiments?|amour|retour|message|contact|nouvelles?|sante|famille|finances?|argent|evolution|decision|choix)\\s+(?:de|d')\\s*"+personToken).test(q);
     const priorLink=/\b(?:silence radio|plus de nouvelles|ne me parle plus|ne repond plus|ne répond plus|attends? (?:un )?(?:appel|message|reponse|réponse)|reprendre contact|radio silence|no longer replies|waiting for (?:a )?(?:call|message|reply)|reconnect)\b/.test(text);
-    return namedContact||subjectNamed||stateNamed||leadingNamed||(directNamed&&priorLink);
+    return namedContact||subjectNamed||stateNamed||leadingNamed||nominalNamed||(directNamed&&priorLink);
   }
   function questionProfile(question,extraContext='',explicitDomain=''){
     const q=normalize(question),ctx=normalize(extraContext),text=(q+' '+ctx).trim();
