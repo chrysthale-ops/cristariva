@@ -520,10 +520,9 @@ html{scroll-padding-top:130px}
 <a class="home-link" href="#deepening"><b data-i18n="s7">Tirages complémentaires</b><small data-i18n="s8">Relation et datation</small></a>
 <a class="home-link" href="#deepening"><b data-i18n="s3">Que disent les planètes me concernant</b><small data-i18n="s4">Votre thème astral et le ciel du moment</small></a>
 <a class="home-link" href="./numerologie.html"><b data-num-fr="Numérologie" data-num-en="Numerology">Numérologie</b><small data-num-fr="Les nombres et votre histoire" data-num-en="Numbers and your story">Les nombres et votre histoire</small></a>
-<a class="home-link" href="#catalogue"><b data-i18n="s5">Les jeux Cristariva</b><small data-i18n="s6">3 oracles et 1 tarot divinatoire</small></a>
 </nav>
-<style>.games-overview{grid-template-columns:repeat(4,minmax(0,1fr))}@media(max-width:800px){.games-overview{grid-template-columns:repeat(2,minmax(0,1fr))}}</style>
-<section class="shell stats games-overview" id="gamesOverview"><div class="stat"><strong data-game-count="cristariva">130</strong><span data-game-name="cristariva">Oracle CRISTARIVA</span></div><div class="stat"><strong data-game-count="amour">—</strong><span data-game-name="amour">Oracle sentimental CRISTARIVA</span></div><div class="stat"><strong data-game-count="reflets">50</strong><span data-game-name="reflets">Oracle des Reflets du Lac</span></div><div class="stat"><strong data-game-count="tarot">78</strong><span data-game-name="tarot">Tarot CRISTARIVA</span></div></section>
+<style>.games-overview{grid-template-columns:repeat(4,minmax(0,1fr))}.games-overview a.stat{color:inherit;text-decoration:none;cursor:pointer;transition:background .2s,border-color .2s}.games-overview a.stat:hover{background:rgba(217,181,109,.15);border-color:var(--gold)}.games-overview a.stat:focus-visible{outline:3px solid var(--gold);outline-offset:4px}@media(max-width:800px){.games-overview{grid-template-columns:repeat(2,minmax(0,1fr))}}</style>
+<section class="shell stats games-overview" id="gamesOverview"><a class="stat" href="#catalogue" data-catalog-game="cristariva"><strong data-game-count="cristariva">130</strong><span data-game-name="cristariva">Oracle CRISTARIVA</span></a><a class="stat" href="#catalogue" data-catalog-game="amour"><strong data-game-count="amour">—</strong><span data-game-name="amour">Oracle sentimental CRISTARIVA</span></a><a class="stat" href="#catalogue" data-catalog-game="reflets"><strong data-game-count="reflets">50</strong><span data-game-name="reflets">Oracle des Reflets du Lac</span></a><a class="stat" href="#catalogue" data-catalog-game="tarot"><strong data-game-count="tarot">78</strong><span data-game-name="tarot">Tarot CRISTARIVA</span></a></section>
 <section class="shell panel" id="approche">
 <h2 data-i18n="s12">Une lecture en plusieurs reflets</h2>
 <p class="muted" data-i18n="s13">Le parcours est volontairement séquentiel : question, choix du tirage, tirage, première interprétation, approfondissements optionnels, puis synthèse finale. Les cartes de relation et de datation ne remplacent pas le tirage symbolique : elles le précisent.</p>
@@ -1607,6 +1606,14 @@ function applyLanguage(){
 }
 $('#catalogSearch').addEventListener('input',renderCatalog);
 $('#catalogGame').addEventListener('change',renderCatalog);
+$('#gamesOverview').addEventListener('click',event=>{
+ const link=event.target.closest('a[data-catalog-game]');
+ if(!link)return;
+ $('#catalogGame').value=link.dataset.catalogGame;
+ $('#catalogSearch').value='';
+ $('#catalogFilter').value='all';
+ $('#catalogGame').dispatchEvent(new Event('change',{bubbles:true}));
+});
 $('#catalogFilter').addEventListener('change',renderCatalog);
 $('#catalogGrid').addEventListener('click',e=>{
  const button=e.target.closest('[data-card-key]');if(!button)return;
