@@ -12,5 +12,17 @@
         "period": 60
       }
     }
-  ]
+  ],
+  "previews": {
+    "ratelimits": [
+      {
+        "name": "GROQ_LIMITER",
+        "namespace_id": "1042027",
+        "simple": {
+          "limit": 6,
+          "period": 60
+        }
+      }
+    ]
+  }
 }
