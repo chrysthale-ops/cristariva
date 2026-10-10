@@ -1,6 +1,6 @@
 /* CRISTARIVA — service worker v51 — position stable du cartouche cartes renversées. */
-const CACHE_NAME='cristariva-v130-20261010-context-dynamics';
-const APP_VERSION='2026.10.10-context-dynamics';
+const CACHE_NAME='cristariva-v130-20261010-narrative-review';
+const APP_VERSION='2026.10.10-narrative-review';
 // Les chemins v2, v3 et thumbs-v1 sont versionnés : conserver ces images d'une mise à jour à l'autre.
 const REFLETS_IMAGE_CACHE='cristariva-reflets-images-v1';
 const CATALOG_IMAGE_CACHE='cristariva-catalog-images-v1';
@@ -23,7 +23,7 @@ const SHELL=[
   './',
   './index.html',
   IMMERSIVE_URL,
-  './story-quality.js?v=8-context-dynamics',
+  './story-quality.js?v=9-narrative-review',
   './groq-hybrid-story.js?v=9-context-dynamics',
   './manifest.webmanifest',
   './manifest-en.webmanifest',
