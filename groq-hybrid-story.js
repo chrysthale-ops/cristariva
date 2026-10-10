@@ -2,6 +2,8 @@
 (function(){
 'use strict';
 const endpoint='https://cristariva.sauvete.workers.dev/';
+// Anonymous page-view counter for the private admin dashboard. No URL, IP or user content is sent.
+try{if(typeof navigator.sendBeacon==='function')navigator.sendBeacon(endpoint+'telemetry/access','');}catch{}
 const cache=new Map(),pending=new Map();
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function requestData(cards){

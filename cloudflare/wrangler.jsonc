@@ -1,6 +1,6 @@
 {
   "name": "cristariva",
-  "main": "groq-worker.mjs",
+  "main": "worker-entry.mjs",
   "compatibility_date": "2026-10-04",
   "workers_dev": true,
   "ratelimits": [
@@ -11,6 +11,20 @@
         "limit": 6,
         "period": 60
       }
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "ADMIN_METRICS",
+        "class_name": "AdminMetrics"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "admin-metrics-v1",
+      "new_sqlite_classes": ["AdminMetrics"]
     }
   ],
   "previews": {
