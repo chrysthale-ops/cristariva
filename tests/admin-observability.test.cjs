@@ -49,6 +49,19 @@ test('site access telemetry sends no visitor payload and does not add an engine 
   assert.match(telemetryLine,/sendBeacon\(endpoint\+'telemetry\/access',''\)/);
 });
 
+test('dashboard separates activity and technical health with 30 day indicators',()=>{
+  assert.match(entry,/Activité CRISTARIVA/);
+  assert.match(entry,/Santé technique/);
+  assert.match(entry,/Taux de réussite/);
+  assert.match(entry,/Rejets qualité/);
+  assert.match(entry,/Accès sur 30 jours/);
+  assert.match(entry,/Demandes sur 30 jours/);
+  assert.match(entry,/Lectures réussies sur 30 jours/);
+  assert.match(entry,/siteAccesses/);
+  assert.match(entry,/successfulReadings/);
+  assert.match(entry,/qualityRejected/);
+});
+
 test('dashboard prepares billing without processing payments',()=>{
   assert.match(entry,/transactions/);
   assert.match(entry,/revenueCents/);
