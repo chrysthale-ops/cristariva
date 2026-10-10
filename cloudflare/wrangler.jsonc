@@ -8,7 +8,7 @@
       "name": "GROQ_LIMITER",
       "namespace_id": "1042026",
       "simple": {
-        "limit": 6,
+        "limit": 18,
         "period": 60
       }
     }
@@ -33,7 +33,7 @@
         "name": "GROQ_LIMITER",
         "namespace_id": "1042027",
         "simple": {
-          "limit": 6,
+          "limit": 18,
           "period": 60
         }
       }
