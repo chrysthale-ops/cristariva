@@ -2,7 +2,7 @@
 (function(){
   'use strict';
 
-  const VERSION='20261010-reading-panel-r17';
+  const VERSION='20261010-reading-panel-r18';
 
   function hideLegacyTarotContext(){
     const legacy=document.getElementById('tarotContext');
@@ -93,8 +93,8 @@
       [question.parentElement,domain?.parentElement,oracle?.parentElement,
         document.getElementById('readingContext')?.parentElement]
         .filter(Boolean).forEach(field=>fields.appendChild(field));
-      [fields,formatTitle,spreads[0]?.parentElement,
-        document.getElementById('tarotReversalOption'),actionRow]
+      [fields,document.getElementById('crFormatReversalRow')||formatTitle,spreads[0]?.parentElement,
+        document.getElementById('crFormatReversalRow')?null:document.getElementById('tarotReversalOption'),actionRow]
         .filter(Boolean).forEach(node=>controls.appendChild(node));
       actionRow.querySelectorAll(':scope > span:empty').forEach(el=>el.remove());
     }
@@ -405,7 +405,8 @@
       }
       #tirage .cr-reading-controls textarea{resize:vertical}
       #tirage #readingContext{background:rgba(237,243,248,.93)!important}
-      #tirage .cr-reading-controls>h3{
+      #tirage .cr-reading-controls>h3,
+      #tirage .cr-reading-controls #crFormatReversalRow>h3{
         display:flex;align-items:center;gap:16px;margin:28px 0 18px!important;
         text-align:center;font-family:Cinzel,Georgia,serif;font-size:1rem;font-weight:500;
       }
@@ -413,6 +414,13 @@
       #tirage .cr-reading-controls>h3::after{
         content:"";flex:1;height:1px;background:rgba(217,181,109,.35);
       }
+      #tirage .cr-reading-controls #crFormatReversalRow{
+        margin:28px 0 18px!important;flex-wrap:wrap!important;gap:12px 18px!important;
+        overflow:visible;max-width:100%;
+      }
+      #tirage .cr-reading-controls #crFormatReversalRow>h3{margin:0!important;white-space:normal}
+      #tirage .cr-reading-controls #crFormatReversalRow .tarot-reversal-option{flex-shrink:1}
+      #tirage .cr-reading-controls #crFormatReversalRow .tarot-reversal-option label{white-space:normal!important;line-height:1.4!important}
       #tirage .cr-immersive-spread-grid{gap:14px!important}
       #tirage .cr-immersive-spread-choice{
         position:relative;min-width:0;min-height:130px;padding:18px 12px!important;

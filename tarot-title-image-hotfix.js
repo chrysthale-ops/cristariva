@@ -31,6 +31,9 @@
       row.className='cr-format-reversal-row';
       heading.parentNode.insertBefore(row,heading);
     }
+    const controls=document.querySelector('#tirage .cr-reading-controls');
+    const spread=controls?.querySelector('.cr-immersive-spread-grid');
+    if(controls&&spread&&row.parentNode!==controls)controls.insertBefore(row,spread);
     if(heading.parentNode!==row)row.appendChild(heading);
     if(option.parentNode!==row)row.appendChild(option);
 
