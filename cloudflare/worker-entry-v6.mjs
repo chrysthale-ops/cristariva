@@ -26,7 +26,7 @@ function hasInventedTriangle(text, input = {}) {
 function hasInventedContactMechanism(text, input = {}) {
   if (!isReturnQuestion(input)) return false;
   const value = normalize(text);
-  return /(?:ne sera probable que si|ne deviendra probable que si|a condition que)[^.!?]{0,180}(?:clarif|decision|choix|message|echange|position)|(?:messages?|echanges?)[^.!?]{0,120}(?:sont|seraient) necessaires?[^.!?]{0,120}(?:contact|recontact|lien)|(?:decision|choix)[^.!?]{0,140}(?:determinera|decidera)[^.!?]{0,100}(?:contact|recontact|rapprochement)|(?:seule?|uniquement)[^.!?]{0,120}(?:communication|message|echange|decision|choix)[^.!?]{0,160}(?:pourra|pourrait|permettra|permettrait)[^.!?]{0,80}(?:declencher|determiner|provoquer|rendre possible)[^.!?]{0,100}(?:contact|recontact|reprise)/.test(value);
+  return /(?:ne sera probable que si|ne deviendra probable que si|a condition que|depend(?: surtout)? d'|conditionn(?:e|ee|es|ees) a)[^.!?]{0,180}(?:clarif|sincer|authenti|communication|decision|choix|message|echange|position)|(?:messages?|echanges?|communication)[^.!?]{0,120}(?:sont|seraient|est|serait) necessaires?[^.!?]{0,120}(?:contact|recontact|lien)|(?:decision|choix)[^.!?]{0,140}(?:determinera|decidera)[^.!?]{0,100}(?:contact|recontact|rapprochement)|(?:seule?|uniquement)[^.!?]{0,120}(?:communication|message|echange|decision|choix)[^.!?]{0,160}(?:pourra|pourrait|permettra|permettrait)[^.!?]{0,80}(?:declencher|determiner|provoquer|rendre possible)[^.!?]{0,100}(?:contact|recontact|reprise)|sans (?:cet|un) echange[^.!?]{0,100}(?:contact|recontact)[^.!?]{0,80}(?:absent|improbable|bloque)/.test(value);
 }
 
 function hasUnsupportedPresentState(text, input = {}) {
@@ -37,12 +37,22 @@ function hasUnsupportedPresentState(text, input = {}) {
   return /(?:actuellement|en ce moment|a present)[^.!?]{0,120}(?:pause|silence|retrait|distance|coupure)|(?:silence|pause|retrait|distance) present(?:e)?\b/.test(value);
 }
 
+function hasUnsupportedTemporalClaim(text, input = {}) {
+  const facts = factsOf(input);
+  if (/(?:recent|derniers? jours|derniere semaine|ces derniers temps)/.test(facts)) return false;
+  const value = normalize(text);
+  return /(?:recent(?:e|ement)?|ces derniers temps|dernierement)[^.!?]{0,100}(?:autonomie|distance|retrait|changement|prise de recul|separation|rapprochement)|(?:autonomie|distance|retrait|changement|prise de recul|separation|rapprochement)[^.!?]{0,100}(?:recent(?:e|ement)?|ces derniers temps|dernierement)/.test(value);
+}
+
 function hasInventedMentalState(text, input = {}) {
   const facts = factsOf(input);
   const value = normalize(text);
   const suppliedReflection = /(?:reflech|ressourc|prendre du recul|besoin de recul|se repose|repos)/.test(facts);
-  if (suppliedReflection) return false;
-  return /(?:chacun|kinya|il|elle|l'autre personne|la personne)[^.!?]{0,90}(?:se retire|prend du recul|reste en retrait)[^.!?]{0,100}(?:pour|afin de)[^.!?]{0,40}(?:reflech|ressourc|faire le point)|(?:kinya|il|elle|l'autre personne|la personne)[^.!?]{0,100}(?:reflechit|se ressource|fait le point|prend le temps de reflechir)/.test(value);
+  if (!suppliedReflection && /(?:chacun|kinya|il|elle|l'autre personne|la personne)[^.!?]{0,90}(?:se retire|prend du recul|reste en retrait)[^.!?]{0,100}(?:pour|afin de)[^.!?]{0,40}(?:reflech|ressourc|faire le point)|(?:kinya|il|elle|l'autre personne|la personne)[^.!?]{0,100}(?:reflechit|se ressource|fait le point|prend le temps de reflechir)/.test(value)) return true;
+
+  const suppliedIntent = /(?:envie|desir|crainte|peur|espoir|souhaite|veut|voudrait|intention|blessure)/.test(facts);
+  if (suppliedIntent) return false;
+  return /(?:l'envie|le desir|la volonte|l'intention)[^.!?]{0,120}(?:renouer|revenir|retablir|reprendre|etablir de nouveau|rapproch)|(?:crainte|peur|espoir)[^.!?]{0,120}(?:repetition|blessure|rapprochement|retour)|(?:kinya|il|elle|l'autre personne|la personne)[^.!?]{0,120}(?:souhaite|veut|voudrait|desire|craint|espere)[^.!?]{0,120}(?:contact|recontact|renouer|rapproch|relation)/.test(value);
 }
 
 function hasSelfWorkReturnLever(text, input = {}) {
@@ -51,12 +61,19 @@ function hasSelfWorkReturnLever(text, input = {}) {
   return /(?:travail(?: soutenu)? sur (?:soi|vous-meme)|travail personnel|developpement personnel|guerison personnelle|en travaillant sur (?:soi|vous-meme))[^.!?]{0,180}(?:renforce|stabilise|favorise|rouvre|ouvre|permet|facilite)[^.!?]{0,100}(?:lien|contact|recontact|retour|rapprochement|reprise)/.test(value);
 }
 
+function hasVisibleCardSequence(text) {
+  const value = normalize(text);
+  return /(?:contexte initial|energie initiale|au depart|dans un premier temps)[^.!?]{0,420}(?:par ailleurs|ensuite|cependant)[^.!?]{0,520}(?:enfin|finalement|en definitive)/.test(value);
+}
+
 function badNarrativeReason(text, input) {
   if (hasInventedTriangle(text, input)) return 'invented_triangle';
   if (hasUnsupportedPresentState(text, input)) return 'unsupported_present_state';
+  if (hasUnsupportedTemporalClaim(text, input)) return 'unsupported_temporal_claim';
   if (hasInventedMentalState(text, input)) return 'invented_mental_state';
   if (hasSelfWorkReturnLever(text, input)) return 'self_work_return_lever';
   if (hasInventedContactMechanism(text, input)) return 'invented_contact_mechanism';
+  if (hasVisibleCardSequence(text)) return 'visible_card_sequence';
   return '';
 }
 
@@ -91,7 +108,9 @@ export {
   hasInventedTriangle,
   hasInventedContactMechanism,
   hasUnsupportedPresentState,
+  hasUnsupportedTemporalClaim,
   hasInventedMentalState,
   hasSelfWorkReturnLever,
+  hasVisibleCardSequence,
   badNarrativeReason
 };
