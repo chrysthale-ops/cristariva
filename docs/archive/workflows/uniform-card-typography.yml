@@ -1,0 +1,184 @@
+name: Uniformiser la typographie de toutes les cartes
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/uniform-card-typography.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  uniform-card-typography:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Installer les outils image
+        run: python -m pip install --quiet pillow opencv-python-headless numpy
+
+      - name: Appliquer un gabarit typographique unique aux 130 cartes
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          import cv2
+          import numpy as np
+          from PIL import Image, ImageDraw, ImageFont
+
+          # Les titres validés sont lus directement dans le fichier de référence
+          # afin d'éviter toute divergence entre l'application et les illustrations.
+          js = Path('validated-card-titles-v3.6.3.js').read_text(encoding='utf-8')
+          block = re.search(r'const CR363_SHORT_TITLES=\{(.*?)\};', js, re.S)
+          if not block:
+              raise SystemExit('Titres validés introuvables')
+          names = {int(k): v for k, v in re.findall(r"(\d+):'([^']*)'", block.group(1))}
+          if len(names) != 130:
+              raise SystemExit(f'130 titres attendus, {len(names)} trouvés')
+
+          # Même police serif pour toute la série, proche du modèle de la carte 110.
+          font_candidates = [
+              '/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf',
+              '/usr/share/fonts/truetype/liberation2/LiberationSerif-Regular.ttf'
+          ]
+          font_path = next((p for p in font_candidates if Path(p).exists()), None)
+          if not font_path:
+              raise SystemExit('Police serif introuvable')
+
+          def text_size(draw, text, font, stroke):
+              b = draw.textbbox((0, 0), text, font=font, stroke_width=stroke)
+              return b[2]-b[0], b[3]-b[1]
+
+          def title_layout(draw, title, w, h):
+              # Taille unique : 5 % de la hauteur de la carte, identique au modèle utilisé
+              # historiquement pour les titres courts. On ne réduit qu'en dernier recours.
+              base = max(22, round(h * 0.050))
+              max_w = int(w * 0.82)
+              font = ImageFont.truetype(font_path, base)
+              stroke = max(1, round(base * 0.045))
+              tw, th = text_size(draw, title, font, stroke)
+              if tw <= max_w:
+                  return [(title, font, stroke)], th
+
+              # Si le titre comporte un espace, on privilégie deux lignes avec la même taille
+              # plutôt que des tailles de caractères différentes d'une carte à l'autre.
+              words = title.split()
+              if len(words) > 1:
+                  best = None
+                  for cut in range(1, len(words)):
+                      l1 = ' '.join(words[:cut])
+                      l2 = ' '.join(words[cut:])
+                      w1, h1 = text_size(draw, l1, font, stroke)
+                      w2, h2 = text_size(draw, l2, font, stroke)
+                      score = max(w1, w2)
+                      if max(w1, w2) <= max_w and (best is None or score < best[0]):
+                          best = (score, l1, l2, max(h1, h2))
+                  if best:
+                      gap = max(2, round(base * 0.08))
+                      return [(best[1], font, stroke), (best[2], font, stroke)], best[3]*2 + gap
+
+              # Exception rare pour un mot très long : réduction limitée et contrôlée.
+              size = base
+              min_size = max(20, round(base * 0.90))
+              while size > min_size:
+                  size -= 1
+                  f = ImageFont.truetype(font_path, size)
+                  s = max(1, round(size * 0.045))
+                  tw, th = text_size(draw, title, f, s)
+                  if tw <= max_w:
+                      return [(title, f, s)], th
+              f = ImageFont.truetype(font_path, min_size)
+              s = max(1, round(min_size * 0.045))
+              return [(title, f, s)], text_size(draw, title, f, s)[1]
+
+          changed = []
+          missing = []
+
+          for cid in range(1, 131):
+              title = names[cid]
+              path = Path('cards') / f'{cid:03d}.webp'
+              if not path.exists():
+                  missing.append(str(path))
+                  continue
+
+              im = Image.open(path).convert('RGB')
+              w, h = im.size
+              arr = np.array(im)
+
+              # Zone strictement intérieure du cartouche inférieur : le liseré reste intact.
+              x0, x1 = int(w * 0.055), int(w * 0.945)
+              y0, y1 = int(h * 0.858), int(h * 0.974)
+              roi = arr[y0:y1, x0:x1].copy()
+
+              # Effacer l'ancien lettrage clair sans toucher à l'illustration ni aux bordures.
+              hsv = cv2.cvtColor(roi, cv2.COLOR_RGB2HSV)
+              gray = cv2.cvtColor(roi, cv2.COLOR_RGB2GRAY)
+              mask = ((gray > 128) & (hsv[:, :, 1] < 110)).astype(np.uint8) * 255
+              kernel = np.ones((5, 5), np.uint8)
+              mask = cv2.dilate(mask, kernel, iterations=2)
+              cleaned = cv2.inpaint(cv2.cvtColor(roi, cv2.COLOR_RGB2BGR), mask, 5, cv2.INPAINT_TELEA)
+              arr[y0:y1, x0:x1] = cv2.cvtColor(cleaned, cv2.COLOR_BGR2RGB)
+              im = Image.fromarray(arr).convert('RGBA')
+
+              # Léger voile uniforme dans le cartouche pour assurer la même lisibilité partout.
+              overlay = Image.new('RGBA', im.size, (0, 0, 0, 0))
+              od = ImageDraw.Draw(overlay)
+              band_top, band_bottom = int(h * 0.858), int(h * 0.974)
+              for yy in range(band_top, band_bottom):
+                  t = (yy - band_top) / max(1, band_bottom - band_top)
+                  alpha = int(24 + 78 * min(1, t * 1.35))
+                  od.line((int(w * 0.055), yy, int(w * 0.945), yy), fill=(7, 10, 14, alpha), width=1)
+              im = Image.alpha_composite(im, overlay)
+
+              draw = ImageDraw.Draw(im)
+              lines, total_h = title_layout(draw, title, w, h)
+              center_y = int(h * 0.916)
+              if len(lines) == 1:
+                  text, font, stroke = lines[0]
+                  tw, th = text_size(draw, text, font, stroke)
+                  tx = (w - tw) // 2
+                  ty = center_y - th // 2
+                  draw.text((tx + 2, ty + 2), text, font=font, fill=(0, 0, 0, 190), stroke_width=stroke, stroke_fill=(0, 0, 0, 150))
+                  draw.text((tx, ty), text, font=font, fill=(247, 242, 232, 255), stroke_width=stroke, stroke_fill=(35, 35, 35, 220))
+              else:
+                  heights = [text_size(draw, t, f, s)[1] for t, f, s in lines]
+                  gap = max(2, round(lines[0][1].size * 0.08))
+                  total = sum(heights) + gap * (len(lines) - 1)
+                  y = center_y - total // 2
+                  for (text, font, stroke), th in zip(lines, heights):
+                      tw, _ = text_size(draw, text, font, stroke)
+                      tx = (w - tw) // 2
+                      draw.text((tx + 2, y + 2), text, font=font, fill=(0, 0, 0, 190), stroke_width=stroke, stroke_fill=(0, 0, 0, 150))
+                      draw.text((tx, y), text, font=font, fill=(247, 242, 232, 255), stroke_width=stroke, stroke_fill=(35, 35, 35, 220))
+                      y += th + gap
+
+              im.convert('RGB').save(path, 'WEBP', quality=95, method=6)
+              changed.append(str(path))
+              print(f'{cid:03d} — {title}')
+
+          if missing:
+              raise SystemExit('Cartes absentes : ' + ', '.join(missing))
+
+          # Nouvelle version PWA pour forcer le renouvellement des images sur le site et Android.
+          sw = Path('service-worker.js')
+          s = sw.read_text(encoding='utf-8')
+          s = re.sub(r"const APP_VERSION='[^']+';", "const APP_VERSION='2026.09.15-33';", s, count=1)
+          s = re.sub(r"const CACHE_NAME='[^']+';", "const CACHE_NAME='cristariva-v33-20260915-typographie-cartes-uniforme';", s, count=1)
+          sw.write_text(s, encoding='utf-8')
+
+          print(f'{len(changed)} cartes uniformisées')
+          PY
+
+      - name: Publier les cartes uniformisées
+        shell: bash
+        run: |
+          git config user.name 'CRISTARIVA updater'
+          git config user.email 'actions@users.noreply.github.com'
+          git add cards service-worker.js
+          git diff --cached --quiet && exit 0
+          git commit -m 'Uniformiser police et taille des titres sur les 130 cartes'
+          git push
