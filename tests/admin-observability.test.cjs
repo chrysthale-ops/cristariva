@@ -23,21 +23,26 @@ test('wrangler deploys the observability entry with durable metrics storage',()=
   assert.ok(config.migrations.some(m=>m.new_sqlite_classes?.includes('AdminMetrics')));
 });
 
-test('admin metrics stay private behind a bearer secret',()=>{
+test('admin metrics stay private behind a bearer secret without persisting the token',()=>{
   assert.match(entry,/ADMIN_TOKEN/);
   assert.match(entry,/Authorization/);
   assert.match(entry,/Bearer /);
   assert.match(entry,/status:401/);
   assert.doesNotMatch(entry,/localStorage/);
-  assert.match(entry,/sessionStorage/);
+  assert.doesNotMatch(entry,/sessionStorage/);
 });
 
-test('observability stores aggregate technical data only',()=>{
-  assert.match(entry,/privacy:'aggregate_only'/);
+test('observability stores aggregate and sanitized technical diagnostics only',()=>{
+  assert.match(entry,/privacy:'aggregate_and_sanitized_diagnostics'/);
   assert.doesNotMatch(entry,/CF-Connecting-IP/);
   assert.doesNotMatch(entry,/card(?:s)?Text|questionText|contextText/i);
   assert.match(entry,/recentErrors/);
   assert.match(entry,/requestId/);
+  assert.match(entry,/durationMs/);
+  assert.match(entry,/provider/);
+  assert.match(entry,/code/);
+  assert.match(entry,/RECENT_ERROR_LIMIT = 50/);
+  assert.match(entry,/RECENT_REQUEST_LIMIT = 100/);
 });
 
 test('site access telemetry sends no visitor payload and does not add an engine fetch',()=>{
@@ -49,10 +54,13 @@ test('site access telemetry sends no visitor payload and does not add an engine 
   assert.match(telemetryLine,/sendBeacon\(endpoint\+'telemetry\/access',''\)/);
 });
 
-test('dashboard separates activity and technical health with 30 day indicators',()=>{
+test('dashboard separates activity, technical health and diagnosis',()=>{
   assert.match(entry,/Activité CRISTARIVA/);
   assert.match(entry,/Santé technique/);
-  assert.match(entry,/Taux de réussite/);
+  assert.match(entry,/Taux de succès technique/);
+  assert.match(entry,/Échantillon/);
+  assert.match(entry,/Diagnostic automatique/);
+  assert.match(entry,/Incidents récents/);
   assert.match(entry,/Rejets qualité/);
   assert.match(entry,/Accès sur 30 jours/);
   assert.match(entry,/Demandes sur 30 jours/);
@@ -60,6 +68,26 @@ test('dashboard separates activity and technical health with 30 day indicators',
   assert.match(entry,/siteAccesses/);
   assert.match(entry,/successfulReadings/);
   assert.match(entry,/qualityRejected/);
+});
+
+test('dashboard exposes recent latency median and p95 from bounded technical samples',()=>{
+  assert.match(entry,/medianLatencyMs/);
+  assert.match(entry,/p95LatencyMs/);
+  assert.match(entry,/recentLatencySamples/);
+  assert.match(entry,/Latence médiane récente/);
+  assert.match(entry,/Latence P95 récente/);
+  assert.match(entry,/percentile\(recentDurations,50\)/);
+  assert.match(entry,/percentile\(recentDurations,95\)/);
+});
+
+test('incident diagnosis can filter rate limits, provider, quality and other errors',()=>{
+  assert.match(entry,/data-filter=\"rate_limit\"/);
+  assert.match(entry,/data-filter=\"provider_unavailable\"/);
+  assert.match(entry,/data-filter=\"quality\"/);
+  assert.match(entry,/data-filter=\"other\"/);
+  assert.match(entry,/Limite \/ quota/);
+  assert.match(entry,/Fournisseur indisponible/);
+  assert.match(entry,/Exception Worker/);
 });
 
 test('dashboard prepares billing without processing payments',()=>{
