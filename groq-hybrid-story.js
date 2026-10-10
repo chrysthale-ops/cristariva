@@ -7,7 +7,7 @@ const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
 function requestData(cards){
  const en=state.lang==='en';
  const roles=cards.length===1?['outcome']:cards.length===2?['origin','outcome']:cards.length===3?['origin','evolution','outcome']:cards.length===4?['origin','obstacle','evolution','outcome']:['origin','obstacle','resource',...Array(Math.max(0,cards.length-4)).fill('evolution'),'outcome'];
- return {lang:en?'en':'fr',question:String(state.question||''),domain:String(state.domain||''),oracle:String(state.oracle||''),cards:cards.map((c,i)=>{
+ return {lang:en?'en':'fr',question:String(state.question||''),context:String(state.context||''),domain:String(state.domain||''),oracle:String(state.oracle||''),cards:cards.map((c,i)=>{
  const reversed=state.oracle==='tarot'&&state.draw?.[i]===c&&state.tarotReversed?.[i]===true;
  const l=en?(c.en||c):c;
  const domain=String(state.domain||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();

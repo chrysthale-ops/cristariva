@@ -11,7 +11,7 @@ test('Reflets : le moteur externe reçoit la signification du domaine choisi',as
  try{
  w.eval(fs.readFileSync(path.join(__dirname,'../oracle-reflets-data.js'),'utf8'));
  const cards=[w.REFLETS_DATA.all[37]];
- w.state={lang:'fr',question:'Essai domaines',oracle:'reflets',draw:cards};
+ w.state={lang:'fr',question:'Essai domaines',context:'Je suis célibataire.',oracle:'reflets',draw:cards};
  w.storyInterpretation=()=>{};w.interpretation=()=>{};w.AbortSignal=AbortSignal;w.CR_STORY_QUALITY=quality;
  const timers=[];w.setTimeout=fn=>timers.push(fn);
  let sent;w.fetch=async(_url,options)=>{sent=JSON.parse(options.body);return {ok:true,status:200,json:async()=>({text:'Une information manque encore pour comprendre la situation.'})};};
@@ -21,6 +21,7 @@ test('Reflets : le moteur externe reçoit la signification du domaine choisi',as
  await timers.shift()();
  assert.equal(sent.cards[0].meaning,cards[0][field],domain);
  assert.equal(sent.oracle,'reflets');
+ assert.equal(sent.context,'Je suis célibataire.');
  }
  }finally{w.close();}
 });

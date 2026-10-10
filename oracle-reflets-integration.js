@@ -44,6 +44,7 @@ function start(){
    if(!isReflets())return;
    ev.stopImmediatePropagation();ev.preventDefault();
    state.question=document.querySelector('#question')?.value.trim()||'';
+  state.context=document.querySelector('#readingContext')?.value.trim()||'';
    const n=parseInt(state.format||1,10);
    state.draw=rand(REFLETS_DATA.main,n);state.relation=null;state.date=null;
    const pset=(state.lang==='en'?POSITIONS_EN:POSITIONS_FR)[n];const pos=pset.map(x=>x[0]);
