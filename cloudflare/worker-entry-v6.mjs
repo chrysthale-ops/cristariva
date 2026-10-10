@@ -10,12 +10,13 @@ const normalize = value => String(value || '')
 
 function hasExplicitThirdPartyFact(input = {}) {
   const facts = normalize(`${input.question || ''} ${input.context || ''}`);
-  return /(?:tierce personne|troisieme personne|3e personne|relation parallele|triangle amoureux|rivalite|amant|maitresse|autre relation|autre partenaire)/.test(facts);
+  return /(?:tierce personne|troisieme personne|3e personne|relation parallele|triangle amoureux|rivalite|amant|maitresse|autre relation|autre partenaire|avec une autre personne|en couple avec)/.test(facts);
 }
 
 function hasInventedTriangle(text, input = {}) {
   if (hasExplicitThirdPartyFact(input)) return false;
-  const value = normalize(text);
+  let value = normalize(text);
+  value = value.replace(/(?:sans (?:pour autant )?(?:permettre d'|pouvoir )?affirmer|ne permet(?:tent)? pas d'affirmer)[^.!?]{0,100}(?:tierce personne|troisieme personne|relation parallele|rivalite)/g, '');
   return /(?:dynamique triangulaire|relation triangulaire|tierce personne|troisieme personne|relation parallele|interets paralleles|rivalite(?: amoureuse)?|qui occupe quelle place)/.test(value);
 }
 
