@@ -18,14 +18,30 @@ exports.handler=async function(event){
  const schema={type:'object',additionalProperties:false,required:['segments'],properties:{segments:{type:'array',items:{type:'object',additionalProperties:false,required:['index','text'],properties:{index:{type:'integer'},text:{type:'string'}}}}}};
  const system=quality.system;
  try{
- const response=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{Authorization:'Bearer '+process.env.GROQ_API_KEY,'Content-Type':'application/json'},signal:AbortSignal.timeout(18000),body:JSON.stringify({model:process.env.GROQ_MODEL||'openai/gpt-oss-120b',messages:[{role:'system',content:system},{role:'user',content:JSON.stringify(input)}],response_format:{type:'json_schema',json_schema:{name:'reading',strict:true,schema}},max_completion_tokens:6000})});
- if(!response.ok)return reply(response.status===429?429:502,{error:'provider_unavailable'});
- const data=await response.json();
- if(data.choices?.[0]?.finish_reason!=='stop')return reply(502,{error:'incomplete'});
- const result=JSON.parse(data.choices[0].message.content);
- if(!Array.isArray(result.segments)||result.segments.length!==input.cards.length||result.segments.some((s,i)=>s.index!==i||!bounded(s.text,3500)||s.text.trim().length<40))return reply(502,{error:'coverage'});
- const text=result.segments.map(s=>s.text.trim()).join(' ');
- // Explicit card labels remain forbidden; natural wording that happens to match a title is allowed.
+ const callProvider=async(systemPrompt,payload)=>{
+  const response=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{Authorization:'Bearer '+process.env.GROQ_API_KEY,'Content-Type':'application/json'},signal:AbortSignal.timeout(18000),body:JSON.stringify({model:process.env.GROQ_MODEL||'openai/gpt-oss-120b',messages:[{role:'system',content:systemPrompt},{role:'user',content:JSON.stringify(payload)}],response_format:{type:'json_schema',json_schema:{name:'reading',strict:true,schema}},max_completion_tokens:6000})});
+  if(!response.ok)return {status:response.status===429?429:502,error:'provider_unavailable'};
+  const data=await response.json();
+  if(data.choices?.[0]?.finish_reason!=='stop')return {status:502,error:'incomplete'};
+  return {result:JSON.parse(data.choices[0].message.content)};
+ };
+ const readText=result=>{
+  if(!Array.isArray(result?.segments)||result.segments.length!==input.cards.length||result.segments.some((s,i)=>s.index!==i||!bounded(s.text,3500)||s.text.trim().length<40))return null;
+  return result.segments.map(s=>s.text.trim()).join(' ');
+ };
+ let call=await callProvider(system,input);
+ if(call.error)return reply(call.status,{error:call.error});
+ let text=readText(call.result);
+ if(!text)return reply(502,{error:'coverage'});
+ const issues=quality.editorialIssues(text,input),initialError=quality.validate(text,input);
+ if(initialError)issues.push('shared_'+initialError);
+ if(issues.length){
+  // One corrective attempt; no fallback or replacement of prose fragments.
+  call=await callProvider(system+' '+quality.rewriteGuidance,{...input,draft_to_rewrite:text,detected_issues:[...new Set(issues)]});
+  if(call.error)return reply(call.status,{error:call.error});
+  text=readText(call.result);
+  if(!text)return reply(502,{error:'coverage'});
+ }
  const qualityError=quality.validate(text,input);
  if(qualityError)return reply(502,{error:'quality',reason:qualityError});
  return reply(200,{text,engine:'groq-hybrid-v2'});
